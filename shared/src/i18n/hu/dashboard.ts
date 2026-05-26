@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '{count} aktív utazás',
   'dashboard.subtitle.archivedSuffix': ' · {count} archivált',
   'dashboard.newTrip': 'Új utazás',
+  'dashboard.newTripSub': 'Start blank · or import from another planner',
   'dashboard.gridView': 'Rácsnézet',
   'dashboard.listView': 'Listanézet',
   'dashboard.currency': 'Pénznem',

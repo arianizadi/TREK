@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '활성 여행 {count}개',
   'dashboard.subtitle.archivedSuffix': ' · {count}개 보관됨',
   'dashboard.newTrip': '새 여행',
+  'dashboard.newTripSub': 'Start blank · or import from another planner',
   'dashboard.gridView': '격자 보기',
   'dashboard.listView': '목록 보기',
   'dashboard.currency': '통화',

@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '{count} aktivních cest',
   'dashboard.subtitle.archivedSuffix': ' · {count} archivováno',
   'dashboard.newTrip': 'Nová cesta',
+  'dashboard.newTripSub': 'Start blank · or import from another planner',
   'dashboard.gridView': 'Mřížka',
   'dashboard.listView': 'Seznam',
   'dashboard.currency': 'Měna',

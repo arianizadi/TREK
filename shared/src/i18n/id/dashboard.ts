@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '{count} perjalanan aktif',
   'dashboard.subtitle.archivedSuffix': ' · {count} diarsipkan',
   'dashboard.newTrip': 'Perjalanan Baru',
+  'dashboard.newTripSub': 'Start blank · or import from another planner',
   'dashboard.gridView': 'Tampilan grid',
   'dashboard.listView': 'Tampilan daftar',
   'dashboard.currency': 'Mata uang',

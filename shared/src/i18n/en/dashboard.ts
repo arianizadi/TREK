@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '{count} active trips',
   'dashboard.subtitle.archivedSuffix': ' · {count} archived',
   'dashboard.newTrip': 'New Trip',
+  'dashboard.newTripSub': 'Plan a new trip from scratch',
   'dashboard.gridView': 'Grid view',
   'dashboard.listView': 'List view',
   'dashboard.currency': 'Currency',

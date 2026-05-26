@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '{count} aktywnych podróży',
   'dashboard.subtitle.archivedSuffix': ' · {count} zarchiwizowanych',
   'dashboard.newTrip': 'Nowa podróż',
+  'dashboard.newTripSub': 'Start blank · or import from another planner',
   'dashboard.gridView': 'Widok siatki',
   'dashboard.listView': 'Widok listy',
   'dashboard.currency': 'Waluta',

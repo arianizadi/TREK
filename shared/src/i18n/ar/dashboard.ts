@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '{count} رحلات نشطة',
   'dashboard.subtitle.archivedSuffix': ' · {count} مؤرشفة',
   'dashboard.newTrip': 'رحلة جديدة',
+  'dashboard.newTripSub': 'Start blank · or import from another planner',
   'dashboard.gridView': 'عرض شبكي',
   'dashboard.listView': 'عرض قائمة',
   'dashboard.currency': 'العملة',

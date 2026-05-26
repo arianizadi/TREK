@@ -9,6 +9,7 @@ const dashboard: TranslationStrings = {
   'dashboard.subtitle.activeMany': '{count} aktif gezi',
   'dashboard.subtitle.archivedSuffix': ' · {count} arşivlendi',
   'dashboard.newTrip': 'Yeni gezi',
+  'dashboard.newTripSub': 'Start blank · or import from another planner',
   'dashboard.gridView': 'Izgara görünümü',
   'dashboard.listView': 'Liste görünümü',
   'dashboard.currency': 'Para birimi',
