@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from 'react'
+import ReactDOM from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from '../../i18n'
 
@@ -38,7 +39,7 @@ export default function ConfirmDialog({
 
   if (!isOpen) return null
 
-  return (
+  return ReactDOM.createPortal(
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center px-4 trek-backdrop-enter"
       style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)', paddingBottom: 'var(--bottom-nav-h)' }}
@@ -87,6 +88,7 @@ export default function ConfirmDialog({
         </div>
       </div>
 
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -24,6 +24,7 @@ interface Addon {
   name: string
   icon: string
   type: string
+  enabled: boolean
 }
 
 export default function Navbar({ tripTitle, tripId, onBack, showBack, onShare }: NavbarProps): React.ReactElement {
@@ -123,42 +124,6 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onShare }:
           <img src={dark ? '/logo-light.svg' : '/logo-dark.svg'} alt="TREK" className="hidden sm:block" style={{ height: 28 }} />
         </Link>
 
-        {/* Global addon nav items */}
-        {globalAddons.length > 0 && !tripTitle && (
-          <>
-            <span style={{ color: 'var(--text-faint)' }}>|</span>
-            <Link to="/dashboard"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0"
-              style={{
-                color: location.pathname === '/dashboard' ? 'var(--text-primary)' : 'var(--text-muted)',
-                background: location.pathname === '/dashboard' ? 'var(--bg-hover)' : 'transparent',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-              onMouseLeave={e => { if (location.pathname !== '/dashboard') e.currentTarget.style.background = 'transparent' }}>
-              <Briefcase className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">{t('nav.myTrips')}</span>
-            </Link>
-            {globalAddons.map(addon => {
-              const Icon = ADDON_ICONS[addon.icon] || CalendarDays
-              const path = `/${addon.id}`
-              const isActive = location.pathname === path
-              return (
-                <Link key={addon.id} to={path}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0"
-                  style={{
-                    color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
-                    background: isActive ? 'var(--bg-hover)' : 'transparent',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}>
-                  <Icon className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline">{getAddonName(addon)}</span>
-                </Link>
-              )
-            })}
-          </>
-        )}
-
         {tripTitle && (
           <>
             <span className="hidden sm:inline" style={{ color: 'var(--text-faint)' }}>/</span>
@@ -168,6 +133,42 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onShare }:
           </>
         )}
       </div>
+
+      {/* Centred liquid-glass tab menu (design handoff). Absolutely positioned so
+          the left brand block and the right action cluster keep their layout. */}
+      {globalAddons.length > 0 && !tripTitle && (
+        <div
+          className="trek-nav-pill"
+          style={{
+            position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+            display: 'flex', gap: 4, padding: 4, borderRadius: 14,
+            background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+            backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'}`,
+          }}
+        >
+          {[{ id: '__trips', path: '/dashboard', label: t('nav.myTrips'), Icon: Briefcase },
+            ...globalAddons.map(a => ({ id: a.id, path: `/${a.id}`, label: getAddonName(a), Icon: ADDON_ICONS[a.icon] || CalendarDays }))
+          ].map(tab => {
+            const isActive = location.pathname === tab.path
+            return (
+              <Link key={tab.id} to={tab.path}
+                className="flex items-center gap-1.5 transition-colors"
+                style={{
+                  padding: '5px 16px', borderRadius: 9, fontSize: 13.5, fontWeight: 500,
+                  color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                  background: isActive ? 'var(--bg-card)' : 'transparent',
+                  boxShadow: isActive ? '0 1px 2px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.05)' : 'none',
+                }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'var(--text-primary)' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = 'var(--text-muted)' }}>
+                <tab.Icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      )}
 
       {/* Spacer */}
       <div className="flex-1" />

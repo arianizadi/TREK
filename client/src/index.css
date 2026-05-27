@@ -489,7 +489,7 @@ input[type="number"], input[type="time"], input[type="date"], input[type="dateti
 }
 
 @media (min-width: 768px) {
-  :root { --nav-h: calc(56px + env(safe-area-inset-top, 0px)); }
+  :root { --nav-h: calc(64px + env(safe-area-inset-top, 0px)); }
 }
 
 .dark {

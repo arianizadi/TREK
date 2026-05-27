@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from 'react'
+import ReactDOM from 'react-dom'
 import { Check, X } from 'lucide-react'
 import { useTranslation } from '../../i18n'
 
@@ -39,7 +40,7 @@ export default function CopyTripDialog({ isOpen, tripTitle, onClose, onConfirm }
 
   if (!isOpen) return null
 
-  return (
+  return ReactDOM.createPortal(
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center px-4 trek-backdrop-enter"
       style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)', paddingBottom: 'var(--bottom-nav-h)' }}
@@ -97,12 +98,14 @@ export default function CopyTripDialog({ isOpen, tripTitle, onClose, onConfirm }
           </button>
           <button
             onClick={() => { onConfirm(); onClose() }}
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors text-white bg-blue-600 hover:bg-blue-700"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-opacity hover:opacity-90"
+            style={{ background: 'var(--text-primary)', color: 'var(--bg-card)' }}
           >
             {t('dashboard.confirm.copy.confirm')}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

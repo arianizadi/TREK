@@ -497,6 +497,7 @@ export const filesApi = {
 
 export const reservationsApi = {
   list: (tripId: number | string) => apiClient.get(`/trips/${tripId}/reservations`).then(r => r.data),
+  upcoming: () => apiClient.get('/reservations/upcoming').then(r => r.data),
   create: (tripId: number | string, data: Record<string, unknown>) => apiClient.post(`/trips/${tripId}/reservations`, data).then(r => r.data),
   update: (tripId: number | string, id: number, data: Record<string, unknown>) => apiClient.put(`/trips/${tripId}/reservations/${id}`, data).then(r => r.data),
   delete: (tripId: number | string, id: number) => apiClient.delete(`/trips/${tripId}/reservations/${id}`).then(r => r.data),
