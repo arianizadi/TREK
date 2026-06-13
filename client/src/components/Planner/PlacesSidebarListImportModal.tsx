@@ -1,10 +1,12 @@
 import ReactDOM from 'react-dom'
+import ToggleSwitch from '../Settings/ToggleSwitch'
 import type { SidebarState } from './usePlacesSidebar'
 
 export function ListImportModal(S: SidebarState) {
   const {
     setListImportOpen, setListImportUrl, t, hasMultipleListImportProviders, availableListImportProviders,
     listImportProvider, setListImportProvider, listImportUrl, listImportLoading, handleListImport,
+    listImportEnrich, setListImportEnrich, canEnrichImport,
   } = S
   return ReactDOM.createPortal(
     <div
@@ -55,6 +57,15 @@ export function ListImportModal(S: SidebarState) {
             fontFamily: 'inherit', boxSizing: 'border-box',
           }}
         />
+        {canEnrichImport && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginTop: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="text-content" style={{ fontSize: 12, fontWeight: 600 }}>{t('places.enrichOnImport')}</div>
+              <div className="text-content-faint" style={{ fontSize: 12, marginTop: 2 }}>{t('places.enrichOnImportHint')}</div>
+            </div>
+            <ToggleSwitch on={listImportEnrich} onToggle={() => setListImportEnrich(!listImportEnrich)} />
+          </div>
+        )}
         <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
           <button
             onClick={() => { setListImportOpen(false); setListImportUrl('') }}
