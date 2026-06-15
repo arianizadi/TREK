@@ -7,6 +7,7 @@
  */
 import { offlineDb } from '../db/offlineDb'
 import { apiClient } from '../api/client'
+import { isAuthed } from './authGate'
 import type { QueuedMutation } from '../db/offlineDb'
 import type { Table } from 'dexie'
 
@@ -88,7 +89,7 @@ export const mutationQueue = {
    * 4xx responses are marked failed and skipped.
    */
   async flush(): Promise<void> {
-    if (_flushing || !navigator.onLine) return
+    if (_flushing || !navigator.onLine || !isAuthed()) return
     _flushing = true
     // tempId → realId learned during this flush, so a dependent edit/delete
     // queued against an offline-created entity (still holding the negative id)
