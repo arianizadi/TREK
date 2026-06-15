@@ -1,3 +1,10 @@
+# ── Stage 0: gosu ────────────────────────────────────────────────────────────
+# Rebuild gosu with a current Go toolchain so the runtime image ships no stale
+# Go stdlib (Debian's apt gosu is built with an old Go that trips CVE scanners).
+# The binary and its runtime behaviour are identical to the apt package.
+FROM golang:1.25-alpine AS gosu-build
+RUN CGO_ENABLED=0 GOBIN=/out go install github.com/tianon/gosu@latest
+
 # ── Stage 1: shared ──────────────────────────────────────────────────────────
 FROM node:24-alpine AS shared-builder
 WORKDIR /app
@@ -44,7 +51,7 @@ COPY server/package.json ./server/
 #   amd64 — static binary from KDE CDN (glibc 2.17+; wget stays for healthcheck)
 #   arm64 — apt package (KDE publishes no arm64 static binary)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends tzdata dumb-init gosu wget ca-certificates python3 build-essential && \
+    apt-get install -y --no-install-recommends tzdata dumb-init wget ca-certificates python3 build-essential && \
     npm ci --workspace=server --omit=dev && \
     ARCH=$(dpkg --print-architecture) && \
     if [ "$ARCH" = "amd64" ]; then \
@@ -59,6 +66,9 @@ RUN apt-get update && \
     apt-get purge -y python3 build-essential && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
+# gosu rebuilt with a current Go toolchain (stage 0) — used by CMD to drop to node.
+COPY --from=gosu-build /out/gosu /usr/local/bin/gosu
 
 ENV XDG_CACHE_HOME=/tmp/kf6-cache
 # Prevent Qt from probing for a display in headless containers.
