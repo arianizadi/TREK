@@ -64,8 +64,8 @@ export function normalizeFlight(raw: AirtrailFlightRaw): AirtrailFlight {
     toCode: airportCode(raw.to),
     toName: raw.to?.name ?? null,
     date: raw.date ?? null,
-    departure: raw.departureScheduled ?? null,
-    arrival: raw.arrivalScheduled ?? null,
+    departure: raw.departureScheduled ?? raw.departure ?? null,
+    arrival: raw.arrivalScheduled ?? raw.arrival ?? null,
     airline: entityName(raw.airline),
     flightNumber: raw.flightNumber ?? null,
     aircraft: entityCode(raw.aircraft),
@@ -103,11 +103,14 @@ function hasCoords(a: AirtrailAirport | null): a is AirtrailAirport & { lat: num
 
 /** Raw AirTrail flight → the data createReservation() expects (type:'flight'). */
 export function mapFlightToReservation(raw: AirtrailFlightRaw): MappedReservation {
-  // Read the SCHEDULED times only — TREK plans against the scheduled (booked) time,
-  // not the actual/estimated `departure`/`arrival`. When a flight has no scheduled
-  // time, the clock is left blank (date preserved) rather than fabricated.
-  const dep = localParts(raw.departureScheduled, raw.from?.tz ?? null);
-  const arr = localParts(raw.arrivalScheduled, raw.to?.tz ?? null);
+  // Prefer the scheduled (booked) time TREK plans against, but fall back to the
+  // primary departure/arrival instant when AirTrail has no scheduled time. Manually
+  // entered flights only set `departure`/`arrival` (the `*Scheduled` columns stay
+  // null), so reading scheduled alone dropped the clock — and the whole arrival —
+  // for the common case (#1336). Only when neither exists is the clock left blank
+  // (date preserved) rather than fabricated.
+  const dep = localParts(raw.departureScheduled ?? raw.departure, raw.from?.tz ?? null);
+  const arr = localParts(raw.arrivalScheduled ?? raw.arrival, raw.to?.tz ?? null);
 
   const fromCode = airportCode(raw.from);
   const toCode = airportCode(raw.to);
@@ -194,8 +197,11 @@ export function canonicalHash(raw: AirtrailFlightRaw): string {
     to: airportCode(raw.to),
     date: raw.date ?? null,
     datePrecision: raw.datePrecision ?? 'day',
-    departureScheduled: raw.departureScheduled ?? null,
-    arrivalScheduled: raw.arrivalScheduled ?? null,
+    // Hash the same instant the import uses (scheduled, else primary) so a change to
+    // whichever time TREK actually shows triggers a re-sync — and existing flights
+    // imported without a scheduled time re-sync once to pick up their clock (#1336).
+    departureScheduled: raw.departureScheduled ?? raw.departure ?? null,
+    arrivalScheduled: raw.arrivalScheduled ?? raw.arrival ?? null,
     airline: entityCode(raw.airline),
     flightNumber: raw.flightNumber ?? null,
     aircraft: entityCode(raw.aircraft),

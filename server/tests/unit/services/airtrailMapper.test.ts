@@ -51,9 +51,15 @@ describe('airtrailMapper.normalizeFlight', () => {
       flightNumber: 'BA178',
       seatClass: 'economy',
     });
-    // The picker preview surfaces the scheduled times, not the actual ones.
+    // The picker preview prefers the scheduled times over the actual ones.
     expect(n.departure).toBe('2021-09-01T23:00:00.000+00:00');
     expect(n.arrival).toBe('2021-09-02T07:00:00.000+00:00');
+  });
+
+  it('#1336 surfaces the primary departure/arrival when there is no scheduled time', () => {
+    const n = normalizeFlight(flight({ departureScheduled: null, arrivalScheduled: null }));
+    expect(n.departure).toBe('2021-09-01T23:42:00.000+00:00');
+    expect(n.arrival).toBe('2021-09-02T07:42:00.000+00:00');
   });
 
   it('falls back to ICAO when IATA is missing and tolerates null airports', () => {
@@ -74,13 +80,24 @@ describe('airtrailMapper.mapFlightToReservation', () => {
     expect(m.reservation_end_time).toBe('2021-09-02T08:00');
   });
 
-  it('leaves the clock blank (date only) when the flight has no scheduled time', () => {
-    const m = mapFlightToReservation(flight({ departureScheduled: null, arrivalScheduled: null }));
+  it('leaves the clock blank (date only) when the flight has no time at all', () => {
+    const m = mapFlightToReservation(flight({ departure: null, arrival: null, departureScheduled: null, arrivalScheduled: null }));
     // Date is preserved from the AirTrail canonical date; no fabricated 00:00.
     expect(m.reservation_time).toBe('2021-09-01');
     expect(m.reservation_end_time).toBeNull();
     expect(m.endpoints.find(e => e.role === 'from')?.local_time).toBeNull();
     expect(m.endpoints.find(e => e.role === 'to')?.local_time).toBeNull();
+  });
+
+  it('#1336 falls back to the primary departure/arrival when AirTrail has no scheduled times', () => {
+    // Manually-entered AirTrail flights set only departure/arrival; *Scheduled stays null.
+    const m = mapFlightToReservation(flight({ departureScheduled: null, arrivalScheduled: null }));
+    // departure 23:42 UTC at JFK (EDT) = 19:42 local; arrival 07:42 UTC at LHR (BST) = 08:42.
+    expect(m.reservation_time).toBe('2021-09-01T19:42');
+    expect(m.reservation_end_time).toBe('2021-09-02T08:42');
+    expect(m.endpoints.find(e => e.role === 'from')?.local_time).toBe('19:42');
+    expect(m.endpoints.find(e => e.role === 'to')?.local_time).toBe('08:42');
+    expect(m.endpoints.find(e => e.role === 'to')?.local_date).toBe('2021-09-02');
   });
 
   it('builds two endpoints with codes, coords and timezones', () => {
@@ -142,8 +159,8 @@ describe('airtrailMapper.mapFlightToReservation', () => {
     expect(m.endpoints.find(e => e.role === 'to')).toBeDefined();
   });
 
-  it('leaves the end time null for a partial flight with no scheduled arrival', () => {
-    const m = mapFlightToReservation(flight({ arrivalScheduled: null }));
+  it('leaves the end time null for a partial flight with no arrival time at all', () => {
+    const m = mapFlightToReservation(flight({ arrival: null, arrivalScheduled: null }));
     expect(m.reservation_end_time).toBeNull();
     expect(m.reservation_time).toBe('2021-09-01T19:00');
   });
@@ -164,9 +181,17 @@ describe('airtrailMapper.canonicalHash', () => {
     expect(canonicalHash(flight())).not.toBe(
       canonicalHash(flight({ departureScheduled: '2021-09-01T22:00:00.000+00:00' })),
     );
-    // ...but a change to the actual time alone must not (TREK never shows it).
+    // ...but a change to the actual time alone must not (TREK shows the scheduled one).
     expect(canonicalHash(flight())).toBe(
       canonicalHash(flight({ departure: '2021-09-01T20:00:00.000+00:00', arrival: '2021-09-02T05:00:00.000+00:00' })),
+    );
+  });
+
+  it('#1336 tracks the primary departure when there is no scheduled time', () => {
+    // With no scheduled time, departure IS what TREK imports, so a change must re-sync.
+    const manual = flight({ departureScheduled: null, arrivalScheduled: null });
+    expect(canonicalHash(manual)).not.toBe(
+      canonicalHash(flight({ departureScheduled: null, arrivalScheduled: null, departure: '2021-09-01T20:00:00.000+00:00' })),
     );
   });
 
