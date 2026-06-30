@@ -54,6 +54,7 @@ export const reservationSchema = z.object({
   location: z.string().nullable().optional(),
   confirmation_number: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
   status: z.string(),
   type: z.string(),
   accommodation_id: z.union([z.number(), z.string()]).nullable().optional(),

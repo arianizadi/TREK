@@ -3123,6 +3123,15 @@ function runMigrations(db: Database.Database): void {
         }
       }
     },
+    // Dedicated booking URL (#935) — users previously stuffed links into notes.
+    // Additive nullable TEXT; existing rows default to NULL.
+    () => {
+      try {
+        db.exec('ALTER TABLE reservations ADD COLUMN url TEXT');
+      } catch (err: any) {
+        if (!err.message?.includes('duplicate column name')) throw err;
+      }
+    },
   ];
 
   if (currentVersion < migrations.length) {

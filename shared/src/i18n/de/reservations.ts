@@ -23,6 +23,8 @@ const reservations: TranslationStrings = {
   'reservations.timeAlt': 'Uhrzeit (alternativ, z.B. 19:30)',
   'reservations.notes': 'Notizen',
   'reservations.notesPlaceholder': 'Zusätzliche Notizen...',
+  'reservations.urlLabel': 'Link',
+  'reservations.urlPlaceholder': 'https://...',
   'reservations.meta.airline': 'Fluggesellschaft',
   'reservations.meta.flightNumber': 'Flugnr.',
   'reservations.meta.from': 'Von',

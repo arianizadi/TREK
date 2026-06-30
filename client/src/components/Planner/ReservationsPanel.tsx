@@ -361,6 +361,18 @@ function ReservationCard({ r, tripId, onEdit, onDelete, files = [], onNavigateTo
           </div>
         )}
 
+        {/* Link */}
+        {r.url && (
+          <div>
+            <div className={fieldLabelClass}>{t('reservations.urlLabel')}</div>
+            <div className={fieldValueClass} style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 400 }}>
+              <ExternalLink size={13} className="text-content-faint" style={{ flexShrink: 0 }} />
+              <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline"
+                style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.url}</a>
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {r.notes && (
           <div>

@@ -88,6 +88,25 @@ describe('Create reservation', () => {
     expect(res.body.reservation.type).toBe('hotel');
   });
 
+  it('RESV-001b — persists and updates the dedicated url field (#935)', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+
+    const created = await request(app)
+      .post(`/api/trips/${trip.id}/reservations`)
+      .set('Cookie', authCookie(user.id))
+      .send({ title: 'Hotel', type: 'hotel', url: 'https://hotel.example/booking' });
+    expect(created.status).toBe(201);
+    expect(created.body.reservation.url).toBe('https://hotel.example/booking');
+
+    const updated = await request(app)
+      .put(`/api/trips/${trip.id}/reservations/${created.body.reservation.id}`)
+      .set('Cookie', authCookie(user.id))
+      .send({ url: 'https://hotel.example/changed' });
+    expect(updated.status).toBe(200);
+    expect(updated.body.reservation.url).toBe('https://hotel.example/changed');
+  });
+
   it('RESV-001 — POST without title returns 400', async () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id);

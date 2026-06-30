@@ -86,7 +86,7 @@ export function ReservationModal({ isOpen, onClose, onSave, reservation, days, p
   const [form, setForm] = useState({
     title: '', type: 'other', status: 'pending',
     reservation_time: '', reservation_end_time: '', end_date: '', location: '', confirmation_number: '',
-    notes: '', assignment_id: '' as string | number, accommodation_id: '' as string | number,
+    notes: '', url: '', assignment_id: '' as string | number, accommodation_id: '' as string | number,
     meta_check_in_time: '', meta_check_in_end_time: '', meta_check_out_time: '',
     hotel_place_id: '' as string | number, hotel_start_day: '' as string | number, hotel_end_day: '' as string | number,
     hotel_address: '',
@@ -136,6 +136,7 @@ export function ReservationModal({ isOpen, onClose, onSave, reservation, days, p
         location: reservation.location || '',
         confirmation_number: reservation.confirmation_number || '',
         notes: reservation.notes || '',
+        url: reservation.url || '',
         assignment_id: reservation.assignment_id || '',
         accommodation_id: reservation.accommodation_id || '',
         meta_check_in_time: meta.check_in_time || '',
@@ -164,6 +165,7 @@ export function ReservationModal({ isOpen, onClose, onSave, reservation, days, p
         location: prefill.location || '',
         confirmation_number: prefill.confirmation_number || '',
         notes: prefill.notes || '',
+        url: (prefill as { url?: string }).url || '',
         assignment_id: defaultAssignmentId ?? '',
         accommodation_id: '',
         meta_check_in_time: meta.check_in_time || '',
@@ -180,7 +182,7 @@ export function ReservationModal({ isOpen, onClose, onSave, reservation, days, p
       setForm({
         title: '', type: 'other', status: 'pending',
         reservation_time: '', reservation_end_time: '', end_date: '', location: '', confirmation_number: '',
-        notes: '', assignment_id: defaultAssignmentId ?? '', accommodation_id: '',
+        notes: '', url: '', assignment_id: defaultAssignmentId ?? '', accommodation_id: '',
         meta_check_in_time: '', meta_check_in_end_time: '', meta_check_out_time: '',
         hotel_place_id: '', hotel_start_day: '', hotel_end_day: '', hotel_address: '',
       })
@@ -237,6 +239,7 @@ export function ReservationModal({ isOpen, onClose, onSave, reservation, days, p
         reservation_end_time: form.type === 'hotel' ? null : (combinedEndTime || null),
         location: form.location, confirmation_number: form.confirmation_number,
         notes: form.notes,
+        url: form.url,
         assignment_id: (form.type === 'hotel' && !form.accommodation_id) ? null : (form.assignment_id || null),
         accommodation_id: form.type === 'hotel' ? (form.accommodation_id || null) : null,
         metadata: Object.keys(metadata).length > 0 ? metadata : null,
@@ -590,6 +593,16 @@ export function ReservationModal({ isOpen, onClose, onSave, reservation, days, p
             </div>
           </>
         )}
+
+        {/* Link */}
+        <div>
+          <label className={labelClass}>{t('reservations.urlLabel')}</label>
+          <div className="relative">
+            <Link2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-muted pointer-events-none" />
+            <input type="url" value={form.url} onChange={e => set('url', e.target.value)}
+              placeholder={t('reservations.urlPlaceholder')} className={inputClass} style={{ paddingLeft: 34 }} />
+          </div>
+        </div>
 
         {/* Notes */}
         <div>
