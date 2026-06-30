@@ -161,5 +161,7 @@ const reservations: TranslationStrings = {
   'reservations.createExpenseHint': 'Sparar bokningen och öppnar sedan kostnadsredigeraren.',
   'reservations.linkedExpense': 'Relaterade kostnader',
   'reservations.removeExpense': 'Ta bort utgiften',
+  'reservations.urlLabel': 'Länk',
+  'reservations.urlPlaceholder': 'https://...',
 };
 export default reservations;

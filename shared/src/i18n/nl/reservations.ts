@@ -164,5 +164,7 @@ const reservations: TranslationStrings = {
   'reservations.createExpenseHint': 'Boeking opslaan en daarna de Onkosteneditor openen.',
   'reservations.linkedExpense': 'Gekoppelde kostenpost',
   'reservations.removeExpense': 'Kostenpost verwijderen',
+  'reservations.urlLabel': 'Link',
+  'reservations.urlPlaceholder': 'https://...',
 };
 export default reservations;

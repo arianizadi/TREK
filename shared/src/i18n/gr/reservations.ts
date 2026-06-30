@@ -166,5 +166,7 @@ const reservations: TranslationStrings = {
   'reservations.createExpenseHint': 'Saves the booking, then opens the Costs editor.',
   'reservations.linkedExpense': 'Linked expense',
   'reservations.removeExpense': 'Remove expense',
+  'reservations.urlLabel': 'Σύνδεσμος',
+  'reservations.urlPlaceholder': 'https://...',
 };
 export default reservations;

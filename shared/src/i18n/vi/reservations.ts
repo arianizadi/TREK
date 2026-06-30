@@ -161,5 +161,7 @@ const reservations: TranslationStrings = {
   'reservations.createExpenseHint': 'Lưu đặt chỗ, sau đó mở trình chỉnh sửa Chi phí.',
   'reservations.linkedExpense': 'Chi phí liên kết',
   'reservations.removeExpense': 'Xóa chi phí',
+  'reservations.urlLabel': 'Liên kết',
+  'reservations.urlPlaceholder': 'https://...',
 };
 export default reservations;
