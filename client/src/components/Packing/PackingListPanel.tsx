@@ -1,6 +1,7 @@
 import { usePackingList } from './usePackingListPanel'
 import type { PackingListPanelProps } from './usePackingListPanel'
 import { PackingHeader } from './PackingListPanelHeader'
+import { PackingViewTabs } from './PackingListPanelViewTabs'
 import { PackingFilterTabs } from './PackingListPanelFilterTabs'
 import { PackingList } from './PackingListPanelList'
 import { BagSidebar } from './PackingListPanelBagSidebar'
@@ -17,6 +18,9 @@ export default function PackingListPanel(props: PackingListPanelProps) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', ...font }}>
       {/* ── Header ── */}
       <PackingHeader {...S} />
+
+      {/* ── View-Switch: Gemeinsam / Meine Liste (#858) ── */}
+      <PackingViewTabs {...S} />
 
       {/* ── Filter-Tabs ── */}
       <PackingFilterTabs {...S} />
