@@ -18,7 +18,7 @@ export default function AdminUsersTab({ admin, t, locale }: AdminUsersTabProps):
     hour12, currentUser,
     users, isLoading,
     setShowCreateUser,
-    invites, showCreateInvite, setShowCreateInvite, inviteForm, setInviteForm,
+    invites, inviteTrips, showCreateInvite, setShowCreateInvite, inviteForm, setInviteForm,
     copyInviteLink, handleCreateInvite, handleDeleteInvite,
     handleEditUser, handleDeleteUser,
   } = admin
@@ -163,6 +163,7 @@ export default function AdminUsersTab({ admin, t, locale }: AdminUsersTabProps):
                     <div className="text-xs text-slate-400 mt-0.5">
                       {inv.used_count}/{inv.max_uses === 0 ? '∞' : inv.max_uses} {t('admin.invite.uses')}
                       {inv.expires_at && ` · ${t('admin.invite.expiresAt')} ${new Date(inv.expires_at).toLocaleDateString(locale)}`}
+                      {inv.trip_title && ` · ${t('admin.invite.boundTo', { trip: inv.trip_title })}`}
                       {` · ${t('admin.invite.createdBy')} ${inv.created_by_name}`}
                     </div>
                   </div>
@@ -220,6 +221,22 @@ export default function AdminUsersTab({ admin, t, locale }: AdminUsersTabProps):
               ))}
             </div>
           </div>
+          {inviteTrips.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{t('admin.invite.tripLabel')}</label>
+              <select
+                value={inviteForm.trip_id}
+                onChange={e => setInviteForm(f => ({ ...f, trip_id: e.target.value === '' ? '' : Number(e.target.value) }))}
+                className="w-full py-2 px-2.5 rounded-lg text-sm border border-slate-200 bg-white text-slate-700 focus:border-slate-400 outline-none"
+              >
+                <option value="">{t('admin.invite.tripNone')}</option>
+                {inviteTrips.map(tr => (
+                  <option key={tr.id} value={tr.id}>{tr.title}</option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{t('admin.invite.tripHint')}</p>
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
             <button onClick={() => setShowCreateInvite(false)} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">{t('common.cancel')}</button>
             <button onClick={handleCreateInvite} className="px-4 py-2 text-sm bg-slate-900 text-white rounded-lg hover:bg-slate-700">{t('admin.invite.createAndCopy')}</button>

@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Are you sure you want to delete this place?',
   'trip.confirm.deletePlaces': 'Delete {count} places?',
   'trip.toast.placesDeleted': '{count} places deleted',
+  'trip.invite.linkTitle': 'Trip invite link',
+  'trip.invite.linkHint': 'Anyone with a TREK account who opens this link joins the trip as a member. Regenerate to invalidate the old link.',
+  'trip.invite.create': 'Create invite link',
+  'trip.invite.regenerate': 'Regenerate',
+  'trip.invite.disable': 'Disable',
+  'trip.invite.joinHeading': 'Join this trip',
+  'trip.invite.joinPrompt': 'You\'ve been invited to join "{title}".',
+  'trip.invite.joinCta': 'Join trip',
+  'trip.invite.joining': 'Joining…',
+  'trip.invite.invalidTitle': 'Invite unavailable',
+  'trip.invite.invalid': 'This invite link is invalid or has expired.',
+  'trip.invite.backToDashboard': 'Back to dashboard',
 };
 export default trip;

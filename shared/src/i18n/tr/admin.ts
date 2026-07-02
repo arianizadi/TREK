@@ -364,5 +364,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': 'Seyahate ekle (isteğe bağlı)',
+  'admin.invite.tripNone': 'Seyahat yok',
+  'admin.invite.tripHint': 'Yeni kullanıcı bağlantı üzerinden kaydolduğunda otomatik olarak bu seyahate eklenir.',
+  'admin.invite.boundTo': '{trip} seyahatine ekler',
 };
 export default admin;

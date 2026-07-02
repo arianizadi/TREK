@@ -5,6 +5,7 @@ import { JWT_SECRET, SESSION_DURATION_SECONDS } from '../config';
 import { User } from '../types';
 import { decrypt_api_key } from './apiKeyCrypto';
 import { resolveAuthToggles } from './authService';
+import { joinTripAsMember } from './tripMembership';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -473,9 +474,15 @@ export function findOrCreateUser(
         ).run(validInvite.id);
         if (updated.changes === 0) throw inviteRaceError;
       }
-      return db.prepare(
+      const ins = db.prepare(
         'INSERT INTO users (username, email, password_hash, role, oidc_sub, oidc_issuer, avatar, first_seen_version, login_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)',
       ).run(username, email, hash, role, sub, config.issuer, picture, process.env.APP_VERSION || '0.0.0');
+      // Trip-bound invite (#1402): auto-add the new SSO user to the trip inside the
+      // same atomic step as the invite consume. Idempotent + owner-safe.
+      if (validInvite?.trip_id) {
+        joinTripAsMember(Number(validInvite.trip_id), Number(ins.lastInsertRowid), validInvite.created_by ?? null);
+      }
+      return ins;
     });
     const result = createUser() as { lastInsertRowid: number | bigint };
     user = { id: Number(result.lastInsertRowid), username, email, role, avatar: picture } as User;

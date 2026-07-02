@@ -349,5 +349,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': '여행에 추가 (선택 사항)',
+  'admin.invite.tripNone': '여행 없음',
+  'admin.invite.tripHint': '새 사용자가 이 링크를 통해 가입하면 해당 여행에 자동으로 추가됩니다.',
+  'admin.invite.boundTo': '{trip}에 추가',
 };
 export default admin;

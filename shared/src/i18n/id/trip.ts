@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Apakah kamu yakin ingin menghapus tempat ini?',
   'trip.confirm.deletePlaces': 'Hapus {count} tempat?',
   'trip.toast.placesDeleted': '{count} tempat dihapus',
+  'trip.invite.linkTitle': 'Tautan undangan perjalanan',
+  'trip.invite.linkHint': 'Siapa pun yang punya akun TREK dan membuka tautan ini akan bergabung ke perjalanan sebagai anggota. Buat ulang untuk membatalkan tautan lama.',
+  'trip.invite.create': 'Buat tautan undangan',
+  'trip.invite.regenerate': 'Buat ulang',
+  'trip.invite.disable': 'Nonaktifkan',
+  'trip.invite.joinHeading': 'Gabung ke perjalanan ini',
+  'trip.invite.joinPrompt': 'Kamu diundang untuk bergabung ke "{title}".',
+  'trip.invite.joinCta': 'Gabung perjalanan',
+  'trip.invite.joining': 'Bergabung…',
+  'trip.invite.invalidTitle': 'Undangan tidak tersedia',
+  'trip.invite.invalid': 'Tautan undangan ini tidak valid atau sudah kedaluwarsa.',
+  'trip.invite.backToDashboard': 'Kembali ke dasbor',
 };
 export default trip;

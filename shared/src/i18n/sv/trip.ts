@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Är du säker på att du vill radera denna plats?',
   'trip.confirm.deletePlaces': 'Radera {count} platser?',
   'trip.toast.placesDeleted': '{count} platser raderade',
+  'trip.invite.linkTitle': 'Inbjudningslänk till resa',
+  'trip.invite.linkHint': 'Alla med ett TREK-konto som öppnar den här länken går med i resan som medlem. Skapa en ny länk för att ogiltigförklara den gamla.',
+  'trip.invite.create': 'Skapa inbjudningslänk',
+  'trip.invite.regenerate': 'Skapa ny',
+  'trip.invite.disable': 'Inaktivera',
+  'trip.invite.joinHeading': 'Gå med i resan',
+  'trip.invite.joinPrompt': 'Du har bjudits in att gå med i "{title}".',
+  'trip.invite.joinCta': 'Gå med i resan',
+  'trip.invite.joining': 'Går med…',
+  'trip.invite.invalidTitle': 'Inbjudan inte tillgänglig',
+  'trip.invite.invalid': 'Den här inbjudningslänken är ogiltig eller har gått ut.',
+  'trip.invite.backToDashboard': 'Tillbaka till översikten',
 };
 export default trip;

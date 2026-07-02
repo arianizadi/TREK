@@ -20,6 +20,7 @@ import JourneyDetailPage from './pages/JourneyDetailPage'
 import CollectionsPage from './pages/CollectionsPage'
 import JourneyPublicPage from './pages/JourneyPublicPage'
 import SharedTripPage from './pages/SharedTripPage'
+import JoinTripPage from './pages/JoinTripPage'
 import InAppNotificationsPage from './pages/InAppNotificationsPage.tsx'
 import OAuthAuthorizePage from './pages/OAuthAuthorizePage'
 import { ToastContainer } from './components/shared/Toast'
@@ -222,6 +223,16 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Trip invite link (#1143) — behind ProtectedRoute so an anonymous
+            visitor is redirected to /login (never registration) and returns here. */}
+        <Route
+          path="/join/:token"
+          element={
+            <ProtectedRoute>
+              <JoinTripPage />
             </ProtectedRoute>
           }
         />

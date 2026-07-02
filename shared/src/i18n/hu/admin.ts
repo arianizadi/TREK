@@ -362,5 +362,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': 'Hozzáadás utazáshoz (opcionális)',
+  'admin.invite.tripNone': 'Nincs utazás',
+  'admin.invite.tripHint': 'Az új felhasználó automatikusan hozzáadódik ehhez az utazáshoz, amikor a linken keresztül regisztrál.',
+  'admin.invite.boundTo': 'hozzáadja a következőhöz: {trip}',
 };
 export default admin;

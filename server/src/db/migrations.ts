@@ -3266,6 +3266,29 @@ function runMigrations(db: Database.Database): void {
     () => {
       try { db.exec("ALTER TABLE collection_members ADD COLUMN role TEXT NOT NULL DEFAULT 'editor'"); } catch (err) { console.warn('[migrations] Non-fatal migration step failed:', err); }
     },
+    // Migration 153: per-trip invite links (#1143). One rotating token per trip;
+    // a logged-in existing user who opens the link joins the trip as a member.
+    // Deleting the trip drops the token (CASCADE); the creator is nulled if their
+    // account is removed so the link keeps working.
+    () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS trip_invite_tokens (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          trip_id INTEGER NOT NULL UNIQUE REFERENCES trips(id) ON DELETE CASCADE,
+          token TEXT UNIQUE NOT NULL,
+          created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          expires_at TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_trip_invite_tokens_token ON trip_invite_tokens(token);
+      `);
+    },
+    // Migration 154: optional trip binding on an admin invite link (#1402). A user
+    // who REGISTERS via the link is auto-added to the trip. Nullable for backward
+    // compatibility; ON DELETE SET NULL so removing the trip just unbinds the invite.
+    () => {
+      try { db.exec('ALTER TABLE invite_tokens ADD COLUMN trip_id INTEGER REFERENCES trips(id) ON DELETE SET NULL'); } catch (err) { console.warn('[migrations] Non-fatal migration step failed:', err); }
+    },
   ];
 
   if (currentVersion < migrations.length) {

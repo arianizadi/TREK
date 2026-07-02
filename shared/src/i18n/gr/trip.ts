@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το μέρος;',
   'trip.confirm.deletePlaces': 'Διαγραφή {count} μερών;',
   'trip.toast.placesDeleted': '{count} μέρη διαγράφηκαν',
+  'trip.invite.linkTitle': 'Σύνδεσμος πρόσκλησης ταξιδιού',
+  'trip.invite.linkHint': 'Όποιος έχει λογαριασμό TREK και ανοίξει αυτόν τον σύνδεσμο, εντάσσεται στο ταξίδι ως μέλος. Δημιουργήστε ξανά τον σύνδεσμο για να ακυρώσετε τον παλιό.',
+  'trip.invite.create': 'Δημιουργία συνδέσμου πρόσκλησης',
+  'trip.invite.regenerate': 'Δημιουργία ξανά',
+  'trip.invite.disable': 'Απενεργοποίηση',
+  'trip.invite.joinHeading': 'Συμμετοχή σε αυτό το ταξίδι',
+  'trip.invite.joinPrompt': 'Λάβατε πρόσκληση για συμμετοχή στο «{title}».',
+  'trip.invite.joinCta': 'Συμμετοχή στο ταξίδι',
+  'trip.invite.joining': 'Γίνεται συμμετοχή…',
+  'trip.invite.invalidTitle': 'Η πρόσκληση δεν είναι διαθέσιμη',
+  'trip.invite.invalid': 'Αυτός ο σύνδεσμος πρόσκλησης δεν είναι έγκυρος ή έχει λήξει.',
+  'trip.invite.backToDashboard': 'Επιστροφή στα ταξίδια μου',
 };
 export default trip;

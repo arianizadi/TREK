@@ -518,7 +518,8 @@ export const adminApi = {
   updateTemplateItem: (templateId: number, itemId: number, data: { name: string }) => apiClient.put(`/admin/packing-templates/${templateId}/items/${itemId}`, data).then(r => r.data),
   deleteTemplateItem: (templateId: number, itemId: number) => apiClient.delete(`/admin/packing-templates/${templateId}/items/${itemId}`).then(r => r.data),
   listInvites: () => apiClient.get('/admin/invites').then(r => r.data),
-  createInvite: (data: { max_uses: number; expires_in_days?: number }) => apiClient.post('/admin/invites', data).then(r => r.data),
+  listInviteTrips: () => apiClient.get('/admin/invites/trips').then(r => r.data),
+  createInvite: (data: { max_uses: number; expires_in_days?: number; trip_id?: number | null }) => apiClient.post('/admin/invites', data).then(r => r.data),
   deleteInvite: (id: number) => apiClient.delete(`/admin/invites/${id}`).then(r => r.data),
   auditLog: (params?: { limit?: number; offset?: number }) =>
       apiClient.get('/admin/audit-log', { params }).then(r => r.data),
@@ -810,6 +811,16 @@ export const shareApi = {
   createLink: (tripId: number | string, perms?: Record<string, boolean>) => apiClient.post(`/trips/${tripId}/share-link`, perms || {}).then(r => r.data),
   deleteLink: (tripId: number | string) => apiClient.delete(`/trips/${tripId}/share-link`).then(r => r.data),
   getSharedTrip: (token: string) => apiClient.get(`/shared/${token}`).then(r => r.data),
+}
+
+// Trip invite links (#1143) — join a trip as an existing, logged-in user.
+export const tripInviteApi = {
+  getLink: (tripId: number | string) => apiClient.get(`/trips/${tripId}/invite-link`).then(r => r.data),
+  createLink: (tripId: number | string, expires_in_days?: number | null) =>
+    apiClient.post(`/trips/${tripId}/invite-link`, { expires_in_days: expires_in_days ?? null }).then(r => r.data),
+  deleteLink: (tripId: number | string) => apiClient.delete(`/trips/${tripId}/invite-link`).then(r => r.data),
+  preview: (token: string) => apiClient.get(`/trip-invites/${token}`).then(r => r.data),
+  accept: (token: string) => apiClient.post(`/trip-invites/${token}/accept`).then(r => r.data),
 }
 
 export const notificationsApi = {

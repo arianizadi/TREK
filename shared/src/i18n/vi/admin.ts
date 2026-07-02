@@ -355,5 +355,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Cấu hình',
   'admin.group.integration': 'Tích hợp',
   'admin.group.maintenance': 'Bảo trì',
+  'admin.invite.tripLabel': 'Thêm vào chuyến đi (tùy chọn)',
+  'admin.invite.tripNone': 'Không có chuyến đi',
+  'admin.invite.tripHint': 'Người dùng mới sẽ tự động được thêm vào chuyến đi này khi họ đăng ký qua liên kết.',
+  'admin.invite.boundTo': 'thêm vào {trip}',
 };
 export default admin;

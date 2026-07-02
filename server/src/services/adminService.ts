@@ -432,14 +432,20 @@ export async function checkAndNotifyVersion(): Promise<void> {
 
 export function listInvites() {
   return db.prepare(`
-    SELECT i.*, u.username as created_by_name
+    SELECT i.*, u.username as created_by_name, t.title as trip_title
     FROM invite_tokens i
     JOIN users u ON i.created_by = u.id
+    LEFT JOIN trips t ON i.trip_id = t.id
     ORDER BY i.created_at DESC
   `).all();
 }
 
-export function createInvite(createdBy: number, data: { max_uses?: string | number; expires_in_days?: string | number }) {
+/** Trips an admin can bind an invite to — id + title only, for the picker (#1402). */
+export function listTripsForInvite() {
+  return db.prepare('SELECT id, title FROM trips ORDER BY title COLLATE NOCASE ASC').all();
+}
+
+export function createInvite(createdBy: number, data: { max_uses?: string | number; expires_in_days?: string | number; trip_id?: string | number | null }) {
   const rawUses = parseInt(String(data.max_uses));
   const uses = rawUses === 0 ? 0 : Math.min(Math.max(rawUses || 1, 1), 5);
   const token = crypto.randomBytes(16).toString('hex');
@@ -447,19 +453,30 @@ export function createInvite(createdBy: number, data: { max_uses?: string | numb
     ? new Date(Date.now() + parseInt(String(data.expires_in_days)) * 86400000).toISOString()
     : null;
 
+  // Optional trip binding: only persist a trip that actually exists, so a stale
+  // or forged id can never bind (and never auto-adds anyone on registration).
+  let tripId: number | null = null;
+  if (data.trip_id != null && String(data.trip_id).trim() !== '') {
+    const parsed = parseInt(String(data.trip_id));
+    if (Number.isInteger(parsed) && db.prepare('SELECT id FROM trips WHERE id = ?').get(parsed)) {
+      tripId = parsed;
+    }
+  }
+
   const ins = db.prepare(
-    'INSERT INTO invite_tokens (token, max_uses, expires_at, created_by) VALUES (?, ?, ?, ?)'
-  ).run(token, uses, expiresAt, createdBy);
+    'INSERT INTO invite_tokens (token, max_uses, expires_at, created_by, trip_id) VALUES (?, ?, ?, ?, ?)'
+  ).run(token, uses, expiresAt, createdBy, tripId);
 
   const inviteId = Number(ins.lastInsertRowid);
   const invite = db.prepare(`
-    SELECT i.*, u.username as created_by_name
+    SELECT i.*, u.username as created_by_name, t.title as trip_title
     FROM invite_tokens i
     JOIN users u ON i.created_by = u.id
+    LEFT JOIN trips t ON i.trip_id = t.id
     WHERE i.id = ?
   `).get(inviteId);
 
-  return { invite, inviteId, uses, expiresInDays: data.expires_in_days ?? null };
+  return { invite, inviteId, uses, expiresInDays: data.expires_in_days ?? null, tripId };
 }
 
 export function deleteInvite(id: string) {

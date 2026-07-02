@@ -56,6 +56,7 @@ Click **Create Invite** (invite links section, below the user table). Configure:
 
 - **Max uses** — how many times the link can be used before it expires: `1×`, `2×`, `3×`, `4×`, `5×`, or `∞` (unlimited). Defaults to `1×`.
 - **Expiry** — how long the link remains valid: `1d`, `3d`, `7d`, `14d`, or `∞` (no expiry). Defaults to `7d`.
+- **Add to trip** (optional) — bind the invite to a trip. Anyone who registers through the link is automatically added to that trip as a member. Defaults to **No trip** (a plain registration invite). The selector only appears when at least one trip exists.
 
 After creation the link is copied to your clipboard automatically. Share it with the intended recipient. The URL format is:
 
@@ -71,6 +72,7 @@ Existing invites are listed below the creation button. Each row shows:
 - A status badge — `active`, `used up`, or `expired`
 - **Usage** — `used / max` (or `used / ∞` for unlimited)
 - **Expiry** date, if set
+- **Adds to** — the bound trip, if the invite is trip-bound
 - **Created by** — the admin who generated the link
 - A **copy link** button (only shown for active invites)
 - A **delete** (revoke) button

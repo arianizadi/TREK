@@ -350,5 +350,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': 'إضافة إلى رحلة (اختياري)',
+  'admin.invite.tripNone': 'بدون رحلة',
+  'admin.invite.tripHint': 'تتم إضافة المستخدم الجديد تلقائيًا إلى هذه الرحلة عند تسجيله عبر الرابط.',
+  'admin.invite.boundTo': 'يُضاف إلى {trip}',
 };
 export default admin;

@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Bạn có chắc chắn muốn xóa địa điểm này không?',
   'trip.confirm.deletePlaces': 'Xóa {count} địa điểm?',
   'trip.toast.placesDeleted': '{count} địa điểm đã bị xóa',
+  'trip.invite.linkTitle': 'Liên kết mời tham gia chuyến đi',
+  'trip.invite.linkHint': 'Bất kỳ ai có tài khoản TREK mở liên kết này đều sẽ tham gia chuyến đi với tư cách thành viên. Tạo lại để vô hiệu hóa liên kết cũ.',
+  'trip.invite.create': 'Tạo liên kết mời',
+  'trip.invite.regenerate': 'Tạo lại',
+  'trip.invite.disable': 'Vô hiệu hóa',
+  'trip.invite.joinHeading': 'Tham gia chuyến đi này',
+  'trip.invite.joinPrompt': 'Bạn được mời tham gia "{title}".',
+  'trip.invite.joinCta': 'Tham gia chuyến đi',
+  'trip.invite.joining': 'Đang tham gia…',
+  'trip.invite.invalidTitle': 'Lời mời không khả dụng',
+  'trip.invite.invalid': 'Liên kết mời này không hợp lệ hoặc đã hết hạn.',
+  'trip.invite.backToDashboard': 'Quay lại bảng điều khiển',
 };
 export default trip;

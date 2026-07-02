@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Modal from '../shared/Modal'
-import { tripsApi, authApi, shareApi } from '../../api/client'
+import { tripsApi, authApi, shareApi, tripInviteApi } from '../../api/client'
 import { useToast } from '../shared/Toast'
 import { useAuthStore } from '../../store/authStore'
 import { useCanDo } from '../../store/permissionsStore'
@@ -157,6 +157,106 @@ function ShareLinkSection({ tripId, t }: { tripId: number; t: (key: string, para
           cursor: 'pointer', fontFamily: 'inherit',
         }}>
           <Link2 size={12} /> {t('share.createLink')}
+        </button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Trip invite link (#1143). One rotating token per trip that an existing,
+ * logged-in user opens to join the trip as a member. Mirrors ShareLinkSection
+ * but the link points at /join/:token (login-required, no registration).
+ */
+function TripInviteLinkSection({ tripId, t }: { tripId: number; t: (key: string, params?: Record<string, string | number>) => string }) {
+  const [token, setToken] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const toast = useToast()
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current) }, [])
+
+  useEffect(() => {
+    tripInviteApi.getLink(tripId)
+      .then((d: { token: string | null }) => setToken(d.token))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [tripId])
+
+  const inviteUrl = token ? `${window.location.origin}/join/${token}` : null
+
+  const create = async () => {
+    setBusy(true)
+    try { const d = await tripInviteApi.createLink(tripId); setToken(d.token) }
+    catch { toast.error(t('share.createError')) }
+    finally { setBusy(false) }
+  }
+
+  const remove = async () => {
+    setBusy(true)
+    try { await tripInviteApi.deleteLink(tripId); setToken(null) }
+    catch { toast.error(t('common.error')) }
+    finally { setBusy(false) }
+  }
+
+  const copy = () => {
+    if (!inviteUrl) return
+    navigator.clipboard.writeText(inviteUrl)
+    setCopied(true)
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    copyTimerRef.current = setTimeout(() => setCopied(false), 2000)
+  }
+
+  if (loading) return null
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--border-faint)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+        <UserPlus size={14} className="text-content-muted" />
+        <span className="text-content" style={{ fontSize: 'calc(13px * var(--fs-scale-body, 1))', fontWeight: 600 }}>{t('trip.invite.linkTitle')}</span>
+      </div>
+      <p className="text-content-faint" style={{ fontSize: 'calc(11px * var(--fs-scale-caption, 1))', marginBottom: 12, lineHeight: 1.5 }}>{t('trip.invite.linkHint')}</p>
+
+      {inviteUrl ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="bg-surface-tertiary border border-edge-faint" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', borderRadius: 8 }}>
+            <input type="text" value={inviteUrl} readOnly className="text-content" style={{ flex: 1, border: 'none', background: 'none', fontSize: 'calc(11px * var(--fs-scale-caption, 1))', outline: 'none', fontFamily: 'monospace' }} />
+            <button onClick={copy} style={{
+              display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 6,
+              border: 'none', background: copied ? '#16a34a' : 'var(--accent)', color: copied ? 'white' : 'var(--accent-text)',
+              fontSize: 'calc(10px * var(--fs-scale-caption, 1))', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.2s',
+            }}>
+              {copied ? <><Check size={10} /> {t('common.copied')}</> : <><Copy size={10} /> {t('common.copy')}</>}
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={create} disabled={busy} className="border border-edge text-content-muted" style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              padding: '6px 0', borderRadius: 8, background: 'none', fontSize: 'calc(11px * var(--fs-scale-caption, 1))', fontWeight: 500,
+              cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit',
+            }}>
+              <Link2 size={11} /> {t('trip.invite.regenerate')}
+            </button>
+            <button onClick={remove} disabled={busy} style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              padding: '6px 0', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)',
+              background: 'rgba(239,68,68,0.06)', color: '#ef4444', fontSize: 'calc(11px * var(--fs-scale-caption, 1))', fontWeight: 500,
+              cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit',
+            }}>
+              <Trash2 size={11} /> {t('trip.invite.disable')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={create} disabled={busy} className="border border-dashed border-edge text-content-muted" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          width: '100%', padding: '8px 0', borderRadius: 8,
+          background: 'none', fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500,
+          cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit',
+        }}>
+          <UserPlus size={12} /> {t('trip.invite.create')}
         </button>
       )}
     </div>
@@ -538,6 +638,7 @@ export default function TripMembersModal({ isOpen, onClose, tripId, tripTitle }:
         {/* Right column: Share Link */}
         {canManageShare && <div className="border-l border-edge-faint" style={{ paddingLeft: 24 }}>
         <ShareLinkSection tripId={tripId} t={t} />
+        <TripInviteLinkSection tripId={tripId} t={t} />
         </div>}
 
         <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>

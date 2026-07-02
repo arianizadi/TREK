@@ -370,5 +370,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': 'Προσθήκη σε ταξίδι (προαιρετικό)',
+  'admin.invite.tripNone': 'Χωρίς ταξίδι',
+  'admin.invite.tripHint': 'Ο νέος χρήστης προστίθεται αυτόματα σε αυτό το ταξίδι όταν εγγραφεί μέσω του συνδέσμου.',
+  'admin.invite.boundTo': 'προσθήκη στο {trip}',
 };
 export default admin;

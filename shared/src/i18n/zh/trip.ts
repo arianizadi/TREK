@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': '确定要删除这个地点吗？',
   'trip.confirm.deletePlaces': '删除 {count} 个地点？',
   'trip.toast.placesDeleted': '已删除 {count} 个地点',
+  'trip.invite.linkTitle': '行程邀请链接',
+  'trip.invite.linkHint': '任何拥有 TREK 账户的人打开此链接都会以成员身份加入行程。重新生成可使旧链接失效。',
+  'trip.invite.create': '创建邀请链接',
+  'trip.invite.regenerate': '重新生成',
+  'trip.invite.disable': '停用',
+  'trip.invite.joinHeading': '加入此行程',
+  'trip.invite.joinPrompt': '您已被邀请加入"{title}"。',
+  'trip.invite.joinCta': '加入行程',
+  'trip.invite.joining': '加入中…',
+  'trip.invite.invalidTitle': '邀请不可用',
+  'trip.invite.invalid': '此邀请链接无效或已过期。',
+  'trip.invite.backToDashboard': '返回仪表盘',
 };
 export default trip;

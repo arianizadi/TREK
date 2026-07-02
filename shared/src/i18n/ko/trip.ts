@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': '이 장소를 삭제할까요?',
   'trip.confirm.deletePlaces': '{count}개 장소를 삭제할까요?',
   'trip.toast.placesDeleted': '{count}개 장소가 삭제되었습니다',
+  'trip.invite.linkTitle': '여행 초대 링크',
+  'trip.invite.linkHint': 'TREK 계정이 있는 사람이 이 링크를 열면 여행에 멤버로 참여합니다. 기존 링크를 무효화하려면 다시 생성하세요.',
+  'trip.invite.create': '초대 링크 만들기',
+  'trip.invite.regenerate': '다시 생성',
+  'trip.invite.disable': '비활성화',
+  'trip.invite.joinHeading': '이 여행 참여하기',
+  'trip.invite.joinPrompt': '"{title}" 여행에 초대되었습니다.',
+  'trip.invite.joinCta': '여행 참여',
+  'trip.invite.joining': '참여 중…',
+  'trip.invite.invalidTitle': '초대를 사용할 수 없음',
+  'trip.invite.invalid': '이 초대 링크는 유효하지 않거나 만료되었습니다.',
+  'trip.invite.backToDashboard': '대시보드로 돌아가기',
 };
 export default trip;

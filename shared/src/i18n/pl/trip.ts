@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlaces': 'Usunąć {count} miejsc?',
   'trip.toast.placesDeleted': '{count} miejsc usunięto',
   'trip.loadingPhotos': 'Ładowanie zdjęć...',
+  'trip.invite.linkTitle': 'Link zaproszenia do podróży',
+  'trip.invite.linkHint': 'Każda osoba z kontem TREK, która otworzy ten link, dołączy do podróży jako członek. Wygeneruj ponownie, aby unieważnić stary link.',
+  'trip.invite.create': 'Utwórz link zaproszenia',
+  'trip.invite.regenerate': 'Wygeneruj ponownie',
+  'trip.invite.disable': 'Wyłącz',
+  'trip.invite.joinHeading': 'Dołącz do tej podróży',
+  'trip.invite.joinPrompt': 'Zaproszono Cię do dołączenia do „{title}”.',
+  'trip.invite.joinCta': 'Dołącz do podróży',
+  'trip.invite.joining': 'Dołączanie…',
+  'trip.invite.invalidTitle': 'Zaproszenie niedostępne',
+  'trip.invite.invalid': 'Ten link zaproszenia jest nieprawidłowy lub wygasł.',
+  'trip.invite.backToDashboard': 'Powrót do panelu',
 };
 export default trip;

@@ -355,5 +355,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': 'Přidat k cestě (volitelné)',
+  'admin.invite.tripNone': 'Žádná cesta',
+  'admin.invite.tripHint': 'Nový uživatel bude po registraci přes odkaz automaticky přidán k této cestě.',
+  'admin.invite.boundTo': 'přidá k {trip}',
 };
 export default admin;

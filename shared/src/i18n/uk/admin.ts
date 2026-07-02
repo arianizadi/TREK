@@ -360,5 +360,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': 'Додати до подорожі (необов’язково)',
+  'admin.invite.tripNone': 'Без подорожі',
+  'admin.invite.tripHint': 'Новий користувач автоматично додається до цієї подорожі, коли реєструється за посиланням.',
+  'admin.invite.boundTo': 'додає до {trip}',
 };
 export default admin;

@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Вы уверены, что хотите удалить это место?',
   'trip.confirm.deletePlaces': 'Удалить {count} мест?',
   'trip.toast.placesDeleted': '{count} мест удалено',
+  'trip.invite.linkTitle': 'Ссылка-приглашение в поездку',
+  'trip.invite.linkHint': 'Любой пользователь с аккаунтом TREK, открыв эту ссылку, присоединится к поездке как участник. Создайте ссылку заново, чтобы старая перестала работать.',
+  'trip.invite.create': 'Создать ссылку-приглашение',
+  'trip.invite.regenerate': 'Создать заново',
+  'trip.invite.disable': 'Отключить',
+  'trip.invite.joinHeading': 'Присоединиться к поездке',
+  'trip.invite.joinPrompt': 'Вас пригласили присоединиться к поездке «{title}».',
+  'trip.invite.joinCta': 'Присоединиться',
+  'trip.invite.joining': 'Присоединение…',
+  'trip.invite.invalidTitle': 'Приглашение недоступно',
+  'trip.invite.invalid': 'Эта ссылка-приглашение недействительна или срок её действия истёк.',
+  'trip.invite.backToDashboard': 'Вернуться на панель управления',
 };
 export default trip;

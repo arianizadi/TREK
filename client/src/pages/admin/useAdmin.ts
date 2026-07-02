@@ -74,8 +74,9 @@ export function useAdmin() {
 
   // Invite links
   const [invites, setInvites] = useState<any[]>([])
+  const [inviteTrips, setInviteTrips] = useState<{ id: number; title: string }[]>([])
   const [showCreateInvite, setShowCreateInvite] = useState<boolean>(false)
-  const [inviteForm, setInviteForm] = useState<{ max_uses: number; expires_in_days: number | '' }>({ max_uses: 1, expires_in_days: 7 })
+  const [inviteForm, setInviteForm] = useState<{ max_uses: number; expires_in_days: number | ''; trip_id: number | '' }>({ max_uses: 1, expires_in_days: 7, trip_id: '' })
 
   // File types
   const [allowedFileTypes, setAllowedFileTypes] = useState<string>('jpg,jpeg,png,gif,webp,heic,pdf,doc,docx,xls,xlsx,txt,csv')
@@ -125,14 +126,16 @@ export function useAdmin() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [usersData, statsData, invitesData] = await Promise.all([
+      const [usersData, statsData, invitesData, inviteTripsData] = await Promise.all([
         adminApi.users(),
         adminApi.stats(),
         adminApi.listInvites().catch(() => ({ invites: [] })),
+        adminApi.listInviteTrips().catch(() => ({ trips: [] })),
       ])
       setUsers(usersData.users)
       setStats(statsData)
       setInvites(invitesData.invites || [])
+      setInviteTrips(inviteTripsData.trips || [])
     } catch (err: unknown) {
       toast.error(t('admin.toast.loadError'))
     } finally {
@@ -279,10 +282,11 @@ export function useAdmin() {
       const data = await adminApi.createInvite({
         max_uses: inviteForm.max_uses,
         expires_in_days: inviteForm.expires_in_days || undefined,
+        trip_id: inviteForm.trip_id === '' ? null : inviteForm.trip_id,
       })
       setInvites(prev => [data.invite, ...prev])
       setShowCreateInvite(false)
-      setInviteForm({ max_uses: 1, expires_in_days: 7 })
+      setInviteForm({ max_uses: 1, expires_in_days: 7, trip_id: '' })
       // Copy link to clipboard
       const link = `${window.location.origin}/register?invite=${data.invite.token}`
       navigator.clipboard.writeText(link).then(() => toast.success(t('admin.invite.copied')))
@@ -371,7 +375,7 @@ export function useAdmin() {
     requireMfa, setRequireMfa,
     passkeyLogin, setPasskeyLogin, passkeyConfigured,
     webauthnRpId, setWebauthnRpId, webauthnOrigins, setWebauthnOrigins, savingWebauthn, handleSaveWebauthn,
-    invites, setInvites, showCreateInvite, setShowCreateInvite, inviteForm, setInviteForm,
+    invites, setInvites, inviteTrips, showCreateInvite, setShowCreateInvite, inviteForm, setInviteForm,
     allowedFileTypes, setAllowedFileTypes, savingFileTypes, setSavingFileTypes,
     smtpValues, setSmtpValues, smtpLoaded,
     mapsKey, setMapsKey, weatherKey, setWeatherKey,

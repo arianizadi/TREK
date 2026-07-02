@@ -135,11 +135,15 @@ export class AdminController {
   @Get('invites')
   listInvites() { return { invites: this.admin.listInvites() }; }
 
+  // Trips an admin can optionally bind a registration invite to (#1402).
+  @Get('invites/trips')
+  listInviteTrips() { return { trips: this.admin.listTripsForInvite() }; }
+
   @Post('invites')
   @HttpCode(201)
   createInvite(@CurrentUser() user: User, @Body() body: unknown, @Req() req: Request) {
     const result = this.admin.createInvite(user.id, body);
-    writeAudit({ userId: user.id, action: 'admin.invite_create', resource: String(result.inviteId), ip: getClientIp(req), details: { max_uses: result.uses, expires_in_days: result.expiresInDays } });
+    writeAudit({ userId: user.id, action: 'admin.invite_create', resource: String(result.inviteId), ip: getClientIp(req), details: { max_uses: result.uses, expires_in_days: result.expiresInDays, trip_id: result.tripId } });
     return { invite: result.invite };
   }
 

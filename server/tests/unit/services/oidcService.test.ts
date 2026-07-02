@@ -42,7 +42,7 @@ vi.mock('../../../src/config', () => ({
 import { createTables } from '../../../src/db/schema';
 import { runMigrations } from '../../../src/db/migrations';
 import { resetTestDb } from '../../helpers/test-db';
-import { createUser } from '../../helpers/factories';
+import { createUser, createTrip } from '../../helpers/factories';
 import {
   createState,
   consumeState,
@@ -520,6 +520,24 @@ describe('findOrCreateUser', () => {
     );
     const row = testDb.prepare('SELECT avatar FROM users WHERE id = ?').get(user.id) as any;
     expect(row.avatar).toBe('https://idp.example.com/u/new.png');
+  });
+
+  it('OIDC-SVC-045: a trip-bound invite auto-adds the new SSO user as a trip member (#1402)', () => {
+    const { user: admin } = createUser(testDb, { role: 'admin' });
+    const trip = createTrip(testDb, admin.id);
+    testDb.prepare(
+      'INSERT INTO invite_tokens (token, max_uses, used_count, expires_at, created_by, trip_id) VALUES (?, 5, 0, NULL, ?, ?)'
+    ).run('inv-trip-join', admin.id, trip.id);
+
+    const result = findOrCreateUser(
+      { sub: 'sub-trip-join', email: 'joiner@example.com', name: 'Joiner' },
+      MOCK_CONFIG,
+      'inv-trip-join'
+    );
+    expect('user' in result).toBe(true);
+    const uid = (result as { user: any }).user.id;
+    const member = testDb.prepare('SELECT * FROM trip_members WHERE trip_id = ? AND user_id = ?').get(trip.id, uid);
+    expect(member).toBeTruthy();
   });
 });
 

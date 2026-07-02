@@ -22,6 +22,7 @@ import { verifyJwtAndLoadUser } from '../middleware/auth';
 import { User } from '../types';
 import { DEMO_EMAIL_PRIMARY, isDemoEmail } from './demo';
 import { avatarUrl } from './avatarUrl';
+import { joinTripAsMember } from './tripMembership';
 import { isPasskeyConfigured } from './webauthnConfig';
 
 export { avatarUrl };
@@ -431,6 +432,11 @@ export function registerUser(body: {
       ).get(validInvite.id);
       if (!updated) {
         console.warn(`[Auth] Invite token ${validInvite.token.slice(0, 8)}... exceeded max_uses due to race condition`);
+      }
+      // Trip-bound invite (#1402): auto-add the freshly registered user to the
+      // trip. Idempotent + owner-safe; no-ops if the bound trip was since deleted.
+      if (validInvite.trip_id) {
+        joinTripAsMember(Number(validInvite.trip_id), Number(result.lastInsertRowid), validInvite.created_by ?? null);
       }
     }
 

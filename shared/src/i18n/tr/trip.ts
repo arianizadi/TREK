@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Bu yeri silmek istediğinizden emin misiniz?',
   'trip.confirm.deletePlaces': '{count} Yer silinsin mi?',
   'trip.toast.placesDeleted': '{count} yer silindi',
+  'trip.invite.linkTitle': 'Seyahat davet bağlantısı',
+  'trip.invite.linkHint': 'TREK hesabı olan ve bu bağlantıyı açan herkes seyahate üye olarak katılır. Eski bağlantıyı geçersiz kılmak için yeniden oluşturun.',
+  'trip.invite.create': 'Davet bağlantısı oluştur',
+  'trip.invite.regenerate': 'Yeniden oluştur',
+  'trip.invite.disable': 'Devre dışı bırak',
+  'trip.invite.joinHeading': 'Bu seyahate katıl',
+  'trip.invite.joinPrompt': '"{title}" seyahatine katılmaya davet edildiniz.',
+  'trip.invite.joinCta': 'Seyahate katıl',
+  'trip.invite.joining': 'Katılınıyor…',
+  'trip.invite.invalidTitle': 'Davet kullanılamıyor',
+  'trip.invite.invalid': 'Bu davet bağlantısı geçersiz veya süresi dolmuş.',
+  'trip.invite.backToDashboard': 'Panoya dön',
 };
 export default trip;

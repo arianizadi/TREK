@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Voulez-vous vraiment supprimer ce lieu ?',
   'trip.confirm.deletePlaces': 'Supprimer {count} lieux?',
   'trip.toast.placesDeleted': '{count} lieux supprimés',
+  'trip.invite.linkTitle': 'Lien d\'invitation au voyage',
+  'trip.invite.linkHint': 'Toute personne disposant d\'un compte TREK qui ouvre ce lien rejoint le voyage en tant que membre. Régénérez le lien pour invalider l\'ancien.',
+  'trip.invite.create': 'Créer un lien d\'invitation',
+  'trip.invite.regenerate': 'Régénérer',
+  'trip.invite.disable': 'Désactiver',
+  'trip.invite.joinHeading': 'Rejoindre ce voyage',
+  'trip.invite.joinPrompt': 'Vous avez été invité à rejoindre « {title} ».',
+  'trip.invite.joinCta': 'Rejoindre le voyage',
+  'trip.invite.joining': 'Ajout en cours…',
+  'trip.invite.invalidTitle': 'Invitation indisponible',
+  'trip.invite.invalid': 'Ce lien d\'invitation est invalide ou a expiré.',
+  'trip.invite.backToDashboard': 'Retour au tableau de bord',
 };
 export default trip;

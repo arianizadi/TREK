@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlaces': '{count} helyet töröl?',
   'trip.toast.placesDeleted': '{count} hely törölve',
   'trip.loadingPhotos': 'Helyek fotóinak betöltése...',
+  'trip.invite.linkTitle': 'Meghívó link az utazáshoz',
+  'trip.invite.linkHint': 'Bárki, akinek van TREK-fiókja és megnyitja ezt a linket, tagként csatlakozik az utazáshoz. A régi link érvénytelenítéséhez hozz létre újat.',
+  'trip.invite.create': 'Meghívó link létrehozása',
+  'trip.invite.regenerate': 'Újragenerálás',
+  'trip.invite.disable': 'Letiltás',
+  'trip.invite.joinHeading': 'Csatlakozás az utazáshoz',
+  'trip.invite.joinPrompt': 'Meghívtak a(z) „{title}” utazáshoz.',
+  'trip.invite.joinCta': 'Csatlakozás',
+  'trip.invite.joining': 'Csatlakozás…',
+  'trip.invite.invalidTitle': 'A meghívó nem érhető el',
+  'trip.invite.invalid': 'Ez a meghívó link érvénytelen vagy lejárt.',
+  'trip.invite.backToDashboard': 'Vissza az irányítópultra',
 };
 export default trip;

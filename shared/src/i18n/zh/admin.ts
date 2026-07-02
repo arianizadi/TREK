@@ -340,5 +340,9 @@ const admin: TranslationStrings = {
   'admin.group.config': 'Configuration',
   'admin.group.integration': 'Integrations',
   'admin.group.maintenance': 'Maintenance',
+  'admin.invite.tripLabel': '添加到行程（可选）',
+  'admin.invite.tripNone': '不选择行程',
+  'admin.invite.tripHint': '新用户通过链接注册时会自动加入此行程。',
+  'admin.invite.boundTo': '加入 {trip}',
 };
 export default admin;

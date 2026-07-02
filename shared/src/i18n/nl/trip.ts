@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Weet je zeker dat je deze plaats wilt verwijderen?',
   'trip.confirm.deletePlaces': '{count} plaatsen verwijderen?',
   'trip.toast.placesDeleted': '{count} plaatsen verwijderd',
+  'trip.invite.linkTitle': 'Uitnodigingslink voor reis',
+  'trip.invite.linkHint': 'Iedereen met een TREK-account die deze link opent, neemt als lid deel aan de reis. Genereer opnieuw om de oude link ongeldig te maken.',
+  'trip.invite.create': 'Uitnodigingslink maken',
+  'trip.invite.regenerate': 'Opnieuw genereren',
+  'trip.invite.disable': 'Uitschakelen',
+  'trip.invite.joinHeading': 'Deelnemen aan deze reis',
+  'trip.invite.joinPrompt': 'Je bent uitgenodigd om deel te nemen aan "{title}".',
+  'trip.invite.joinCta': 'Deelnemen aan reis',
+  'trip.invite.joining': 'Bezig met deelnemen…',
+  'trip.invite.invalidTitle': 'Uitnodiging niet beschikbaar',
+  'trip.invite.invalid': 'Deze uitnodigingslink is ongeldig of verlopen.',
+  'trip.invite.backToDashboard': 'Terug naar dashboard',
 };
 export default trip;

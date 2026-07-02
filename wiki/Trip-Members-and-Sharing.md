@@ -65,6 +65,26 @@ Changes to toggles take effect immediately for an existing link.
 
 Click **Delete link** (red button below the URL) to revoke access. The token is invalidated and existing viewers are redirected.
 
+## Trip Invite Link
+
+Below the public share link, users with the `share_manage` permission can also create a **trip invite link** — a single rotating link that lets people **join the trip as members**:
+
+```
+<your-instance>/join/<token>
+```
+
+Unlike the read-only share link, this one is **not anonymous**:
+
+- Whoever opens it must have a TREK account and be **signed in**. If they are not, they are sent to the login page and returned to the invite afterwards — there is **no registration** from this link.
+- Anyone who opens it while signed in is added to the trip as a **member** (the same access a manually-added member gets). The owner and existing members are simply taken straight to the trip.
+- To invite people who do **not** yet have an account, use an admin invite link with an optional trip binding instead — see [Invite-Links](Invite-Links).
+
+### Creating and revoking
+
+- Click **Create invite link** to generate the link, then copy it with the copy button.
+- Click **Regenerate** to rotate the token — the previous link stops working immediately.
+- Click **Disable** to remove the link entirely.
+
 > **Admin:** To invite users who do not yet have an account, create invite links in the admin panel. See [Invite-Links](Invite-Links).
 
 ## Related Pages

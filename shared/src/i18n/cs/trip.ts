@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'Opravdu chcete toto místo smazat?',
   'trip.confirm.deletePlaces': 'Smazat {count} míst?',
   'trip.toast.placesDeleted': '{count} míst smazáno',
+  'trip.invite.linkTitle': 'Odkaz pro pozvání na cestu',
+  'trip.invite.linkHint': 'Kdokoli s účtem TREK, kdo otevře tento odkaz, se připojí k cestě jako člen. Vygenerováním nového odkazu zneplatníte ten starý.',
+  'trip.invite.create': 'Vytvořit odkaz pro pozvání',
+  'trip.invite.regenerate': 'Vygenerovat znovu',
+  'trip.invite.disable': 'Deaktivovat',
+  'trip.invite.joinHeading': 'Připojit se k této cestě',
+  'trip.invite.joinPrompt': 'Byli jste pozváni k připojení k cestě „{title}".',
+  'trip.invite.joinCta': 'Připojit se k cestě',
+  'trip.invite.joining': 'Připojování…',
+  'trip.invite.invalidTitle': 'Pozvánka není dostupná',
+  'trip.invite.invalid': 'Tento odkaz pro pozvání je neplatný nebo jeho platnost vypršela.',
+  'trip.invite.backToDashboard': 'Zpět na přehled',
 };
 export default trip;

@@ -349,8 +349,9 @@ describe('TripMembersModal', () => {
     const aliceOption = await screen.findByRole('button', { name: 'alice' });
     await user.click(aliceOption);
 
-    // Click Invite button
-    const inviteBtn = screen.getByRole('button', { name: /Invite/i });
+    // Click the member "Invite" button (exact — the Share area also has a
+    // "Create invite link" button that a loose /Invite/i would match too).
+    const inviteBtn = screen.getByRole('button', { name: 'Invite' });
     await user.click(inviteBtn);
 
     await waitFor(() => {

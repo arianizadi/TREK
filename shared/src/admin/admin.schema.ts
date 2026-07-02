@@ -25,6 +25,9 @@ export const adminInviteCreateRequestSchema = z.object({
   max_uses: z.number().optional(),
   expires_in_days: z.number().optional(),
   role: z.enum(['user', 'admin']).optional(),
+  // Optional trip binding (#1402): a user who registers via the link is
+  // auto-added to this trip. Nullable/absent = a plain registration invite.
+  trip_id: z.number().int().positive().nullable().optional(),
 });
 export type AdminInviteCreateRequest = z.infer<typeof adminInviteCreateRequestSchema>;
 

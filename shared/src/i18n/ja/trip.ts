@@ -27,5 +27,17 @@ const trip: TranslationStrings = {
   'trip.confirm.deletePlace': 'この場所を削除してもよろしいですか？',
   'trip.confirm.deletePlaces': '{count}件の場所を削除してもよろしいですか?',
   'trip.toast.placesDeleted': '{count}件の場所を削除しました',
+  'trip.invite.linkTitle': '旅行の招待リンク',
+  'trip.invite.linkHint': 'TREKアカウントを持っている人がこのリンクを開くと、メンバーとして旅行に参加します。古いリンクを無効にするには再生成してください。',
+  'trip.invite.create': '招待リンクを作成',
+  'trip.invite.regenerate': '再生成',
+  'trip.invite.disable': '無効にする',
+  'trip.invite.joinHeading': 'この旅行に参加',
+  'trip.invite.joinPrompt': '「{title}」への参加に招待されました。',
+  'trip.invite.joinCta': '旅行に参加',
+  'trip.invite.joining': '参加中…',
+  'trip.invite.invalidTitle': '招待は利用できません',
+  'trip.invite.invalid': 'この招待リンクは無効か、有効期限が切れています。',
+  'trip.invite.backToDashboard': 'ダッシュボードに戻る',
 };
 export default trip;

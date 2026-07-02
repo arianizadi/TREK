@@ -34,6 +34,7 @@ export class AdminService {
 
   // Invites
   listInvites() { return svc.listInvites(); }
+  listTripsForInvite() { return svc.listTripsForInvite(); }
   createInvite(userId: number, body: unknown) { return svc.createInvite(userId, body as Parameters<typeof svc.createInvite>[1]); }
   deleteInvite(id: string) { return svc.deleteInvite(id); }
 
