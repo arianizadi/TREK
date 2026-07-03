@@ -11,7 +11,8 @@ import AddonManager from '../components/Admin/AddonManager'
 import PackingTemplateManager from '../components/Admin/PackingTemplateManager'
 import AuditLogPanel from '../components/Admin/AuditLogPanel'
 import AdminMcpTokensPanel from '../components/Admin/AdminMcpTokensPanel'
-import { Users, Map, Briefcase, Shield, FileText, SlidersHorizontal, UserCog, Puzzle, Settings as SettingsIcon, Bell, Database, ScrollText, KeyRound, GitBranch, Bug } from 'lucide-react'
+import AdminPluginsPanel from '../components/Admin/AdminPluginsPanel'
+import { Users, Map, Briefcase, Shield, FileText, SlidersHorizontal, UserCog, Puzzle, Blocks, Settings as SettingsIcon, Bell, Database, ScrollText, KeyRound, GitBranch, Bug } from 'lucide-react'
 import PageSidebar, { type PageSidebarTab } from '../components/Layout/PageSidebar'
 import { useAdmin } from './admin/useAdmin'
 import AdminUpdateBanner from './admin/AdminUpdateBanner'
@@ -45,6 +46,7 @@ export default function AdminPage(): React.ReactElement {
     { id: 'config', label: t('admin.tabs.config'), icon: SlidersHorizontal, group: gConfig },
     { id: 'settings', label: t('admin.tabs.settings'), icon: SettingsIcon, group: gConfig },
     { id: 'addons', label: t('admin.tabs.addons'), icon: Puzzle, group: gConfig },
+    { id: 'plugins', label: t('admin.tabs.plugins'), icon: Blocks, group: gConfig },
     { id: 'notifications', label: t('admin.tabs.notifications'), icon: Bell, group: gIntegration },
     ...(mcpEnabled ? [{ id: 'mcp-tokens', label: t('admin.tabs.mcpTokens'), icon: KeyRound, group: gIntegration }] : []),
     { id: 'github', label: t('admin.tabs.github'), icon: GitBranch, group: gIntegration },
@@ -156,6 +158,8 @@ export default function AdminPage(): React.ReactElement {
           {activeTab === 'audit' && <AuditLogPanel serverTimezone={serverTimezone} />}
 
           {activeTab === 'mcp-tokens' && <AdminMcpTokensPanel />}
+
+          {activeTab === 'plugins' && <AdminPluginsPanel />}
 
           {activeTab === 'github' && <GitHubPanel isPrerelease={updateInfo?.is_prerelease ?? false} />}
 
