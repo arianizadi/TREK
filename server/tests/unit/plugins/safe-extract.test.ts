@@ -43,22 +43,23 @@ function makeTarGz(entries: Array<{ name: string; data?: string; type?: string; 
   parts.push(Buffer.alloc(1024, 0));
   return zlib.gzipSync(Buffer.concat(parts));
 }
-function makeStoredZip(name: string, data: string): Buffer {
+function makeZip(name: string, data: string, method = 0): Buffer {
   const nameB = Buffer.from(name);
-  const dataB = Buffer.from(data);
+  const raw = Buffer.from(data);
+  const comp = method === 8 ? zlib.deflateRawSync(raw) : raw;
   const local = Buffer.alloc(30);
   local.writeUInt32LE(0x04034b50, 0);
-  local.writeUInt16LE(0, 8); // method 0 (stored)
-  local.writeUInt32LE(dataB.length, 18);
-  local.writeUInt32LE(dataB.length, 22);
+  local.writeUInt16LE(method, 8);
+  local.writeUInt32LE(comp.length, 18);
+  local.writeUInt32LE(raw.length, 22);
   local.writeUInt16LE(nameB.length, 26);
-  const localRec = Buffer.concat([local, nameB, dataB]);
+  const localRec = Buffer.concat([local, nameB, comp]);
 
   const central = Buffer.alloc(46);
   central.writeUInt32LE(0x02014b50, 0);
-  central.writeUInt16LE(0, 10);
-  central.writeUInt32LE(dataB.length, 20);
-  central.writeUInt32LE(dataB.length, 24);
+  central.writeUInt16LE(method, 10);
+  central.writeUInt32LE(comp.length, 20);
+  central.writeUInt32LE(raw.length, 24);
   central.writeUInt16LE(nameB.length, 28);
   central.writeUInt32LE(0, 42); // local header offset
   const centralRec = Buffer.concat([central, nameB]);
@@ -101,8 +102,14 @@ describe('extractArchive', () => {
   });
 
   it('extracts a stored zip', () => {
-    extractArchive(makeStoredZip('a.txt', 'hello'), dest);
+    extractArchive(makeZip('a.txt', 'hello'), dest);
     expect(fs.readFileSync(path.join(dest, 'a.txt'), 'utf8')).toBe('hello');
+  });
+
+  it('extracts a deflated zip and rejects an unsupported compression method', () => {
+    extractArchive(makeZip('b.txt', 'world', 8), dest);
+    expect(fs.readFileSync(path.join(dest, 'b.txt'), 'utf8')).toBe('world');
+    expect(() => extractArchive(makeZip('c.txt', 'x', 99), dest)).toThrow(/unsupported zip compression/);
   });
 
   it('refuses a symlink entry', () => {

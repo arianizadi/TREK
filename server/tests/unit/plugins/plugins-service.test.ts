@@ -51,7 +51,7 @@ describe('PluginsService.list', () => {
   it('controller delegates to the service', () => {
     const svc = { list: vi.fn(() => ({ enabled: false, plugins: [] })) } as unknown as PluginsService;
     const runtime = {} as unknown as import('../../../src/nest/plugins/plugin-runtime.service').PluginRuntimeService;
-    const res = new PluginsController(svc, runtime).list();
+    const res = new PluginsController(svc, runtime, {} as never).list();
     expect(svc.list).toHaveBeenCalled();
     expect(res).toEqual({ enabled: false, plugins: [] });
   });
@@ -86,31 +86,31 @@ describe('PluginsController M2 endpoints', () => {
 
   it('get/update config delegate to the service', () => {
     const rt = { activate: vi.fn(), deactivate: vi.fn(), isActive: vi.fn() } as never;
-    const c = new PluginsController(svc, rt);
+    const c = new PluginsController(svc, rt, {} as never);
     expect(c.getConfig('x')).toEqual({ config: { a: 1 } });
     expect(c.updateConfig('x', { a: 2 })).toEqual({ config: { a: 2 } });
   });
 
   it('activate spawns via the runtime when enabled', async () => {
     const rt = { activate: vi.fn(async () => {}), isActive: vi.fn(() => true) } as never;
-    const out = await new PluginsController(svc, rt).activate('x');
+    const out = await new PluginsController(svc, rt, {} as never).activate('x');
     expect(out).toEqual({ status: 'active' });
   });
 
   it('activate is 503 when the runtime is disabled', async () => {
     process.env.TREK_PLUGINS_ENABLED = 'false';
     const rt = { activate: vi.fn(), isActive: vi.fn() } as never;
-    await expect(new PluginsController(svc, rt).activate('x')).rejects.toMatchObject({ status: 503 });
+    await expect(new PluginsController(svc, rt, {} as never).activate('x')).rejects.toMatchObject({ status: 503 });
   });
 
   it('activate surfaces an activation error as 400', async () => {
     const rt = { activate: vi.fn(async () => { throw new Error('bad code'); }), isActive: vi.fn(() => false) } as never;
-    await expect(new PluginsController(svc, rt).activate('x')).rejects.toMatchObject({ status: 400 });
+    await expect(new PluginsController(svc, rt, {} as never).activate('x')).rejects.toMatchObject({ status: 400 });
   });
 
   it('deactivate stops the plugin', async () => {
     const rt = { deactivate: vi.fn(async () => {}) } as never;
-    expect(await new PluginsController(svc, rt).deactivate('x')).toEqual({ status: 'inactive' });
+    expect(await new PluginsController(svc, rt, {} as never).deactivate('x')).toEqual({ status: 'inactive' });
   });
 });
 

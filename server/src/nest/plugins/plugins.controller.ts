@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpException, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { PluginsService } from './plugins.service';
 import { PluginRuntimeService } from './plugin-runtime.service';
+import { PluginRegistryService } from './registry/registry.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 import { pluginsEnabled } from './kill-switch';
@@ -19,11 +20,29 @@ export class PluginsController {
   constructor(
     private readonly plugins: PluginsService,
     private readonly runtime: PluginRuntimeService,
+    private readonly registry: PluginRegistryService,
   ) {}
 
   @Get()
   list() {
     return this.plugins.list();
+  }
+
+  @Get('registry')
+  browse() {
+    return this.registry.browse();
+  }
+
+  @Post('install')
+  @HttpCode(200)
+  async install(@Body() body: { id?: string; version?: string }) {
+    if (!pluginsEnabled()) throw new HttpException({ error: 'Plugins are disabled by server configuration' }, 503);
+    if (!body?.id) throw new HttpException({ error: 'id is required' }, 400);
+    try {
+      return await this.registry.install(body.id, body.version);
+    } catch (e) {
+      throw new HttpException({ error: e instanceof Error ? e.message : 'install failed' }, 400);
+    }
   }
 
   @Get(':id/config')

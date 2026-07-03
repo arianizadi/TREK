@@ -5,6 +5,7 @@ import { PluginsProxyController } from './plugins-proxy.controller';
 import { PluginFrameController } from './plugin-frame.controller';
 import { PluginsService } from './plugins.service';
 import { PluginRuntimeService } from './plugin-runtime.service';
+import { PluginRegistryService } from './registry/registry.service';
 
 /**
  * Plugin system (#plugins). M0 read side + M2 isolated runtime + M3 frontend:
@@ -15,6 +16,6 @@ import { PluginRuntimeService } from './plugin-runtime.service';
  */
 @Module({
   controllers: [PluginsController, PluginsFeedController, PluginsProxyController, PluginFrameController],
-  providers: [PluginsService, PluginRuntimeService],
+  providers: [PluginsService, PluginRuntimeService, PluginRegistryService],
 })
 export class PluginsModule {}

@@ -44,7 +44,11 @@ describe('discoverPlugins', () => {
       name: 'Flight',
       type: 'widget',
       permissions: ['db:own'],
-      settings: [{ key: 'api_key', input_type: 'password', scope: 'instance', secret: true }],
+      settings: [
+        { key: 'api_key', input_type: 'password', scope: 'instance', secret: true },
+        { key: 'units', input_type: 'select', scope: 'user', options: [{ value: 'm', label: 'Metric' }] },
+        { key: 'oauth', input_type: 'oauth', scope: 'user', oauth: { initPath: '/o/start', callbackPath: '/o/cb' } },
+      ],
     });
     const res = discoverPlugins(db);
     expect(res.discovered).toEqual(['flight-tracker']);

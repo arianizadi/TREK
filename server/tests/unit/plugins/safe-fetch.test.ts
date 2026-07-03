@@ -58,6 +58,15 @@ describe('safeDownload', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('rejects an invalid url', async () => {
+    await expect(safeDownload('not-a-url')).rejects.toThrow(/invalid url/);
+  });
+
+  it('rejects a redirect without a location header', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ status: 302, headers: new Headers() }) as unknown as Response));
+    await expect(safeDownload('https://github.com/x')).rejects.toThrow(/redirect without/);
+  });
+
   it('enforces the size cap', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ status: 200, ok: true, headers: new Headers(), arrayBuffer: async () => Buffer.alloc(2000) });
     vi.stubGlobal('fetch', fetchMock);
