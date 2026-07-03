@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { db } from '../../db/database';
 import { pluginsEnabled } from './kill-switch';
 import { maybe_encrypt_api_key } from '../../services/apiKeyCrypto';
+import { readAudit } from './host/plugin-audit';
 
 const SECRET_MASK = '••••••••';
 
@@ -78,6 +79,11 @@ export class PluginsService {
 
   clearErrors(id: string): void {
     db.prepare('DELETE FROM plugin_error_log WHERE plugin_id = ?').run(id);
+  }
+
+  /** A plugin's hash-chained capability audit log, newest first. */
+  auditLog(id: string): unknown[] {
+    return readAudit(db, id);
   }
 
   /** Read the instance config with secret fields masked. */

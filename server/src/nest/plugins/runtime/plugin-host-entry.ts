@@ -12,8 +12,10 @@
 
 import path from 'node:path';
 import net from 'node:net';
+import dns from 'node:dns';
 import { createRequire } from 'node:module';
 import { createPluginContext, type ChildTransport, type PluginContext, type PluginDefinition } from './plugin-sdk';
+import { isBlockedIp, makeHostAllow, classifyConnect } from './egress-policy';
 import type { Envelope, RpcError } from '../protocol/envelope';
 
 const pluginId = process.argv[2] || process.env.TREK_PLUGIN_ID || 'unknown';
@@ -146,20 +148,23 @@ process.on('message', (raw: unknown) => {
  * subdomain.
  *
  * Two layers, so a plugin can't just sidestep `fetch` with a raw socket:
- *  1. `globalThis.fetch` is wrapped (undici path).
+ *  1. `globalThis.fetch` is wrapped (early hostname reject).
  *  2. `net.Socket.prototype.connect` is wrapped — the single TCP choke point that
- *     node:http / node:https / node:net / node:tls all funnel through — so
- *     `require('node:https').request(...)` is subject to the same allowlist.
+ *     node:http / node:https / node:net / node:tls AND undici/fetch all funnel
+ *     through. Here we additionally RESOLVE the destination and refuse any
+ *     private/loopback/link-local/metadata/CGNAT/ULA address (SSRF + DNS-rebinding
+ *     backstop), pinning the resolved IP into the connect so the name can't flip
+ *     to an internal address between check and connect.
+ *
  * Under the OS permission model the child also cannot spawn a fresh process or
- * load a native addon to escape these wrappers. This is strong defense in depth;
- * a kernel/network-namespace guarantee still belongs to the container runtime.
+ * load a native addon to escape these wrappers. A kernel/network-namespace
+ * guarantee still belongs to the container runtime. Set
+ * TREK_PLUGIN_ALLOW_PRIVATE_EGRESS=on to permit private/internal targets (e.g. a
+ * self-hoster's sibling service) — default is the secure, block-private policy.
  */
 function installEgressGuard(egress: string[]): void {
-  const patterns = egress.map((h) => h.trim().toLowerCase()).filter(Boolean);
-  const allowed = (hostname: string): boolean => {
-    const h = hostname.toLowerCase();
-    return patterns.some((p) => (p.startsWith('*.') ? h === p.slice(2) || h.endsWith(p.slice(1)) : h === p));
-  };
+  const allowed = makeHostAllow(egress);
+  const blockPrivate = (process.env.TREK_PLUGIN_ALLOW_PRIVATE_EGRESS ?? '').toLowerCase() !== 'on';
 
   const realFetch = globalThis.fetch;
   if (typeof realFetch === 'function') {
@@ -167,7 +172,7 @@ function installEgressGuard(egress: string[]): void {
       const url = typeof input === 'string' ? input : (input as { url?: string })?.url ?? String(input);
       let host: string;
       try {
-        host = new URL(url).hostname;
+        host = new URL(url).hostname.replace(/^\[/, '').replace(/\]$/, '');
       } catch {
         return Promise.reject(new Error('egress: invalid url'));
       }
@@ -176,25 +181,48 @@ function installEgressGuard(egress: string[]): void {
     }) as typeof fetch;
   }
 
-  // TCP choke point: http/https/net/tls all end up here. A unix-socket (path)
-  // connect is local IPC, not network egress, so it's left alone.
+  // A DNS lookup that refuses to resolve a name to a blocked address; injected
+  // into every hostname connect so the socket only ever reaches a vetted IP.
+  const guardedLookup = (
+    hostname: string,
+    options: unknown,
+    cb: (err: Error | null, address?: unknown, family?: number) => void,
+  ): void => {
+    const opts = typeof options === 'function' ? {} : options;
+    if (typeof options === 'function') cb = options as typeof cb;
+    dns.lookup(hostname, opts as dns.LookupOptions, (err, address, family) => {
+      if (err) return cb(err, address as unknown, family);
+      const list = Array.isArray(address) ? address : [{ address: address as string }];
+      for (const a of list) {
+        if (blockPrivate && isBlockedIp((a as { address: string }).address)) {
+          return cb(new Error(`egress: ${hostname} resolves to a blocked address (${(a as { address: string }).address})`));
+        }
+      }
+      cb(null, address as unknown, family);
+    });
+  };
+
   const proto = net.Socket.prototype as unknown as { connect: (...a: unknown[]) => unknown };
   const realConnect = proto.connect;
   proto.connect = function (this: unknown, ...args: unknown[]): unknown {
+    const target = classifyConnect(args, (s) => net.isIP(s) !== 0);
+    if (target.kind === 'local') return realConnect.apply(this, args); // unix socket / pipe
+    if (!allowed(target.host)) {
+      throw new Error(`egress: ${target.host} is not in the plugin's declared hosts`);
+    }
+    if (target.kind === 'literal-ip') {
+      if (blockPrivate && isBlockedIp(target.host)) {
+        throw new Error(`egress: ${target.host} is a blocked address`);
+      }
+      return realConnect.apply(this, args);
+    }
+    // Hostname: inject the resolving guard. Preserve an existing lookup by
+    // wrapping the args' options object.
     const first = args[0];
-    let host: string | undefined;
-    if (first && typeof first === 'object') {
-      const o = first as { host?: string; path?: string };
-      if (o.path) return realConnect.apply(this, args); // unix socket — local
-      host = o.host ?? 'localhost';
-    } else if (typeof first === 'number' || typeof first === 'string') {
-      // connect(port[, host]) — a numeric-only path connects to localhost.
-      host = typeof args[1] === 'string' ? (args[1] as string) : 'localhost';
-    }
-    if (host && !allowed(host)) {
-      throw new Error(`egress: ${host} is not in the plugin's declared hosts`);
-    }
-    return realConnect.apply(this, args);
+    const options = first && typeof first === 'object' ? { ...(first as object) } : { host: target.host, port: args[0] };
+    (options as { lookup?: unknown }).lookup = guardedLookup;
+    const rest = first && typeof first === 'object' ? args.slice(1) : args.slice(typeof args[1] === 'string' ? 2 : 1);
+    return realConnect.call(this, options, ...rest);
   };
 }
 

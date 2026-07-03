@@ -53,7 +53,8 @@ describe('PluginFrameController', () => {
     expect(res.filePath).toContain(path.join('widget', 'client', 'index.html'));
     const csp = res.headers['Content-Security-Policy'];
     expect(csp).toContain("default-src 'none'");
-    expect(csp).toContain('sandbox allow-scripts allow-forms allow-popups');
+    expect(csp).toContain('sandbox allow-scripts allow-forms');
+    expect(csp).not.toContain('allow-popups');
     expect(csp).not.toContain('allow-same-origin');
     expect(csp).toContain('connect-src \'self\' https://api.weather.com');
     expect(res.headers['X-Content-Type-Options']).toBe('nosniff');

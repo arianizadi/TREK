@@ -3377,6 +3377,27 @@ function runMigrations(db: Database.Database): void {
     () => {
       try { db.exec("ALTER TABLE plugins ADD COLUMN author_pubkey TEXT;"); } catch (err) { console.warn('[migrations] Non-fatal migration step failed:', err); }
     },
+    // Migration 159: hash-chained capability audit log (#plugins, L1 hardening).
+    // Every host-mediated capability call the plugin makes is recorded at the RPC
+    // boundary (where the plugin provably can't reach) with the host-bound acting
+    // user and a per-plugin hash chain, so wide data grants stay attributable +
+    // tamper-evident + user-visible.
+    () => {
+      try {
+        db.exec(`CREATE TABLE IF NOT EXISTS plugin_capability_audit (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          plugin_id TEXT NOT NULL,
+          acting_user_id INTEGER,
+          method TEXT NOT NULL,
+          resource TEXT,
+          code TEXT NOT NULL,
+          ts TEXT NOT NULL DEFAULT (datetime('now')),
+          prev_hash TEXT,
+          hash TEXT NOT NULL
+        );`);
+        db.exec('CREATE INDEX IF NOT EXISTS idx_plugin_audit_plugin ON plugin_capability_audit (plugin_id, id);');
+      } catch (err) { console.warn('[migrations] Non-fatal migration step failed:', err); }
+    },
   ];
 
   if (currentVersion < migrations.length) {

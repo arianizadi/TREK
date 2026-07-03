@@ -104,7 +104,7 @@ export default function PluginFrame({ pluginId, tripId = null, className, title 
     <iframe
       ref={frameRef}
       src={`/plugin-frame/${pluginId}/index.html`}
-      sandbox="allow-scripts allow-forms allow-popups"
+      sandbox="allow-scripts allow-forms"
       referrerPolicy="no-referrer"
       loading="lazy"
       title={title || pluginId}

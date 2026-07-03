@@ -6,6 +6,7 @@ import {
   type RpcResponse,
 } from '../protocol/envelope';
 import type { PluginDataDb } from './plugin-data.service';
+import { auditResource, isAuditable } from './plugin-audit';
 
 /**
  * The per-plugin capability router (#plugins, M1) — the ENFORCEMENT POINT.
@@ -39,6 +40,8 @@ export interface HostDeps {
   broadcastToTrip(tripId: number, eventType: string, payload: Record<string, unknown>): void;
   /** Namespaced per-user broadcast. */
   broadcastToUser(userId: number, payload: Record<string, unknown>): void;
+  /** Optional sink for the capability audit log (host-side, hash-chained). */
+  audit?(entry: { pluginId: string; actingUserId?: number; method: string; resource: string | null; code: string }): void;
 }
 
 type Handler = (params: Record<string, unknown>, actingUserId: number | undefined) => unknown;
@@ -123,6 +126,30 @@ export class PluginRpcHost {
   }
 
   async dispatch(req: RpcRequest, actingUserId?: number): Promise<RpcResponse | RpcError> {
+    const params = (req.params ?? {}) as Record<string, unknown>;
+    const res = await this.handle(req, params, actingUserId);
+    // Audit the core-data / broadcast surface (incl. denials) at the boundary.
+    if (this.deps.audit && isAuditable(req.method)) {
+      try {
+        this.deps.audit({
+          pluginId: this.pluginId,
+          actingUserId,
+          method: req.method,
+          resource: auditResource(req.method, params),
+          code: res.ok ? 'ok' : (res as RpcError).error.code,
+        });
+      } catch {
+        /* auditing must never break a call */
+      }
+    }
+    return res;
+  }
+
+  private async handle(
+    req: RpcRequest,
+    params: Record<string, unknown>,
+    actingUserId?: number,
+  ): Promise<RpcResponse | RpcError> {
     const handler = this.methods.get(req.method);
     if (!handler) {
       const known = (KNOWN_METHODS as readonly string[]).includes(req.method as KnownMethod);
@@ -134,7 +161,6 @@ export class PluginRpcHost {
           : `unknown method ${req.method}`,
       );
     }
-    const params = (req.params ?? {}) as Record<string, unknown>;
     try {
       const result = await handler(params, actingUserId);
       return { k: 'res', id: req.id, ok: true, result };

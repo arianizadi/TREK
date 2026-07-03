@@ -45,6 +45,7 @@ interface Supervised {
   status: PluginStatus;
   crashes: number[]; // crash timestamps (ms)
   lastBeat: number;
+  lastRss: number; // last reported resident set size (bytes)
   routes: PluginRouteInfo[];
   jobs: string[];
   pending: Map<string, Pending>; // host→child invokes awaiting a response
@@ -58,6 +59,7 @@ export interface SupervisorTuning {
   crashLimit?: number;
   backoffCapMs?: number;
   killGraceMs?: number;
+  maxRssBytes?: number;
 }
 
 const DEFAULTS: Required<SupervisorTuning> = {
@@ -66,6 +68,10 @@ const DEFAULTS: Required<SupervisorTuning> = {
   crashLimit: 5,
   backoffCapMs: 30_000,
   killGraceMs: 3000,
+  // Hard RSS ceiling — the real memory cap. --max-old-space-size only bounds the
+  // V8 heap; Buffers/ArrayBuffers/native allocations sail past it, so a plugin
+  // could OOM the box while staying "under" the heap limit. Overridable via env.
+  maxRssBytes: (Number(process.env.TREK_PLUGIN_MAX_RSS_MB) || 300) * 1024 * 1024,
 };
 
 export class PluginSupervisor {
@@ -94,6 +100,7 @@ export class PluginSupervisor {
       status: 'starting',
       crashes: [],
       lastBeat: Date.now(),
+      lastRss: 0,
       routes: [],
       jobs: [],
       pending: new Map(),
@@ -236,9 +243,12 @@ export class PluginSupervisor {
         case 'hello':
           sup.child?.send({ k: 'evt', topic: 'init', data: { config: sup.config, egress: sup.egress } } satisfies Envelope);
           break;
-        case 'heartbeat':
+        case 'heartbeat': {
           sup.lastBeat = Date.now();
+          const rss = (msg.data as { rss?: number })?.rss;
+          if (typeof rss === 'number') sup.lastRss = rss;
           break;
+        }
         case 'loaded': {
           sup.lastBeat = Date.now();
           const d = msg.data as { routes?: PluginRouteInfo[]; jobs?: string[] };
@@ -310,11 +320,22 @@ export class PluginSupervisor {
     this.sweep.unref?.();
   }
 
-  /** Kill any active plugin that has stopped sending heartbeats (drives the crash path). */
+  /**
+   * Kill any active plugin that has stopped sending heartbeats OR blown its RSS
+   * ceiling (drives the crash/backoff path, so a repeat offender auto-disables).
+   */
   reapStale(now = Date.now()): void {
     for (const sup of this.running.values()) {
-      if (sup.status === 'active' && now - sup.lastBeat > this.tuning.heartbeatTimeoutMs) {
+      if (sup.status !== 'active') continue;
+      if (now - sup.lastBeat > this.tuning.heartbeatTimeoutMs) {
         this.hooks.onLog?.(sup.id, 'warn', 'missed heartbeats; killing');
+        sup.child?.kill('SIGKILL');
+      } else if (sup.lastRss > this.tuning.maxRssBytes) {
+        this.hooks.onLog?.(
+          sup.id,
+          'warn',
+          `exceeded memory ceiling (${Math.round(sup.lastRss / 1048576)}MB > ${Math.round(this.tuning.maxRssBytes / 1048576)}MB); killing`,
+        );
         sup.child?.kill('SIGKILL');
       }
     }

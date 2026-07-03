@@ -95,6 +95,11 @@ export class PluginsController {
     return { errors: this.plugins.errors(id) };
   }
 
+  @Get(':id/audit')
+  audit(@Param('id') id: string) {
+    return { audit: this.plugins.auditLog(id) };
+  }
+
   @Delete(':id/errors')
   clearErrors(@Param('id') id: string) {
     this.plugins.clearErrors(id);

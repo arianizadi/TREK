@@ -2,6 +2,7 @@ import { db, canAccessTrip } from '../../../db/database';
 import { broadcast, broadcastToUser } from '../../../websocket';
 import { PluginDataDb } from './plugin-data.service';
 import { PluginRpcHost } from './rpc-host';
+import { appendAudit } from './plugin-audit';
 
 /**
  * Wires a plugin's capability host to the REAL privileged modules (#plugins,
@@ -33,5 +34,6 @@ export function createRealRpcHost(id: string, granted: ReadonlySet<string>): Plu
     canAccessTrip: (tripId, userId) => canAccessTrip(tripId, userId),
     broadcastToTrip: (tripId, event, payload) => broadcast(tripId, `plugin:${id}:${event}`, payload),
     broadcastToUser: (userId, payload) => broadcastToUser(userId, { type: `plugin:${id}`, ...payload }),
+    audit: (entry) => appendAudit(db, entry),
   });
 }

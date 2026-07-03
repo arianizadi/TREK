@@ -83,7 +83,10 @@ export class PluginFrameController {
       "frame-ancestors 'self'",
       "base-uri 'none'",
       "form-action 'self'",
-      'sandbox allow-scripts allow-forms allow-popups',
+      // No allow-popups: window.open() ignores connect-src, so it would be an
+      // egress/phishing bypass (open any URL / a fake full-page login). A future
+      // OAuth-popup addon can re-request it as an explicit capability.
+      'sandbox allow-scripts allow-forms',
     ].join('; ');
   }
 }
