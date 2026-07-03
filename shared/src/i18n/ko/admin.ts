@@ -197,6 +197,7 @@ const admin: TranslationStrings = {
   'admin.packingTemplates.saveError': '저장 실패',
   'admin.tabs.addons': '애드온',
   'admin.tabs.plugins': 'Plugins',
+  'plugins.notFound': 'Plugin not found',
   'admin.plugins.title': 'Plugins',
   'admin.plugins.subtitle': 'Install and manage third-party plugins on your instance.',
   'admin.plugins.disabledTitle': 'Plugins are disabled',

@@ -1,0 +1,86 @@
+/**
+ * The sandboxed plugin frame server (#plugins, M3): serves a plugin's client/
+ * assets with a locked-down per-frame CSP and a strict path guard, only when the
+ * plugin is active and the runtime is enabled.
+ */
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const { pluginsEnabledMock } = vi.hoisted(() => ({ pluginsEnabledMock: vi.fn(() => true) }));
+vi.mock('../../../src/nest/plugins/kill-switch', () => ({ pluginsEnabled: pluginsEnabledMock }));
+
+import { PluginFrameController } from '../../../src/nest/plugins/plugin-frame.controller';
+import type { PluginRuntimeService } from '../../../src/nest/plugins/plugin-runtime.service';
+
+let codeRoot: string;
+beforeAll(() => {
+  codeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'trekplug-frame-'));
+  process.env.TREK_PLUGINS_DIR = codeRoot;
+  const dir = path.join(codeRoot, 'widget', 'client');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.html'), '<!doctype html><body>hi</body>');
+});
+afterAll(() => {
+  delete process.env.TREK_PLUGINS_DIR;
+  fs.rmSync(codeRoot, { recursive: true, force: true });
+});
+
+function fakeRes() {
+  const res = {
+    statusCode: 0,
+    headers: {} as Record<string, string>,
+    sent: undefined as unknown,
+    filePath: undefined as string | undefined,
+    status(c: number) { res.statusCode = c; return res; },
+    setHeader(k: string, v: string) { res.headers[k] = v; },
+    send(b: unknown) { res.sent = b; return res; },
+    sendFile(p: string) { res.filePath = p; res.statusCode ||= 200; },
+  };
+  return res;
+}
+const req = (p: string) => ({ params: { path: p } }) as never;
+
+function runtime(active = true, hosts: string[] = []): PluginRuntimeService {
+  return { isActive: vi.fn(() => active), outboundHostsOf: vi.fn(() => hosts) } as unknown as PluginRuntimeService;
+}
+
+describe('PluginFrameController', () => {
+  it('serves index.html with the opaque-frame CSP + sandbox', () => {
+    const res = fakeRes();
+    new PluginFrameController(runtime(true, ['api.weather.com'])).serve('widget', req(''), res as never);
+    expect(res.filePath).toContain(path.join('widget', 'client', 'index.html'));
+    const csp = res.headers['Content-Security-Policy'];
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain('sandbox allow-scripts allow-forms allow-popups');
+    expect(csp).not.toContain('allow-same-origin');
+    expect(csp).toContain('connect-src \'self\' https://api.weather.com');
+    expect(res.headers['X-Content-Type-Options']).toBe('nosniff');
+  });
+
+  it('404 when the plugin is inactive', () => {
+    const res = fakeRes();
+    new PluginFrameController(runtime(false)).serve('widget', req(''), res as never);
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('404 when the runtime is disabled', () => {
+    pluginsEnabledMock.mockReturnValueOnce(false);
+    const res = fakeRes();
+    new PluginFrameController(runtime(true)).serve('widget', req(''), res as never);
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('403 on a path-traversal attempt', () => {
+    const res = fakeRes();
+    new PluginFrameController(runtime(true)).serve('widget', req('../../../etc/passwd'), res as never);
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('404 for a missing file', () => {
+    const res = fakeRes();
+    new PluginFrameController(runtime(true)).serve('widget', req('missing.js'), res as never);
+    expect(res.statusCode).toBe(404);
+  });
+});

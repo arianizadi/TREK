@@ -204,6 +204,7 @@ const admin: TranslationStrings = {
   'admin.packingTemplates.saveError': 'Kaydedilemedi',
   'admin.tabs.addons': 'Eklentiler',
   'admin.tabs.plugins': 'Plugins',
+  'plugins.notFound': 'Plugin not found',
   'admin.plugins.title': 'Plugins',
   'admin.plugins.subtitle': 'Install and manage third-party plugins on your instance.',
   'admin.plugins.disabledTitle': 'Plugins are disabled',

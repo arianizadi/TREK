@@ -4,8 +4,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useAddonStore } from '../../store/addonStore'
+import { usePluginStore } from '../../store/pluginStore'
 import { useTranslation } from '../../i18n'
-import { Plane, LogOut, Settings, ChevronDown, Shield, ArrowLeft, Users, Moon, Sun, Monitor, CalendarDays, Briefcase, Globe, Compass, BookOpen, Bookmark } from 'lucide-react'
+import { Plane, LogOut, Settings, ChevronDown, Shield, ArrowLeft, Users, Moon, Sun, Monitor, CalendarDays, Briefcase, Globe, Compass, BookOpen, Bookmark, Blocks } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import InAppNotificationBell from './InAppNotificationBell.tsx'
 
@@ -52,6 +53,7 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onShare }:
 
   // Only show 'global' type addons in the navbar — 'integration' addons have no dedicated page
   const globalAddons = allAddons.filter((a: Addon) => a.type === 'global' && a.enabled)
+  const pagePlugins = usePluginStore(s => s.plugins).filter(p => p.type === 'page')
 
   useEffect(() => {
     if (user) loadAddons()
@@ -135,7 +137,7 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onShare }:
 
       {/* Centred liquid-glass tab menu (design handoff). Absolutely positioned so
           the left brand block and the right action cluster keep their layout. */}
-      {globalAddons.length > 0 && !tripTitle && (
+      {(globalAddons.length > 0 || pagePlugins.length > 0) && !tripTitle && (
         <div
           className="trek-nav-pill"
           style={{
@@ -147,7 +149,8 @@ export default function Navbar({ tripTitle, tripId, onBack, showBack, onShare }:
           }}
         >
           {[{ id: '__trips', path: '/dashboard', label: t('nav.myTrips'), Icon: Briefcase },
-            ...globalAddons.map(a => ({ id: a.id, path: `/${a.id}`, label: getAddonName(a), Icon: ADDON_ICONS[a.icon] || CalendarDays }))
+            ...globalAddons.map(a => ({ id: a.id, path: `/${a.id}`, label: getAddonName(a), Icon: ADDON_ICONS[a.icon] || CalendarDays })),
+            ...pagePlugins.map(p => ({ id: `plugin:${p.id}`, path: `/plugins/${p.id}`, label: p.name, Icon: Blocks }))
           ].map(tab => {
             const isActive = location.pathname === tab.path
             return (

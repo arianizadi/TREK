@@ -543,6 +543,14 @@ export const addonsApi = {
   enabled: () => apiClient.get('/addons').then(r => r.data),
 }
 
+export const pluginsApi = {
+  // Active plugins the client renders (page nav entries, dashboard widgets).
+  active: () => apiClient.get('/plugins').then(r => r.data),
+  // Call one of a plugin's own declared routes through the host proxy.
+  invoke: (id: string, sub: string, init?: { method?: string; body?: unknown }) =>
+    apiClient.request({ url: `/plugins/${id}${sub}`, method: init?.method || 'GET', data: init?.body }).then(r => r.data),
+}
+
 export const airtrailApi = {
   getSettings: () => apiClient.get('/integrations/airtrail/settings').then(r => r.data),
   saveSettings: (data: { url: string; apiKey?: string; allowInsecureTls?: boolean; writeEnabled?: boolean }) =>

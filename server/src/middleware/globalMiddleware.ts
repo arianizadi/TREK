@@ -123,7 +123,10 @@ export function applyGlobalMiddleware(
         // 'self' so same-origin file previews can embed PDFs via <object>/<embed>
         // (Firefox/Chrome enforce object-src; 'none' broke inline PDF previews there).
         objectSrc: ["'self'"],
-        frameSrc: ["'none'"],
+        // 'self' so the app can embed same-origin, sandboxed plugin frames
+        // (/plugin-frame/*). Those frames are sandboxed WITHOUT allow-same-origin,
+        // so they run at an opaque origin and get their own locked-down CSP.
+        frameSrc: ["'self'"],
         frameAncestors: ["'self'"],
         // Restrict <form> submission targets (form-action has no default-src
         // fallback, so it must be set explicitly).

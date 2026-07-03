@@ -4,6 +4,8 @@ import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
 import { applyAppearance } from './theme/applyAppearance'
 import { useAddonStore } from './store/addonStore'
+import { usePluginStore } from './store/pluginStore'
+import PluginPage from './pages/PluginPage'
 import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -111,6 +113,7 @@ export default function App() {
   const { loadUser, isAuthenticated, demoMode, setDemoMode, setDevMode, setIsPrerelease, setAppVersion, setHasMapsKey, setServerTimezone, setAppRequireMfa, setTripRemindersEnabled, setPlacesPhotosEnabled, setPlacesAutocompleteEnabled, setPlacesDetailsEnabled } = useAuthStore()
   const { loadSettings } = useSettingsStore()
   const { loadAddons } = useAddonStore()
+  const { loadPlugins } = usePluginStore()
 
   useEffect(() => {
     if (!location.pathname.startsWith('/shared/') && !location.pathname.startsWith('/public/') && !location.pathname.startsWith('/login')) {
@@ -168,6 +171,7 @@ export default function App() {
     if (isAuthenticated) {
       loadSettings()
       loadAddons()
+      loadPlugins()
     }
   }, [isAuthenticated])
 
@@ -281,6 +285,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/plugins/:pluginId"
+          element={
+            <ProtectedRoute>
+              <PluginPage />
             </ProtectedRoute>
           }
         />

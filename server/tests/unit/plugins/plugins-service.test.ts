@@ -18,6 +18,7 @@ vi.mock('../../../src/db/database', () => ({ db: testDb }));
 
 import { PluginsService } from '../../../src/nest/plugins/plugins.service';
 import { PluginsController } from '../../../src/nest/plugins/plugins.controller';
+import { PluginsFeedController } from '../../../src/nest/plugins/plugins-feed.controller';
 
 beforeEach(() => {
   testDb.exec('DELETE FROM plugins');
@@ -53,6 +54,21 @@ describe('PluginsService.list', () => {
     const res = new PluginsController(svc, runtime).list();
     expect(svc.list).toHaveBeenCalled();
     expect(res).toEqual({ enabled: false, plugins: [] });
+  });
+});
+
+describe('PluginsFeedController (client feed)', () => {
+  it('returns active plugins when enabled, nothing when disabled', () => {
+    testDb.prepare("INSERT INTO plugins (id, name, type, icon, status) VALUES ('w','W','widget','Box','active')").run();
+    testDb.prepare("INSERT INTO plugins (id, name, type, icon, status) VALUES ('i','I','integration','Plug','inactive')").run();
+    const feed = new PluginsFeedController();
+
+    process.env.TREK_PLUGINS_ENABLED = 'true';
+    const active = feed.list();
+    expect(active.plugins).toEqual([{ id: 'w', name: 'W', type: 'widget', icon: 'Box' }]);
+
+    process.env.TREK_PLUGINS_ENABLED = 'false';
+    expect(feed.list().plugins).toEqual([]);
   });
 });
 

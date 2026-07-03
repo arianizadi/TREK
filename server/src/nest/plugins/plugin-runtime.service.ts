@@ -74,6 +74,18 @@ export class PluginRuntimeService implements OnModuleInit, OnModuleDestroy {
   isActive(id: string): boolean {
     return this.supervisor.isActive(id);
   }
+
+  /** Declared outbound hosts (from http:outbound:<host> grants) for the frame CSP. */
+  outboundHostsOf(id: string): string[] {
+    const row = db.prepare('SELECT granted_permissions FROM plugins WHERE id = ?').get(id) as
+      | { granted_permissions: string }
+      | undefined;
+    if (!row) return [];
+    return parseArray(row.granted_permissions)
+      .filter((p) => p.startsWith('http:outbound:'))
+      .map((p) => p.slice('http:outbound:'.length))
+      .filter(Boolean);
+  }
   routesOf(id: string): PluginRouteInfo[] {
     return this.supervisor.routesOf(id);
   }

@@ -160,6 +160,7 @@ const admin: TranslationStrings = {
   'admin.packingTemplates.saveError': 'Fehler beim Speichern',
   'admin.tabs.addons': 'Addons',
   'admin.tabs.plugins': 'Plugins',
+  'plugins.notFound': 'Plugin nicht gefunden',
   'admin.plugins.title': 'Plugins',
   'admin.plugins.subtitle': 'Plugins von Drittanbietern auf deiner Instanz installieren und verwalten.',
   'admin.plugins.disabledTitle': 'Plugins sind deaktiviert',

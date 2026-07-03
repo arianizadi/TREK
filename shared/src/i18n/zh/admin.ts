@@ -155,6 +155,7 @@ const admin: TranslationStrings = {
   'admin.packingTemplates.saveError': '保存失败',
   'admin.tabs.addons': '扩展',
   'admin.tabs.plugins': 'Plugins',
+  'plugins.notFound': 'Plugin not found',
   'admin.plugins.title': 'Plugins',
   'admin.plugins.subtitle': 'Install and manage third-party plugins on your instance.',
   'admin.plugins.disabledTitle': 'Plugins are disabled',

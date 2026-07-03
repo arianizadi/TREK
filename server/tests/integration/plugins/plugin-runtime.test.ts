@@ -143,6 +143,13 @@ describe('PluginRuntimeService (M2 end-to-end)', () => {
     await rt.deactivate('booter');
   });
 
+  it('outboundHostsOf extracts declared http:outbound hosts', () => {
+    testDb.prepare("INSERT INTO plugins (id, status, granted_permissions, config) VALUES ('net','inactive','[\"db:own\",\"http:outbound:api.x.com\",\"http:outbound:*.y.com\"]','{}')").run();
+    const rt = new PluginRuntimeService();
+    expect(rt.outboundHostsOf('net')).toEqual(['api.x.com', '*.y.com']);
+    expect(rt.outboundHostsOf('missing')).toEqual([]);
+  });
+
   it('onModuleDestroy tears down cleanly', async () => {
     await expect(new PluginRuntimeService().onModuleDestroy()).resolves.toBeUndefined();
   });
