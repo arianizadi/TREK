@@ -10,11 +10,21 @@ import dns from 'node:dns/promises';
  * pin before anything is written to a plugin location.
  */
 
-const ALLOWED_HOSTS = new Set(['github.com', 'codeload.github.com', 'objects.githubusercontent.com']);
 const MAX_REDIRECTS = 5;
 const MAX_BYTES = 50 * 1024 * 1024;
 
 export class DownloadError extends Error {}
+
+/**
+ * GitHub delivery hosts only. Release-asset downloads 302 through a rotating
+ * `*.githubusercontent.com` host (objects / github-releases / release-assets …),
+ * so we allow that whole suffix plus github.com and codeload. The private-IP
+ * check below is the SSRF backstop regardless of host.
+ */
+function isAllowedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return h === 'github.com' || h === 'codeload.github.com' || h.endsWith('.githubusercontent.com');
+}
 
 export function isPrivateIp(ip: string): boolean {
   const v4 = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
@@ -41,7 +51,7 @@ async function assertSafeHost(urlStr: string): Promise<void> {
     throw new DownloadError(`invalid url: ${urlStr}`);
   }
   if (url.protocol !== 'https:') throw new DownloadError('only https downloads are allowed');
-  if (!ALLOWED_HOSTS.has(url.hostname)) throw new DownloadError(`host not allowlisted: ${url.hostname}`);
+  if (!isAllowedHost(url.hostname)) throw new DownloadError(`host not allowlisted: ${url.hostname}`);
   const addrs = await dns.lookup(url.hostname, { all: true }).catch(() => []);
   if (addrs.length === 0) throw new DownloadError(`could not resolve ${url.hostname}`);
   for (const a of addrs) {

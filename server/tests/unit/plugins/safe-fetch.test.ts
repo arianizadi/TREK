@@ -44,11 +44,12 @@ describe('safeDownload', () => {
     await expect(safeDownload('https://github.com/x.zip')).rejects.toThrow(/private address/);
   });
 
-  it('downloads and hashes, following an allowlisted redirect', async () => {
+  it('downloads and hashes, following a GitHub release-asset redirect', async () => {
     const bytes = Buffer.from('plugin-bytes');
     const fetchMock = vi
       .fn()
-      .mockResolvedValueOnce({ status: 302, headers: new Headers({ location: 'https://codeload.github.com/x.tar.gz' }) })
+      // GitHub 302s release assets to a rotating *.githubusercontent.com host
+      .mockResolvedValueOnce({ status: 302, headers: new Headers({ location: 'https://release-assets.githubusercontent.com/x/plugin.zip' }) })
       .mockResolvedValueOnce({ status: 200, ok: true, headers: new Headers(), arrayBuffer: async () => bytes });
     vi.stubGlobal('fetch', fetchMock);
 
