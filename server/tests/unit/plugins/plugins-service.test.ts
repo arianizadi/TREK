@@ -11,7 +11,8 @@ const { testDb } = vi.hoisted(() => {
     id TEXT PRIMARY KEY, name TEXT, description TEXT, type TEXT, icon TEXT, version TEXT,
     status TEXT, reviewed_at TEXT, source_repo TEXT, config TEXT DEFAULT '{}', updated_at TEXT,
     sort_order INTEGER DEFAULT 0);
-    CREATE TABLE plugin_settings_fields (plugin_id TEXT, field_key TEXT, scope TEXT, secret INTEGER);`);
+    CREATE TABLE plugin_settings_fields (plugin_id TEXT, field_key TEXT, scope TEXT, secret INTEGER);
+    CREATE TABLE plugin_error_log (id INTEGER PRIMARY KEY AUTOINCREMENT, plugin_id TEXT, level TEXT, message TEXT, ts TEXT DEFAULT '2026-01-01');`);
   return { testDb: db };
 });
 vi.mock('../../../src/db/database', () => ({ db: testDb }));
@@ -142,5 +143,16 @@ describe('PluginsService instance config', () => {
   it('throws for an unknown plugin', () => {
     expect(() => new PluginsService().updateInstanceConfig('nope', {})).toThrow(/not found/);
     expect(() => new PluginsService().getInstanceConfig('nope')).toThrow(/not found/);
+  });
+});
+
+describe('PluginsService error log', () => {
+  beforeEach(() => testDb.exec('DELETE FROM plugin_error_log'));
+  it('lists and clears a plugin error log', () => {
+    testDb.prepare("INSERT INTO plugin_error_log (plugin_id, level, message) VALUES ('p','error','boom')").run();
+    const svc = new PluginsService();
+    expect(svc.errors('p')).toEqual([{ ts: '2026-01-01', level: 'error', message: 'boom' }]);
+    svc.clearErrors('p');
+    expect(svc.errors('p')).toEqual([]);
   });
 });

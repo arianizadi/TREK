@@ -15,7 +15,8 @@ const { testDb } = vi.hoisted(() => {
     id TEXT PRIMARY KEY, status TEXT, permissions TEXT DEFAULT '[]', granted_permissions TEXT DEFAULT '[]',
     config TEXT DEFAULT '{}', last_error TEXT, updated_at TEXT);
     CREATE TABLE plugin_error_log (id INTEGER PRIMARY KEY AUTOINCREMENT, plugin_id TEXT, level TEXT, message TEXT, ts TEXT);
-    CREATE TABLE plugin_settings_fields (plugin_id TEXT, field_key TEXT, scope TEXT, secret INTEGER);`);
+    CREATE TABLE plugin_settings_fields (plugin_id TEXT, field_key TEXT, scope TEXT, secret INTEGER);
+    CREATE TABLE settings (user_id INTEGER, key TEXT, value TEXT);`);
   return { testDb: db };
 });
 vi.mock('../../../src/db/database', () => ({ db: testDb, canAccessTrip: () => undefined }));
@@ -148,6 +149,31 @@ describe('PluginRuntimeService (M2 end-to-end)', () => {
     const rt = new PluginRuntimeService();
     expect(rt.outboundHostsOf('net')).toEqual(['api.x.com', '*.y.com']);
     expect(rt.outboundHostsOf('missing')).toEqual([]);
+  });
+
+  it('uninstall removes the code, DB rows, settings and (with deleteData) data', async () => {
+    fs.mkdirSync(path.join(codeRoot, 'gone', 'server'), { recursive: true });
+    fs.writeFileSync(path.join(codeRoot, 'gone', 'server', 'index.js'), 'module.exports={}');
+    testDb.prepare("INSERT INTO plugins (id, status, permissions, config) VALUES ('gone','inactive','[]','{}')").run();
+    testDb.prepare("INSERT INTO plugin_settings_fields (plugin_id, field_key, scope, secret) VALUES ('gone','k','instance',0)").run();
+    testDb.prepare("INSERT INTO settings (user_id, key, value) VALUES (1, 'plugin:gone:units', 'metric')").run();
+
+    await new PluginRuntimeService().uninstall('gone', true);
+
+    expect(fs.existsSync(path.join(codeRoot, 'gone'))).toBe(false);
+    expect(testDb.prepare("SELECT COUNT(*) c FROM plugins WHERE id='gone'").get()).toMatchObject({ c: 0 });
+    expect(testDb.prepare("SELECT COUNT(*) c FROM plugin_settings_fields WHERE plugin_id='gone'").get()).toMatchObject({ c: 0 });
+    expect(testDb.prepare("SELECT COUNT(*) c FROM settings WHERE key LIKE 'plugin:gone:%'").get()).toMatchObject({ c: 0 });
+  });
+
+  it('the egress guard blocks a fetch to an undeclared host', async () => {
+    fs.mkdirSync(path.join(codeRoot, 'nettry', 'server'), { recursive: true });
+    fs.writeFileSync(path.join(codeRoot, 'nettry', 'server', 'index.js'),
+      "module.exports = { async onLoad() { await fetch('https://blocked.example/x'); } };");
+    testDb.prepare("INSERT INTO plugins (id, status, permissions, config) VALUES ('nettry','inactive','[]','{}')").run();
+    // no http:outbound granted -> egress guard blocks all outbound -> onLoad throws
+    await expect(new PluginRuntimeService().activate('nettry')).rejects.toThrow(/egress/);
+    await new PluginRuntimeService().deactivate('nettry').catch(() => {});
   });
 
   it('onModuleDestroy tears down cleanly', async () => {

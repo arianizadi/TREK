@@ -461,6 +461,13 @@ export const adminApi = {
   addons: () => apiClient.get('/admin/addons').then(r => r.data),
   updateAddon: (id: number | string, data: Record<string, unknown>) => apiClient.put(`/admin/addons/${id}`, data).then(r => r.data),
   plugins: () => apiClient.get('/admin/plugins').then(r => r.data),
+  pluginBrowse: () => apiClient.get('/admin/plugins/registry').then(r => r.data),
+  pluginInstall: (id: string, version?: string) => apiClient.post('/admin/plugins/install', { id, version }).then(r => r.data),
+  pluginActivate: (id: string) => apiClient.post(`/admin/plugins/${id}/activate`).then(r => r.data),
+  pluginDeactivate: (id: string) => apiClient.post(`/admin/plugins/${id}/deactivate`).then(r => r.data),
+  pluginUninstall: (id: string, deleteData: boolean) => apiClient.post(`/admin/plugins/${id}/uninstall`, { deleteData }).then(r => r.data),
+  pluginRescan: () => apiClient.post('/admin/plugins/rescan').then(r => r.data),
+  pluginErrors: (id: string) => apiClient.get(`/admin/plugins/${id}/errors`).then(r => r.data),
   // Local LLM (Ollama) management for the AI-parsing addon.
   llmLocalModels: (baseUrl: string): Promise<{ models: { name: string; size: number }[] }> =>
     apiClient.get('/admin/llm/local/models', { params: { baseUrl } }).then(r => r.data),

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { PluginsService } from './plugins.service';
 import { PluginRuntimeService } from './plugin-runtime.service';
 import { PluginRegistryService } from './registry/registry.service';
@@ -72,6 +72,24 @@ export class PluginsController {
   async deactivate(@Param('id') id: string) {
     await this.runtime.deactivate(id);
     return { status: 'inactive' };
+  }
+
+  @Post(':id/uninstall')
+  @HttpCode(200)
+  async uninstall(@Param('id') id: string, @Body() body: { deleteData?: boolean }) {
+    await this.runtime.uninstall(id, !!body?.deleteData);
+    return { status: 'uninstalled' };
+  }
+
+  @Get(':id/errors')
+  errors(@Param('id') id: string) {
+    return { errors: this.plugins.errors(id) };
+  }
+
+  @Delete(':id/errors')
+  clearErrors(@Param('id') id: string) {
+    this.plugins.clearErrors(id);
+    return { ok: true };
   }
 
   @Post('rescan')

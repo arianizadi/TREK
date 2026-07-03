@@ -85,3 +85,20 @@ describe('scaffold + validate CLIs', () => {
     expect(validatePluginDir(tmp).ok).toBe(false);
   });
 });
+
+describe('reference plugin (examples/trip-countdown)', () => {
+  const dir = path.resolve(import.meta.dirname, '..', 'examples', 'trip-countdown');
+
+  it('passes the same validation authors run', () => {
+    const r = validatePluginDir(dir);
+    expect(r.errors).toEqual([]);
+    expect(r.ok).toBe(true);
+  });
+
+  it('has a valid, minimal-permission manifest', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'trek-plugin.json'), 'utf8'));
+    const res = validateManifest(manifest);
+    expect(res.ok).toBe(true);
+    expect(res.manifest?.permissions).toEqual(['db:read:trips']);
+  });
+});

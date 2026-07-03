@@ -125,10 +125,40 @@ process.on('message', (raw: unknown) => {
     return;
   }
   if (msg.k === 'evt') {
-    if (msg.topic === 'init') void boot(((msg.data as { config?: Record<string, unknown> })?.config) ?? {});
-    else if (msg.topic === 'shutdown') void shutdown();
+    if (msg.topic === 'init') {
+      const d = msg.data as { config?: Record<string, unknown>; egress?: string[] };
+      installEgressGuard(d.egress ?? []);
+      void boot(d.config ?? {});
+    } else if (msg.topic === 'shutdown') void shutdown();
   }
 });
+
+/**
+ * Restrict the plugin's outbound network to its declared egress hosts. With no
+ * declared egress, ALL outbound fetch is blocked. Wildcards like `*.host` match
+ * any subdomain. This is process-level defense in depth; the container runtime
+ * (v2) enforces it at the network layer.
+ */
+function installEgressGuard(egress: string[]): void {
+  const patterns = egress.map((h) => h.trim().toLowerCase()).filter(Boolean);
+  const allowed = (hostname: string): boolean => {
+    const h = hostname.toLowerCase();
+    return patterns.some((p) => (p.startsWith('*.') ? h === p.slice(2) || h.endsWith(p.slice(1)) : h === p));
+  };
+  const realFetch = globalThis.fetch;
+  if (typeof realFetch !== 'function') return;
+  globalThis.fetch = ((input: unknown, init?: unknown) => {
+    const url = typeof input === 'string' ? input : (input as { url?: string })?.url ?? String(input);
+    let host: string;
+    try {
+      host = new URL(url).hostname;
+    } catch {
+      return Promise.reject(new Error('egress: invalid url'));
+    }
+    if (!allowed(host)) return Promise.reject(new Error(`egress: ${host} is not in the plugin's declared hosts`));
+    return (realFetch as (i: unknown, n: unknown) => Promise<unknown>)(input, init);
+  }) as typeof fetch;
+}
 
 // Ask the host for the init payload (instance config), then wait for it.
 send({ k: 'evt', topic: 'hello', data: {} });

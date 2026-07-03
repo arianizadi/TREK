@@ -3,9 +3,12 @@ import { db } from '../../db/database';
 import { pluginsEnabled } from './kill-switch';
 import { decrypt_api_key } from '../../services/apiKeyCrypto';
 import { PluginSupervisor, type PluginRouteInfo } from './supervisor/plugin-supervisor';
+import fs from 'node:fs';
 import { createRealRpcHost, closePluginDataDb } from './host/create-rpc-host';
+import { removePluginData } from './host/plugin-data.service';
 import { isKnownPermission } from './protocol/envelope';
 import { discoverPlugins } from './install/discovery';
+import { pluginCodeDir } from './paths';
 
 /**
  * Owns the isolated-plugin runtime lifecycle inside NestJS (#plugins, M2).
@@ -78,13 +81,29 @@ export class PluginRuntimeService implements OnModuleInit, OnModuleDestroy {
     const declared = parseArray(row.permissions).filter(isKnownPermission);
     db.prepare('UPDATE plugins SET granted_permissions = ? WHERE id = ?').run(JSON.stringify(declared), id);
     const config = decryptConfig(parseObject(row.config));
-    await this.supervisor.activate(id, new Set(declared), config);
+    const egress = declared.filter((p) => p.startsWith('http:outbound:')).map((p) => p.slice('http:outbound:'.length));
+    await this.supervisor.activate(id, new Set(declared), config, egress);
   }
 
   async deactivate(id: string): Promise<void> {
     await this.supervisor.disable(id);
     closePluginDataDb(id);
     db.prepare("UPDATE plugins SET status = 'inactive', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(id);
+  }
+
+  /** Stop the plugin, remove its code, and optionally delete all its data. */
+  async uninstall(id: string, deleteData: boolean): Promise<void> {
+    await this.supervisor.disable(id);
+    closePluginDataDb(id);
+    // Code always goes; the DB metadata + fields go so it disappears from the UI.
+    fs.rmSync(pluginCodeDir(id), { recursive: true, force: true });
+    db.prepare('DELETE FROM plugins WHERE id = ?').run(id);
+    db.prepare('DELETE FROM plugin_settings_fields WHERE plugin_id = ?').run(id);
+    if (deleteData) {
+      removePluginData(id);
+      db.prepare('DELETE FROM plugin_error_log WHERE plugin_id = ?').run(id);
+      db.prepare("DELETE FROM settings WHERE key LIKE ?").run(`plugin:${id}:%`);
+    }
   }
 
   isActive(id: string): boolean {

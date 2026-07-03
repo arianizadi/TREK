@@ -67,6 +67,17 @@ export class PluginsService {
     return maskSecrets(config, secretKeys);
   }
 
+  /** A plugin's error log, newest first. */
+  errors(id: string): Array<{ ts: string; level: string; message: string }> {
+    return db
+      .prepare('SELECT ts, level, message FROM plugin_error_log WHERE plugin_id = ? ORDER BY ts DESC, id DESC LIMIT 200')
+      .all(id) as Array<{ ts: string; level: string; message: string }>;
+  }
+
+  clearErrors(id: string): void {
+    db.prepare('DELETE FROM plugin_error_log WHERE plugin_id = ?').run(id);
+  }
+
   /** Read the instance config with secret fields masked. */
   getInstanceConfig(id: string): Record<string, unknown> {
     const row = db.prepare('SELECT config FROM plugins WHERE id = ?').get(id) as { config: string } | undefined;

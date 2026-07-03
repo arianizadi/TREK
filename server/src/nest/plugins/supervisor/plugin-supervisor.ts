@@ -39,6 +39,7 @@ interface Supervised {
   id: string;
   granted: ReadonlySet<string>;
   config: Record<string, unknown>;
+  egress: string[];
   rpcHost: PluginRpcHost;
   child: ChildProcess | null;
   status: PluginStatus;
@@ -80,12 +81,13 @@ export class PluginSupervisor {
   }
 
   /** Spawn a plugin and resolve once it reports `loaded` (or reject on load error). */
-  activate(id: string, granted: ReadonlySet<string>, config: Record<string, unknown> = {}): Promise<void> {
+  activate(id: string, granted: ReadonlySet<string>, config: Record<string, unknown> = {}, egress: string[] = []): Promise<void> {
     if (this.running.has(id)) return Promise.resolve();
     const sup: Supervised = {
       id,
       granted,
       config,
+      egress,
       rpcHost: this.createRpcHost(id, granted),
       child: null,
       status: 'starting',
@@ -201,7 +203,7 @@ export class PluginSupervisor {
     if (msg.k === 'evt') {
       switch (msg.topic) {
         case 'hello':
-          sup.child?.send({ k: 'evt', topic: 'init', data: { config: sup.config } } satisfies Envelope);
+          sup.child?.send({ k: 'evt', topic: 'init', data: { config: sup.config, egress: sup.egress } } satisfies Envelope);
           break;
         case 'heartbeat':
           sup.lastBeat = Date.now();

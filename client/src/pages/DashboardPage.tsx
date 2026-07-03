@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import { IcsSubscribeModal } from '../components/Planner/IcsSubscribeModal'
 import CollectionsWidget from '../components/Dashboard/CollectionsWidget'
+import PluginWidgets from '../components/Plugins/PluginWidgets'
+import { usePluginStore } from '../store/pluginStore'
 import { formatTime, splitReservationDateTime } from '../utils/formatters'
 import { convertDistance, getDistanceUnitLabel } from '../utils/units'
 import { useSettingsStore } from '../store/settingsStore'
@@ -125,7 +127,8 @@ export default function DashboardPage(): React.ReactElement {
   const isAddonEnabled = useAddonStore(s => s.isEnabled)
   const showCollections = isAddonEnabled('collections') && sideWidgets.collections
   // Desktop has a master toggle for the whole right column; off → centered layout.
-  const sidebarVisible = (isMobile || dashCfg.desktop.sidebar) && (showCurrency || showCollections || showTimezones || showUpcoming)
+  const widgetPlugins = usePluginStore(s => s.plugins).filter(p => p.type === 'widget')
+  const sidebarVisible = (isMobile || dashCfg.desktop.sidebar) && (showCurrency || showCollections || showTimezones || showUpcoming || widgetPlugins.length > 0)
 
   return (
     <>
@@ -234,6 +237,7 @@ export default function DashboardPage(): React.ReactElement {
               {showCollections && <CollectionsWidget onOpen={() => navigate('/collections')} />}
               {showTimezones && <TimezoneTool locale={locale} />}
               {showUpcoming && <UpcomingTool items={upcoming} locale={locale} onOpen={(tripId) => navigate(`/trips/${tripId}`)} />}
+              <PluginWidgets plugins={widgetPlugins} />
             </aside>
           )}
         </main>
