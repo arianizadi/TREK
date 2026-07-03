@@ -120,7 +120,8 @@ describe('PluginRegistryService', () => {
     const row = testDb.prepare("SELECT status, source_repo, source_commit FROM plugins WHERE id='flight-tracker'").get() as { status: string; source_repo: string; source_commit: string };
     expect(row).toMatchObject({ status: 'inactive', source_repo: 'acme/trek-flight', source_commit: 'a'.repeat(40) });
     // no staging left behind
-    expect(fs.existsSync(path.join(dataRoot, '.staging'))).toBe(false || fs.readdirSync(path.join(dataRoot, '.staging')).length === 0);
+    const staging = path.join(dataRoot, '.staging');
+    expect(!fs.existsSync(staging) || fs.readdirSync(staging).length === 0).toBe(true);
   });
 
   it('rejects an sha256 mismatch', async () => {

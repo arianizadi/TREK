@@ -71,7 +71,11 @@ export class PluginFrameController {
     const connect = ["'self'", ...outbound.map((h) => (h.includes('://') ? h : `https://${h}`))].join(' ');
     return [
       "default-src 'none'",
-      "script-src 'self'",
+      // The frame runs at an OPAQUE origin (sandbox without allow-same-origin),
+      // so 'self' matches nothing — inline is the only way its own script can run.
+      // Safe here: the sandbox (not this script-src) is the isolation boundary,
+      // and the plugin author controls the frame's code either way.
+      "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
