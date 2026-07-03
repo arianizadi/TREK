@@ -460,6 +460,7 @@ export const adminApi = {
   updateOidc: (data: Record<string, unknown>) => apiClient.put('/admin/oidc', data).then(r => r.data),
   addons: () => apiClient.get('/admin/addons').then(r => r.data),
   updateAddon: (id: number | string, data: Record<string, unknown>) => apiClient.put(`/admin/addons/${id}`, data).then(r => r.data),
+  plugins: () => apiClient.get('/admin/plugins').then(r => r.data),
   // Local LLM (Ollama) management for the AI-parsing addon.
   llmLocalModels: (baseUrl: string): Promise<{ models: { name: string; size: number }[] }> =>
     apiClient.get('/admin/llm/local/models', { params: { baseUrl } }).then(r => r.data),
