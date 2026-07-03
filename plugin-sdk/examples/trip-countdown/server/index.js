@@ -31,7 +31,7 @@ module.exports = definePlugin({
         return {
           status: 200,
           headers: json(),
-          body: JSON.stringify({ trip: t ? { name: t.name, days } : null }),
+          body: JSON.stringify({ trip: t ? { name: t.title, days } : null }),
         }
       },
     },

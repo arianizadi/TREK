@@ -71,7 +71,9 @@ export class PluginRpcHost {
     }
 
     if (has('db:read:trips')) {
-      this.methods.set('trips.getById', (p) => this.tripRead(p, () => deps.canAccessTrip(num(p.tripId, 'tripId'), num(p.asUserId, 'asUserId'))));
+      this.methods.set('trips.getById', (p) =>
+        this.tripRead(p, () => deps.db.prepare('SELECT * FROM trips WHERE id = ?').get(num(p.tripId, 'tripId'))),
+      );
       this.methods.set('trips.getPlaces', (p) =>
         this.tripRead(p, () => deps.db.prepare('SELECT * FROM places WHERE trip_id = ? ORDER BY day_id, position').all(num(p.tripId, 'tripId'))),
       );

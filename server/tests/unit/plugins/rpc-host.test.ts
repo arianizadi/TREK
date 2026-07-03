@@ -18,9 +18,12 @@ function makeDeps(): HostDeps {
       close: vi.fn(),
     } as unknown as HostDeps['data'],
     db: {
-      prepare: vi.fn(() => ({
+      prepare: vi.fn((sql: string) => ({
         all: () => [{ id: 7, name: 'Place' }],
-        get: () => ({ id: 3, username: 'ada', display_name: 'Ada', avatar: null }),
+        get: () =>
+          sql.includes('FROM trips')
+            ? { id: 1, title: 'Japan', start_date: '2027-01-01' }
+            : { id: 3, username: 'ada', display_name: 'Ada', avatar: null },
       })),
     },
     // trip 1 is accessible to user 42; everything else is not
@@ -63,7 +66,9 @@ describe('PluginRpcHost — capability enforcement', () => {
     const host = new PluginRpcHost('p', new Set(['db:read:trips']), deps);
     const res = await host.dispatch(req('trips.getById', { tripId: 1, asUserId: 42 }));
     expect(ok(res)).toBe(true);
-    expect((res as RpcResponse).result).toEqual({ id: 1 });
+    // returns the ACTUAL trip row (title/start_date), not the access-check object
+    expect((res as RpcResponse).result).toMatchObject({ id: 1, title: 'Japan', start_date: '2027-01-01' });
+    expect(deps.db.prepare).toHaveBeenCalledWith(expect.stringContaining('FROM trips'));
   });
 
   it('db:read:trips is still RESOURCE_FORBIDDEN when the user is not a member', async () => {
