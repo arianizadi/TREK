@@ -175,7 +175,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Plugin odinstalován',
   'admin.plugins.uninstallTitle': 'Odinstalovat plugin?',
   'admin.plugins.uninstallBody': 'Tím se plugin zastaví, odstraní se jeho kód a smažou se všechna jeho data. Tuto akci nelze vrátit zpět.',
-  'admin.plugins.trustNote': 'Pluginy běží izolovaně a mají pouze oprávnění, která schválíte. Instalujte pouze kód od autorů, kterým důvěřujete.',
   'admin.plugins.status.starting': 'Spouští se…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Stránka',
@@ -220,8 +219,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': 'Poskytovat fotky do sekce Fotky',
   'admin.plugins.perm.hook:calendar-source': 'Poskytovat události do kalendáře',
   'admin.plugins.perm.http:outbound': 'Odesílat odchozí požadavky na deklarované hostitele',
-  'admin.plugins.riskTitle': 'Instalace na vlastní riziko',
-  'admin.plugins.riskBody': 'Pluginy jsou kód třetích stran. I po předchozí rychlé kontrole může plugin stále obsahovat škodlivý obsah — v případě pochybností si plugin před instalací sami prohlédněte. TREK nenese žádnou odpovědnost.',
+  'admin.plugins.updateConsentTitle': 'Tato aktualizace vyžaduje nová oprávnění',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} žádá o oprávnění, která jste zatím neudělili. Nová verze je nainstalována, ale zůstane vypnutá, dokud ji neschválíte.',
+  'admin.plugins.updateNewPermissions': 'Nově požadovaná oprávnění',
+  'admin.plugins.updateNewEgress': 'Nová odchozí připojení',
+  'admin.plugins.updateApprove': 'Schválit a zapnout',
+  'admin.plugins.updateLater': 'Zatím ponechat vypnuté',
+  'admin.plugins.updateKeptOff': 'Aktualizace nainstalována — zůstává vypnutá, dokud neschválíte nová oprávnění',
+  'admin.plugins.reviewedMeaning':
+    '„Zkontrolováno“ znamená, že správce TREK prověřil tento plugin na škodlivý kód u každé verze — nikoli jeho kvalitu ani to, zda funguje. Není to záruka, že je plugin neškodný.',
+  'admin.plugins.security.title': 'Jak jsou pluginy izolovány — a kde jsou hranice',
+  'admin.plugins.security.isolationTitle': 'Každý plugin běží v izolaci',
+  'admin.plugins.security.isolationBody':
+    'Plugin běží jako vlastní uzamčený proces, který může číst pouze své vlastní soubory. Nemůže číst vaši databázi, váš přihlašovací tajný klíč ani váš šifrovací klíč, nemůže spouštět jiné programy a nemůže nikam zapisovat soubory. Jeho rozhraní běží v uzavřeném rámci prohlížeče, který nemůže číst vaši session cookie ani zasahovat do okolní stránky TREK.',
+  'admin.plugins.security.permsTitle': 'Co oprávnění znamenají',
+  'admin.plugins.security.permsBody':
+    'Oprávnění zobrazená před instalací jsou pevný limit, který TREK vynucuje po celou dobu běhu pluginu — plugin doslova nemůže udělat nic, co není na seznamu. Říkají vám ale, co plugin může dělat, nikoli co skutečně dělá. Plugin, který smí číst vaše cesty a spojit se se serverem, může vaše cesty tomuto serveru odeslat, proto si přečtěte oprávnění i odchozí hostitele, nejen popis.',
+  'admin.plugins.security.limitsTitle': 'Co nemůžeme slíbit',
+  'admin.plugins.security.limitsBody':
+    'Izolace je silná softwarová hranice, nikoli absolutní. Plugin jedná přesně s těmi právy, která schválíte, takže v jejich rámci se může chovat jinak, než naznačuje jeho popis, a může odeslat data, která oprávněně drží, hostitelům, které deklaroval. TREK nečte ani neposuzuje, co kód pluginu ve skutečnosti dělá.',
+  'admin.plugins.security.worstTitle': 'Nejhorší případ',
+  'admin.plugins.security.worstBody':
+    'Škodlivý plugin, který zapnete, může zneužít data a připojení, jež jste mu udělili — například vynést cesty, které smí číst. Nemůže krást hesla, padělat přihlášení administrátora, spouštět příkazy na vašem serveru ani se dostat k datům, která jste neudělili. Škoda zůstává v rámci toho, co jste schválili, a vypnutí pluginu ji zastaví.',
+  'admin.plugins.security.reviewedTitle': 'Co znamená „Zkontrolováno“',
+  'admin.plugins.security.reviewedBody':
+    'Zkontrolovaný plugin ručně prověřil správce TREK na škodlivý kód u každé verze — kontroloval nepřátelský kód, nikoli to, zda dobře funguje. Není to slib, že je plugin neškodný.',
+  'admin.plugins.security.trustTitle': 'Závěrem',
+  'admin.plugins.security.trustBody':
+    'Instalace pluginu je jako instalace jakékoli aplikace třetí strany: přidávejte pouze kód od autorů, kterým důvěřujete, a v případě pochybností si jej nejprve sami prohlédněte. TREK nenese žádnou odpovědnost za pluginy třetích stran.',
   'admin.addons.title': 'Doplňky',
   'admin.addons.subtitle': 'Zapněte nebo vypněte funkce a přizpůsobte si TREK.',
   'admin.addons.catalog.memories.name': 'Fotky (Immich)',

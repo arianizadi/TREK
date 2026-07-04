@@ -177,7 +177,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Plugin eltávolítva',
   'admin.plugins.uninstallTitle': 'Plugin eltávolítása?',
   'admin.plugins.uninstallBody': 'Ez leállítja a plugint, eltávolítja a kódját, és törli az összes adatát. Ez nem vonható vissza.',
-  'admin.plugins.trustNote': 'A pluginok elkülönítve futnak, kizárólag az általad jóváhagyott engedélyekkel. Csak megbízható szerzőktől telepíts kódot.',
   'admin.plugins.status.starting': 'Indítás…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Oldal',
@@ -222,8 +221,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': 'Fotók biztosítása az Emlékek funkcióhoz',
   'admin.plugins.perm.hook:calendar-source': 'Események biztosítása a naptárhoz',
   'admin.plugins.perm.http:outbound': 'Kimenő kérések küldése a bejelentett kiszolgálók felé',
-  'admin.plugins.riskTitle': 'Telepítés csak saját felelősségre',
-  'admin.plugins.riskBody': 'A pluginok harmadik féltől származó kódok. Egy plugin még előzetes gyors ellenőrzés után is tartalmazhat káros tartalmat — kétség esetén telepítés előtt vizsgáld meg magad a plugint. A TREK semmilyen felelősséget nem vállal.',
+  'admin.plugins.updateConsentTitle': 'Ez a frissítés új engedélyeket igényel',
+  'admin.plugins.updateConsentBody':
+    'A(z) {name} v{version} olyan jogokat kér, amelyeket még nem adtál meg. Az új verzió telepítve van, de kikapcsolva marad, amíg jóvá nem hagyod.',
+  'admin.plugins.updateNewPermissions': 'Újonnan kért engedélyek',
+  'admin.plugins.updateNewEgress': 'Új kimenő kapcsolatok',
+  'admin.plugins.updateApprove': 'Jóváhagyás és bekapcsolás',
+  'admin.plugins.updateLater': 'Egyelőre kikapcsolva marad',
+  'admin.plugins.updateKeptOff': 'Frissítés telepítve — kikapcsolva marad, amíg jóvá nem hagyod az új engedélyeket',
+  'admin.plugins.reviewedMeaning':
+    'Az „Ellenőrizve" azt jelenti, hogy egy TREK karbantartó minden verziónál átvizsgálta ezt a plugint kártevők után — nem a minőségét vagy azt, hogy működik-e. Ez nem garancia arra, hogy a plugin ártalmatlan.',
+  'admin.plugins.security.title': 'Hogyan vannak a pluginok elszigetelve — és mik a korlátok',
+  'admin.plugins.security.isolationTitle': 'Minden plugin elszigetelten fut',
+  'admin.plugins.security.isolationBody':
+    'A plugin saját, lezárt folyamatként fut, amely csak a saját fájljait olvashatja. Nem fér hozzá az adatbázisodhoz, a bejelentkezési titkodhoz vagy a titkosítási kulcsodhoz, nem indíthat más programokat, és sehová nem írhat fájlokat. A felülete egy lezárt böngészőkeretben fut, amely nem olvashatja a munkamenet-sütidet, és nem nyúlhat a körülötte lévő TREK oldalhoz.',
+  'admin.plugins.security.permsTitle': 'Mit jelentenek az engedélyek',
+  'admin.plugins.security.permsBody':
+    'A telepítés előtt megjelenített engedélyek szigorú korlátot jelentenek, amelyet a TREK a plugin futása közben kényszerít ki — szó szerint semmit sem tehet, ami nem szerepel a listán. De azt mutatják meg, mit tehet egy plugin, nem azt, hogy valójában mit tesz. Egy olyan plugin, amely olvashatja az utazásaidat és elérhet egy szervert, el is küldheti az utazásaidat arra a szerverre, ezért ne csak a leírást, hanem az engedélyeket és a kimenő kiszolgálókat is olvasd el.',
+  'admin.plugins.security.limitsTitle': 'Mit nem ígérhetünk',
+  'admin.plugins.security.limitsBody':
+    'Az elszigetelés erős szoftveres határ, de nem abszolút. A plugin pontosan azokkal a jogokkal működik, amelyeket jóváhagysz, így ezeken a jogokon belül a leírásától eltérően is viselkedhet, és a jogszerűen birtokolt adatokat elküldheti az általa bejelentett kiszolgálóknak. A TREK nem olvassa és nem ítéli meg, hogy egy plugin kódja valójában mit csinál.',
+  'admin.plugins.security.worstTitle': 'A legrosszabb eset',
+  'admin.plugins.security.worstBody':
+    'Egy ellenséges plugin, amelyet bekapcsolsz, visszaélhet a neki megadott adatokkal és kapcsolatokkal — például kiszivárogtathatja azokat az utazásokat, amelyeket olvashat. Nem tud jelszavakat ellopni, admin bejelentkezést hamisítani, parancsokat futtatni a szervereden, vagy olyan adatokhoz hozzáférni, amelyeket nem engedélyeztél. A kár azon belül marad, amit jóváhagytál, és a plugin kikapcsolása leállítja.',
+  'admin.plugins.security.reviewedTitle': 'Mit jelent az „Ellenőrizve"',
+  'admin.plugins.security.reviewedBody':
+    'Egy ellenőrzött plugint egy TREK karbantartó minden verziónál kézzel átvizsgált kártevők után — ellenséges kód szempontjából ellenőrizte, nem pedig azt, hogy jól működik-e. Ez nem ígéret arra, hogy a plugin ártalmatlan.',
+  'admin.plugins.security.trustTitle': 'A lényeg',
+  'admin.plugins.security.trustBody':
+    'Egy plugin telepítése olyan, mint bármely harmadik féltől származó alkalmazás telepítése: csak megbízható szerzőktől adj hozzá kódot, és kétség esetén előbb magad vizsgáld meg. A TREK semmilyen felelősséget nem vállal a harmadik féltől származó pluginokért.',
   'admin.addons.title': 'Bővítmények',
   'admin.addons.subtitle': 'Funkciók engedélyezése vagy letiltása a TREK testreszabásához.',
   'admin.addons.catalog.packing.name': 'Listák',

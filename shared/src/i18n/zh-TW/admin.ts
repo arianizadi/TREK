@@ -211,7 +211,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': '外掛已解除安裝',
   'admin.plugins.uninstallTitle': '解除安裝外掛？',
   'admin.plugins.uninstallBody': '這將停止該外掛、移除其程式碼並刪除其所有資料。此操作無法復原。',
-  'admin.plugins.trustNote': '外掛在隔離環境中執行，僅擁有你核准的權限。請只安裝你信任的作者的程式碼。',
   'admin.plugins.status.starting': '啟動中…',
   'admin.plugins.type.widget': '小工具',
   'admin.plugins.type.page': '頁面',
@@ -256,8 +255,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': '為「回憶」提供照片',
   'admin.plugins.perm.hook:calendar-source': '為行事曆提供事件',
   'admin.plugins.perm.http:outbound': '向其宣告的主機發出對外請求',
-  'admin.plugins.riskTitle': '安裝風險自負',
-  'admin.plugins.riskBody': '外掛屬於第三方程式碼。即使事先經過快速審核，外掛仍可能包含有害內容——如有疑慮，請在安裝前自行檢查外掛。TREK 概不承擔任何責任。',
+  'admin.plugins.updateConsentTitle': '此更新需要新的權限',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} 要求你尚未授予的權限。新版本已安裝，但在你核准之前將保持關閉。',
+  'admin.plugins.updateNewPermissions': '新要求的權限',
+  'admin.plugins.updateNewEgress': '新的對外連線',
+  'admin.plugins.updateApprove': '核准並啟用',
+  'admin.plugins.updateLater': '暫時保持關閉',
+  'admin.plugins.updateKeptOff': '更新已安裝——在你核准新權限之前保持關閉',
+  'admin.plugins.reviewedMeaning':
+    '「已審核」代表 TREK 維護者曾針對每個版本掃描此外掛是否含有惡意程式碼——並非檢查品質或功能是否正常。這不保證外掛無害。',
+  'admin.plugins.security.title': '外掛如何被隔離——以及其限制',
+  'admin.plugins.security.isolationTitle': '每個外掛都在沙箱中執行',
+  'admin.plugins.security.isolationBody':
+    '外掛以自身受限的獨立程序執行，只能讀取自己的檔案。它無法讀取你的資料庫、登入密鑰或加密金鑰，無法啟動其他程式，也無法在任何位置寫入檔案。它的介面在一個封閉的瀏覽器框架中執行，無法讀取你的工作階段 Cookie，也無法觸及其周圍的 TREK 頁面。',
+  'admin.plugins.security.permsTitle': '這些權限的含義',
+  'admin.plugins.security.permsBody':
+    '安裝前顯示的權限是 TREK 在外掛執行期間強制執行的硬性上限——它絕對無法做出清單以外的任何動作。但這些權限告訴你外掛「能」做什麼，而非它「實際」做什麼。一個獲准讀取你行程並連線某伺服器的外掛，就能將你的行程傳送到該伺服器，所以請閱讀權限與對外主機，而不只是看說明。',
+  'admin.plugins.security.limitsTitle': '我們無法保證的事',
+  'admin.plugins.security.limitsBody':
+    '這種隔離是一道強而有力的軟體邊界，但並非絕對。外掛僅以你核准的權限行事，因此在這些權限範圍內，它的行為可能與其說明不符，也可能將它合法持有的資料傳送到它所宣告的主機。TREK 不會讀取或評判外掛的程式碼實際做了什麼。',
+  'admin.plugins.security.worstTitle': '最壞的情況',
+  'admin.plugins.security.worstBody':
+    '你啟用的惡意外掛可能濫用你授予它的資料與連線——例如洩漏它獲准讀取的行程。它無法竊取密碼、偽造管理員登入、在你的伺服器上執行命令，或存取你未授予的資料。損害僅限於你核准的範圍，停用該外掛即可阻止它。',
+  'admin.plugins.security.reviewedTitle': '「已審核」的含義',
+  'admin.plugins.security.reviewedBody':
+    '已審核的外掛，代表 TREK 維護者曾針對每個版本手動掃描惡意程式碼——檢查是否含有有害程式碼，而非它是否運作良好。這並不保證外掛無害。',
+  'admin.plugins.security.trustTitle': '結論',
+  'admin.plugins.security.trustBody':
+    '安裝外掛就像安裝任何第三方應用程式：只加入你信任的作者所提供的程式碼，如有疑慮，請先自行檢查。TREK 對第三方外掛概不承擔任何責任。',
   'admin.addons.title': '擴充套件',
   'admin.addons.subtitle': '啟用或停用功能以自定義你的 TREK 體驗。',
   'admin.addons.catalog.memories.name': '照片 (Immich)',

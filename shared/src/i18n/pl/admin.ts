@@ -170,7 +170,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Wtyczka została odinstalowana',
   'admin.plugins.uninstallTitle': 'Odinstalować wtyczkę?',
   'admin.plugins.uninstallBody': 'Spowoduje to zatrzymanie wtyczki, usunięcie jej kodu i wszystkich jej danych. Tej operacji nie można cofnąć.',
-  'admin.plugins.trustNote': 'Wtyczki działają w izolacji, wyłącznie z uprawnieniami, które zatwierdzisz. Instaluj tylko kod od autorów, którym ufasz.',
   'admin.plugins.status.starting': 'Uruchamianie…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Strona',
@@ -215,8 +214,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': 'Dostarczanie zdjęć do sekcji Zdjęcia',
   'admin.plugins.perm.hook:calendar-source': 'Dostarczanie wydarzeń do kalendarza',
   'admin.plugins.perm.http:outbound': 'Wykonywanie wychodzących zapytań do zadeklarowanych hostów',
-  'admin.plugins.riskTitle': 'Instalujesz na własne ryzyko',
-  'admin.plugins.riskBody': 'Wtyczki to kod stron trzecich. Nawet po wcześniejszym pobieżnym przeglądzie wtyczka może nadal zawierać szkodliwą zawartość — w razie wątpliwości samodzielnie sprawdź wtyczkę przed instalacją. TREK nie ponosi żadnej odpowiedzialności.',
+  'admin.plugins.updateConsentTitle': 'Ta aktualizacja wymaga nowych uprawnień',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} prosi o uprawnienia, których jeszcze nie przyznałeś. Nowa wersja jest zainstalowana, ale pozostaje wyłączona, dopóki jej nie zatwierdzisz.',
+  'admin.plugins.updateNewPermissions': 'Nowo wymagane uprawnienia',
+  'admin.plugins.updateNewEgress': 'Nowe połączenia wychodzące',
+  'admin.plugins.updateApprove': 'Zatwierdź i włącz',
+  'admin.plugins.updateLater': 'Na razie pozostaw wyłączoną',
+  'admin.plugins.updateKeptOff': 'Aktualizacja zainstalowana — pozostaje wyłączona, dopóki nie zatwierdzisz nowych uprawnień',
+  'admin.plugins.reviewedMeaning':
+    '„Zweryfikowana” oznacza, że opiekun TREK przeskanował tę wtyczkę pod kątem złośliwego oprogramowania w każdej wersji — nie pod kątem jakości ani tego, czy działa. To nie jest gwarancja, że wtyczka jest nieszkodliwa.',
+  'admin.plugins.security.title': 'Jak wtyczki są izolowane — i jakie są tego granice',
+  'admin.plugins.security.isolationTitle': 'Każda wtyczka działa w izolacji',
+  'admin.plugins.security.isolationBody':
+    'Wtyczka działa jako własny, odizolowany proces, który może odczytywać wyłącznie swoje własne pliki. Nie może odczytać Twojej bazy danych, sekretu logowania ani klucza szyfrującego, nie może uruchamiać innych programów ani nigdzie zapisywać plików. Jej interfejs działa w zamkniętej ramce przeglądarki, która nie może odczytać Twojego pliku cookie sesji ani ingerować w otaczającą ją stronę TREK.',
+  'admin.plugins.security.permsTitle': 'Co oznaczają uprawnienia',
+  'admin.plugins.security.permsBody':
+    'Uprawnienia pokazywane przed instalacją to twarda granica, którą TREK egzekwuje w trakcie działania wtyczki — dosłownie nie może ona zrobić niczego, czego nie ma na liście. Mówią one jednak, co wtyczka może robić, a nie co faktycznie robi. Wtyczka, która może odczytywać Twoje podróże i łączyć się z serwerem, może wysłać Twoje podróże na ten serwer, dlatego czytaj uprawnienia i hosty wychodzące, a nie tylko opis.',
+  'admin.plugins.security.limitsTitle': 'Czego nie możemy obiecać',
+  'admin.plugins.security.limitsBody':
+    'Izolacja to silna granica programowa, ale nie absolutna. Wtyczka działa dokładnie z tymi uprawnieniami, które zatwierdzisz, więc w ich ramach może zachowywać się inaczej, niż sugeruje jej opis, i może wysyłać dane, do których ma zgodny z uprawnieniami dostęp, do zadeklarowanych przez siebie hostów. TREK nie odczytuje ani nie ocenia tego, co faktycznie robi kod wtyczki.',
+  'admin.plugins.security.worstTitle': 'Najgorszy scenariusz',
+  'admin.plugins.security.worstBody':
+    'Wroga wtyczka, którą włączysz, może nadużyć danych i połączeń, które jej przyznałeś — na przykład ujawnić podróże, które może odczytywać. Nie może wykraść haseł, sfałszować logowania administratora, uruchamiać poleceń na Twoim serwerze ani sięgać po dane, których jej nie przyznałeś. Szkody pozostają w granicach tego, co zatwierdziłeś, a wyłączenie wtyczki je zatrzymuje.',
+  'admin.plugins.security.reviewedTitle': 'Co oznacza „Zweryfikowana”',
+  'admin.plugins.security.reviewedBody':
+    'Zweryfikowana wtyczka została ręcznie przeskanowana pod kątem złośliwego oprogramowania przez opiekuna TREK w każdej wersji — sprawdzona pod kątem wrogiego kodu, a nie tego, czy działa dobrze. To nie jest obietnica, że wtyczka jest nieszkodliwa.',
+  'admin.plugins.security.trustTitle': 'Podsumowanie',
+  'admin.plugins.security.trustBody':
+    'Instalacja wtyczki jest jak instalacja dowolnej aplikacji innych firm: dodawaj tylko kod od autorów, którym ufasz, a w razie wątpliwości najpierw samodzielnie go sprawdź. TREK nie ponosi żadnej odpowiedzialności za wtyczki innych firm.',
   'admin.addons.title': 'Dodatki',
   'admin.addons.subtitle': 'Włączaj lub wyłączaj funkcje, aby dostosować swoje doświadczenie w TREK.',
   'admin.addons.catalog.packing.name': 'Listy',

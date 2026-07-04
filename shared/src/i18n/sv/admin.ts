@@ -229,7 +229,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Pluginet har avinstallerats',
   'admin.plugins.uninstallTitle': 'Avinstallera pluginet?',
   'admin.plugins.uninstallBody': 'Detta stoppar pluginet, tar bort dess kod och raderar alla dess data. Detta kan inte ångras.',
-  'admin.plugins.trustNote': 'Plugins körs isolerat med endast de behörigheter du godkänner. Installera bara kod från upphovspersoner du litar på.',
   'admin.plugins.status.starting': 'Startar…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Sida',
@@ -274,8 +273,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': 'Tillhandahålla foton till Minnen',
   'admin.plugins.perm.hook:calendar-source': 'Tillhandahålla händelser till kalendern',
   'admin.plugins.perm.http:outbound': 'Göra utgående anrop till sina deklarerade värdar',
-  'admin.plugins.riskTitle': 'Installera på egen risk',
-  'admin.plugins.riskBody': 'Plugins är tredjepartskod. Även efter en tidigare snabbgranskning kan ett plugin fortfarande innehålla skadligt innehåll – granska vid tveksamhet pluginet själv innan du installerar. TREK tar inget som helst ansvar.',
+  'admin.plugins.updateConsentTitle': 'Den här uppdateringen kräver nya behörigheter',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} begär behörigheter som du ännu inte har beviljat. Den nya versionen är installerad men förblir avstängd tills du godkänner den.',
+  'admin.plugins.updateNewPermissions': 'Nyligen begärda behörigheter',
+  'admin.plugins.updateNewEgress': 'Nya utgående anslutningar',
+  'admin.plugins.updateApprove': 'Godkänn och aktivera',
+  'admin.plugins.updateLater': 'Låt vara avstängd tills vidare',
+  'admin.plugins.updateKeptOff': 'Uppdateringen är installerad — förblir avstängd tills du godkänner de nya behörigheterna',
+  'admin.plugins.reviewedMeaning':
+    '”Granskad” betyder att en TREK-underhållare har skannat pluginet efter skadlig kod i varje version — inte efter kvalitet eller om det fungerar. Det är ingen garanti för att ett plugin är ofarligt.',
+  'admin.plugins.security.title': 'Så här isoleras plugins — och gränserna för det',
+  'admin.plugins.security.isolationTitle': 'Varje plugin körs inkapslat',
+  'admin.plugins.security.isolationBody':
+    'Ett plugin körs som en egen låst process som bara kan läsa sina egna filer. Det kan inte läsa din databas, din inloggningshemlighet eller din krypteringsnyckel, kan inte starta andra program och kan inte skriva filer någonstans. Dess gränssnitt körs i en förseglad webbläsarram som inte kan läsa din sessionscookie eller röra TREK-sidan runt omkring.',
+  'admin.plugins.security.permsTitle': 'Vad behörigheterna betyder',
+  'admin.plugins.security.permsBody':
+    'Behörigheterna som visas innan du installerar är en hård gräns som TREK upprätthåller medan pluginet körs — det kan bokstavligen inte göra något som inte står på listan. Men de talar om vad ett plugin kan göra, inte vad det faktiskt gör. Ett plugin som får läsa dina resor och nå en server kan skicka dina resor till den servern, så läs behörigheterna och de utgående värdarna, inte bara beskrivningen.',
+  'admin.plugins.security.limitsTitle': 'Vad vi inte kan lova',
+  'admin.plugins.security.limitsBody':
+    'Isoleringen är en stark mjukvarugräns, men inte en absolut. Ett plugin agerar med exakt de rättigheter du godkänner, så inom dessa rättigheter kan det bete sig annorlunda än vad beskrivningen antyder, och det kan skicka data som det legitimt innehar till de värdar det har deklarerat. TREK läser eller bedömer inte vad ett plugins kod faktiskt gör.',
+  'admin.plugins.security.worstTitle': 'Värsta tänkbara fall',
+  'admin.plugins.security.worstBody':
+    'Ett fientligt plugin som du aktiverar kan missbruka de data och anslutningar du har gett det — till exempel läcka de resor det får läsa. Det kan inte stjäla lösenord, förfalska en administratörsinloggning, köra kommandon på din server eller nå data som du inte har beviljat. Skadan håller sig inom det du har godkänt, och att stänga av pluginet stoppar det.',
+  'admin.plugins.security.reviewedTitle': 'Vad ”Granskad” betyder',
+  'admin.plugins.security.reviewedBody':
+    'Ett granskat plugin har manuellt skannats efter skadlig kod av en TREK-underhållare i varje version — kontrollerat för fientlig kod, inte för om det fungerar bra. Det är inget löfte om att pluginet är ofarligt.',
+  'admin.plugins.security.trustTitle': 'Sammanfattningsvis',
+  'admin.plugins.security.trustBody':
+    'Att installera ett plugin är som att installera vilken tredjepartsapp som helst: lägg bara till kod från upphovspersoner du litar på, och granska det själv först om du är osäker. TREK tar inget ansvar för tredjepartsplugins.',
   'admin.addons.title': 'Tillägg',
   'admin.addons.subtitle': 'Aktivera eller inaktivera funktioner för att anpassa din TREK-upplevelse.',
   'admin.addons.catalog.packing.name': 'Listor',
