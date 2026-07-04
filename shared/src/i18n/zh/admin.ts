@@ -172,7 +172,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': '插件已卸载',
   'admin.plugins.uninstallTitle': '卸载插件？',
   'admin.plugins.uninstallBody': '这将停止该插件、移除其代码并删除其全部数据。此操作无法撤销。',
-  'admin.plugins.trustNote': '插件在隔离环境中运行，仅拥有你批准的权限。请只安装来自你信任的作者的代码。',
   'admin.plugins.status.starting': '启动中…',
   'admin.plugins.type.widget': '小组件',
   'admin.plugins.type.page': '页面',
@@ -217,8 +216,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': '为回忆提供照片',
   'admin.plugins.perm.hook:calendar-source': '为日历提供事件',
   'admin.plugins.perm.http:outbound': '向其声明的主机发出出站请求',
-  'admin.plugins.riskTitle': '安装风险自负',
-  'admin.plugins.riskBody': '插件是第三方代码。即使经过事先的快速审核，插件仍可能包含有害内容——如有疑虑，请在安装前自行检查插件。TREK 不承担任何责任。',
+  'admin.plugins.updateConsentTitle': '此次更新需要新的权限',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} 请求了你尚未授予的权限。新版本已安装，但在你批准之前将保持关闭。',
+  'admin.plugins.updateNewPermissions': '新请求的权限',
+  'admin.plugins.updateNewEgress': '新的出站连接',
+  'admin.plugins.updateApprove': '批准并启用',
+  'admin.plugins.updateLater': '暂时保持关闭',
+  'admin.plugins.updateKeptOff': '更新已安装 —— 在你批准新权限之前保持关闭',
+  'admin.plugins.reviewedMeaning':
+    '“已审核”表示 TREK 维护者已针对该插件的每个版本进行了恶意软件扫描 —— 而非检查其质量或是否可用。这并不保证插件无害。',
+  'admin.plugins.security.title': '插件如何被隔离 —— 以及其局限',
+  'admin.plugins.security.isolationTitle': '每个插件都在隔离环境中运行',
+  'admin.plugins.security.isolationBody':
+    '插件作为其独立的受限进程运行，只能读取自己的文件。它无法读取你的数据库、登录密钥或加密密钥，无法启动其他程序，也无法在任何位置写入文件。它的界面运行在一个封闭的浏览器框架中，既读不到你的会话 Cookie，也无法触及周围的 TREK 页面。',
+  'admin.plugins.security.permsTitle': '权限的含义',
+  'admin.plugins.security.permsBody':
+    '安装前显示的权限是 TREK 在插件运行期间强制执行的硬性上限 —— 凡是不在清单上的事，插件根本无法做到。但它们只告诉你插件能做什么，而非它实际做了什么。一个获准读取你的行程并连接某服务器的插件，就能把你的行程发送到该服务器，因此请仔细阅读权限和出站主机，而不只是看描述。',
+  'admin.plugins.security.limitsTitle': '我们无法承诺的事',
+  'admin.plugins.security.limitsBody':
+    '这种隔离是强有力的软件边界，但并非绝对。插件所拥有的权限完全就是你批准的那些，因此在这些权限范围内，它的行为可能与其描述不符，也可能把它合法持有的数据发送到它所声明的主机。TREK 不会读取或评判插件代码实际做了什么。',
+  'admin.plugins.security.worstTitle': '最坏的情况',
+  'admin.plugins.security.worstBody':
+    '你启用的恶意插件可能滥用你授予它的数据和连接 —— 例如，泄露它有权读取的行程。但它无法窃取密码、伪造管理员登录、在你的服务器上执行命令，也无法触及你未授权的数据。损害始终限于你批准的范围，而停用该插件即可将其制止。',
+  'admin.plugins.security.reviewedTitle': '“已审核”的含义',
+  'admin.plugins.security.reviewedBody':
+    '已审核的插件，其每个版本都经过 TREK 维护者的人工恶意软件扫描 —— 检查的是有无恶意代码，而非它是否运行良好。这并不保证插件无害。',
+  'admin.plugins.security.trustTitle': '归根结底',
+  'admin.plugins.security.trustBody':
+    '安装插件就如同安装任何第三方应用：只添加来自你信任的作者的代码，如有疑虑，请先自行检查。TREK 对第三方插件不承担任何责任。',
   'admin.addons.title': '扩展',
   'admin.addons.subtitle': '启用或禁用功能以自定义你的 TREK 体验。',
   'admin.addons.catalog.memories.name': '照片 (Immich)',

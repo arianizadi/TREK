@@ -214,7 +214,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': '플러그인이 제거되었습니다',
   'admin.plugins.uninstallTitle': '플러그인을 제거할까요?',
   'admin.plugins.uninstallBody': '플러그인이 중지되고 코드가 제거되며 모든 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-  'admin.plugins.trustNote': '플러그인은 승인한 권한만 가지고 격리된 상태로 실행됩니다. 신뢰할 수 있는 작성자의 코드만 설치하세요.',
   'admin.plugins.status.starting': '시작 중…',
   'admin.plugins.type.widget': '위젯',
   'admin.plugins.type.page': '페이지',
@@ -259,8 +258,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': '사진 기능에 사진 제공',
   'admin.plugins.perm.hook:calendar-source': '캘린더에 일정 제공',
   'admin.plugins.perm.http:outbound': '선언된 호스트로 아웃바운드 요청 전송',
-  'admin.plugins.riskTitle': '설치에 따른 위험은 본인 부담입니다',
-  'admin.plugins.riskBody': '플러그인은 서드파티 코드입니다. 사전에 간단한 검토를 거쳤더라도 플러그인에 유해한 내용이 포함되어 있을 수 있습니다 — 의심스러운 경우 설치하기 전에 직접 플러그인을 확인하세요. TREK은 어떠한 책임도 지지 않습니다.',
+  'admin.plugins.updateConsentTitle': '이 업데이트에는 새로운 권한이 필요합니다',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version}이(가) 아직 부여하지 않은 권한을 요청합니다. 새 버전은 설치되었지만 승인하기 전까지는 꺼진 상태로 유지됩니다.',
+  'admin.plugins.updateNewPermissions': '새로 요청된 권한',
+  'admin.plugins.updateNewEgress': '새로운 아웃바운드 연결',
+  'admin.plugins.updateApprove': '승인하고 켜기',
+  'admin.plugins.updateLater': '일단 꺼두기',
+  'admin.plugins.updateKeptOff': '업데이트가 설치되었습니다 — 새 권한을 승인하기 전까지 꺼진 상태로 둡니다',
+  'admin.plugins.reviewedMeaning':
+    '"검토됨"은 TREK 관리자가 각 버전마다 이 플러그인에 악성코드가 있는지 검사했다는 의미입니다 — 품질이나 정상 작동 여부를 검사한 것이 아닙니다. 플러그인이 무해하다는 보장은 아닙니다.',
+  'admin.plugins.security.title': '플러그인이 격리되는 방식 — 그리고 그 한계',
+  'admin.plugins.security.isolationTitle': '모든 플러그인은 격리된 상태로 실행됩니다',
+  'admin.plugins.security.isolationBody':
+    '플러그인은 자체 파일만 읽을 수 있는 잠긴 별도 프로세스로 실행됩니다. 데이터베이스, 로그인 비밀 값, 암호화 키를 읽을 수 없고, 다른 프로그램을 실행할 수 없으며, 어디에도 파일을 쓸 수 없습니다. 플러그인의 인터페이스는 세션 쿠키를 읽거나 주변 TREK 페이지를 건드릴 수 없는 봉인된 브라우저 프레임에서 실행됩니다.',
+  'admin.plugins.security.permsTitle': '권한이 의미하는 것',
+  'admin.plugins.security.permsBody':
+    '설치 전에 표시되는 권한은 플러그인이 실행되는 동안 TREK이 강제하는 엄격한 한계입니다 — 목록에 없는 것은 말 그대로 아무것도 할 수 없습니다. 하지만 이는 플러그인이 무엇을 할 수 있는지를 알려줄 뿐, 실제로 무엇을 하는지는 알려주지 않습니다. 여행을 읽고 서버에 연결할 수 있는 플러그인은 그 서버로 여행 데이터를 전송할 수 있으므로, 설명뿐만 아니라 권한과 아웃바운드 호스트도 확인하세요.',
+  'admin.plugins.security.limitsTitle': '보장할 수 없는 것',
+  'admin.plugins.security.limitsBody':
+    '이 격리는 강력한 소프트웨어 경계이지만 절대적인 것은 아닙니다. 플러그인은 정확히 승인한 권한만큼 동작하므로, 그 권한 범위 내에서는 설명과 다르게 동작할 수 있으며, 정당하게 보유한 데이터를 선언한 호스트로 전송할 수 있습니다. TREK은 플러그인의 코드가 실제로 무엇을 하는지 읽거나 판단하지 않습니다.',
+  'admin.plugins.security.worstTitle': '최악의 경우',
+  'admin.plugins.security.worstBody':
+    '활성화한 악의적인 플러그인은 부여한 데이터와 연결을 오용할 수 있습니다 — 예를 들어 읽을 수 있는 여행 데이터를 유출할 수 있습니다. 하지만 비밀번호를 훔치거나, 관리자 로그인을 위조하거나, 서버에서 명령을 실행하거나, 부여하지 않은 데이터에 접근할 수는 없습니다. 피해는 승인한 범위 안에 머물며, 플러그인을 끄면 중단됩니다.',
+  'admin.plugins.security.reviewedTitle': '"검토됨"의 의미',
+  'admin.plugins.security.reviewedBody':
+    '검토된 플러그인은 각 버전마다 TREK 관리자가 악성코드를 수동으로 검사한 것입니다 — 정상 작동 여부가 아니라 악의적인 코드가 있는지 확인한 것입니다. 플러그인이 무해하다는 약속은 아닙니다.',
+  'admin.plugins.security.trustTitle': '핵심 요약',
+  'admin.plugins.security.trustBody':
+    '플러그인을 설치하는 것은 다른 서드파티 앱을 설치하는 것과 같습니다: 신뢰할 수 있는 작성자의 코드만 추가하고, 의심스러우면 먼저 직접 확인하세요. TREK은 서드파티 플러그인에 대해 어떠한 책임도 지지 않습니다.',
   'admin.addons.title': '애드온',
   'admin.addons.subtitle': '기능을 활성화 또는 비활성화하여 TREK 경험을 맞춤 설정하세요.',
   'admin.addons.catalog.packing.name': '목록',

@@ -208,7 +208,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'プラグインをアンインストールしました',
   'admin.plugins.uninstallTitle': 'プラグインをアンインストールしますか？',
   'admin.plugins.uninstallBody': 'プラグインを停止してコードを削除し、そのすべてのデータを消去します。この操作は元に戻せません。',
-  'admin.plugins.trustNote': 'プラグインは承認した権限のみで分離実行されます。信頼できる作者のコードのみをインストールしてください。',
   'admin.plugins.status.starting': '起動中…',
   'admin.plugins.type.widget': 'ウィジェット',
   'admin.plugins.type.page': 'ページ',
@@ -253,8 +252,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': '「写真」機能への写真の提供',
   'admin.plugins.perm.hook:calendar-source': 'カレンダーへの予定の提供',
   'admin.plugins.perm.http:outbound': '宣言済みホストへの外部リクエストの送信',
-  'admin.plugins.riskTitle': 'インストールは自己責任で行ってください',
-  'admin.plugins.riskBody': 'プラグインはサードパーティ製のコードです。事前に簡易レビューが行われていても、プラグインに有害な内容が含まれている可能性は残ります。少しでも疑わしい場合は、インストール前にご自身でプラグインの内容を確認してください。TREKは一切の責任を負いません。',
+  'admin.plugins.updateConsentTitle': 'このアップデートには新しい権限が必要です',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} は、まだ許可していない権限を要求しています。新しいバージョンはインストール済みですが、承認するまで無効のままです。',
+  'admin.plugins.updateNewPermissions': '新たに要求された権限',
+  'admin.plugins.updateNewEgress': '新しい外部接続',
+  'admin.plugins.updateApprove': '承認して有効化',
+  'admin.plugins.updateLater': '今は無効のままにする',
+  'admin.plugins.updateKeptOff': 'アップデートをインストールしました — 新しい権限を承認するまで無効のままです',
+  'admin.plugins.reviewedMeaning':
+    '「レビュー済み」とは、TREKのメンテナーが各バージョンでこのプラグインをマルウェアの観点から確認したという意味です — 品質や動作の可否を確認したものではありません。プラグインが無害であることを保証するものではありません。',
+  'admin.plugins.security.title': 'プラグインの分離のしくみ — そしてその限界',
+  'admin.plugins.security.isolationTitle': 'すべてのプラグインは隔離環境で実行されます',
+  'admin.plugins.security.isolationBody':
+    'プラグインは、自身のファイルしか読み取れない厳重に制限された独立プロセスとして実行されます。データベース、ログイン用のシークレット、暗号鍵を読み取ることはできず、他のプログラムを起動することも、どこかにファイルを書き込むこともできません。その画面は隔離されたブラウザフレーム内で動作し、セッションCookieを読み取ったり、周囲のTREKページに干渉したりすることはできません。',
+  'admin.plugins.security.permsTitle': '権限の意味',
+  'admin.plugins.security.permsBody':
+    'インストール前に表示される権限は、プラグインの実行中にTREKが強制する厳格な制限です — リストにないことは一切実行できません。ただし、これらはプラグインが何をできるかを示すもので、実際に何をするかを示すものではありません。旅行の読み取りとサーバーへの接続を許可されたプラグインは、あなたの旅行をそのサーバーに送信できます。説明文だけでなく、権限と接続先ホストも確認してください。',
+  'admin.plugins.security.limitsTitle': '保証できないこと',
+  'admin.plugins.security.limitsBody':
+    'この分離は強固なソフトウェア上の境界ですが、絶対的なものではありません。プラグインは、あなたが承認した権限のとおりに動作するため、その権限の範囲内では説明とは異なる振る舞いをする場合があり、正当に保持しているデータを宣言済みのホストへ送信することもできます。TREKは、プラグインのコードが実際に何をするかを読み取ったり判断したりはしません。',
+  'admin.plugins.security.worstTitle': '最悪の場合',
+  'admin.plugins.security.worstBody':
+    '有効化した悪意のあるプラグインは、あなたが与えたデータと接続を悪用する可能性があります — たとえば、読み取りを許可された旅行を漏えいさせるなどです。ただし、パスワードを盗んだり、管理者ログインを偽造したり、サーバー上でコマンドを実行したり、許可していないデータにアクセスしたりすることはできません。被害はあなたが承認した範囲内にとどまり、プラグインを無効化すれば止まります。',
+  'admin.plugins.security.reviewedTitle': '「レビュー済み」の意味',
+  'admin.plugins.security.reviewedBody':
+    'レビュー済みのプラグインは、TREKのメンテナーが各バージョンで手動でマルウェアの有無を確認したものです — 悪意のあるコードの有無を確認したものであり、正しく動作するかどうかを確認したものではありません。プラグインが無害であることを約束するものではありません。',
+  'admin.plugins.security.trustTitle': '結論',
+  'admin.plugins.security.trustBody':
+    'プラグインのインストールは、サードパーティ製アプリのインストールと同じです。信頼できる作者のコードのみを追加し、少しでも疑わしい場合は、まずご自身で内容を確認してください。TREKはサードパーティ製プラグインについて一切の責任を負いません。',
   'admin.addons.title': 'アドオン',
   'admin.addons.subtitle': '機能を有効／無効にしてTREKをカスタマイズします。',
   'admin.addons.catalog.packing.name': 'リスト',

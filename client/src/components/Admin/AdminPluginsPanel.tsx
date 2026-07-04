@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   Blocks, AlertTriangle, PackageOpen, RefreshCw, Trash2, Download, Bug, X, ShieldCheck,
-  ArrowUpCircle, Github, ExternalLink, ChevronRight, Check, Luggage, Plane, Globe, Image,
+  ArrowUpCircle, Github, ExternalLink, ChevronRight, ChevronDown, Check, Lock, Luggage, Plane, Globe, Image,
   CalendarDays, Map, Bell, Cloud, Camera, Compass, BookOpen, Wallet, Puzzle,
 } from 'lucide-react'
 import { adminApi } from '../../api/client'
@@ -139,6 +139,7 @@ export default function AdminPluginsPanel() {
   const [detailFor, setDetailFor] = useState<RegistryItem | null>(null)
   const [errorsFor, setErrorsFor] = useState<{ id: string; rows: Array<{ ts: string; level: string; message: string }> } | null>(null)
   const [confirmUninstall, setConfirmUninstall] = useState<PluginRow | null>(null)
+  const [consentUpdate, setConsentUpdate] = useState<{ plugin: PluginRow; version: string; newPermissions: string[]; newEgress: string[] } | null>(null)
 
   const refresh = () => {
     adminApi.plugins()
@@ -182,6 +183,23 @@ export default function AdminPluginsPanel() {
   const install = (id: string) => act(id, () => adminApi.pluginInstall(id), t('admin.plugins.installed'))
   const installedIds = new Set(plugins.map(p => p.id))
 
+  // Run an update through the server-side re-consent gate. If the new version
+  // asks for rights the admin never granted, the server leaves it OFF and hands
+  // back the delta — we surface a consent dialog instead of silently widening.
+  const runUpdate = (p: PluginRow) => {
+    setBusy(p.id)
+    adminApi.pluginUpdate(p.id)
+      .then((r: { version: string; activated: boolean; newPermissions: string[]; newEgress: string[] }) => {
+        if (r.activated || (r.newPermissions.length === 0 && r.newEgress.length === 0)) {
+          toast.success(t('admin.plugins.updated'))
+        } else {
+          setConsentUpdate({ plugin: p, version: r.version, newPermissions: r.newPermissions, newEgress: r.newEgress })
+        }
+      })
+      .catch(e => toast.error((e as { response?: { data?: { error?: string } } })?.response?.data?.error || t('admin.plugins.actionError')))
+      .finally(() => { setBusy(null); refresh() })
+  }
+
   return (
     <div className="bg-surface-card border border-edge rounded-xl overflow-hidden">
       {/* Header — flush-left title/subtitle, like the Addons panel */}
@@ -221,17 +239,8 @@ export default function AdminPluginsPanel() {
         ) : error ? (
           <div className="py-10 text-center text-sm text-rose-600">{t('admin.plugins.loadError')}</div>
         ) : view === 'browse' ? (
-          <>
-            <div className="mb-4 p-4 rounded-xl border-2 border-amber-500/60 bg-amber-500/10 flex items-start gap-3">
-              <AlertTriangle size={22} className="text-amber-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-amber-700">{t('admin.plugins.riskTitle')}</p>
-                <p className="text-xs text-amber-700/90 mt-1 leading-relaxed">{t('admin.plugins.riskBody')}</p>
-              </div>
-            </div>
-            <RegistryGrid items={registry} busy={busy} t={t} installedIds={installedIds}
-              onInstall={install} onOpenDetail={setDetailFor} />
-          </>
+          <RegistryGrid items={registry} busy={busy} t={t} installedIds={installedIds}
+            onInstall={install} onOpenDetail={setDetailFor} />
         ) : plugins.length === 0 ? (
           <div className="py-14 text-center">
             <div className="w-14 h-14 rounded-2xl bg-surface-tertiary grid place-items-center mx-auto mb-4">
@@ -273,14 +282,7 @@ export default function AdminPluginsPanel() {
                         </span>
                       )}
                       {hasUpdate && (
-                        <button onClick={() => act(p.id, async () => {
-                          // Restart around the install so the running child actually picks up
-                          // the new code, and keep the admin's ON/OFF intent as it was.
-                          const wasEnabled = p.enabled === 1
-                          if (wasEnabled) await adminApi.pluginDeactivate(p.id)
-                          await adminApi.pluginInstall(p.id)
-                          if (wasEnabled) await adminApi.pluginActivate(p.id)
-                        }, t('admin.plugins.updated'))}
+                        <button onClick={() => busy !== p.id && runUpdate(p)}
                           className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 transition-colors">
                           <ArrowUpCircle size={11} /> {t('admin.plugins.updateTo', { version: latest[p.id] })}
                         </button>
@@ -323,10 +325,7 @@ export default function AdminPluginsPanel() {
         )}
       </div>
 
-      <div className="px-6 py-3.5 border-t border-edge-secondary bg-surface-secondary flex items-center gap-2">
-        <ShieldCheck size={14} className="text-content-faint shrink-0" />
-        <p className="text-xs text-content-faint">{t('admin.plugins.trustNote')}</p>
-      </div>
+      <SecurityInfo t={t} />
 
       {/* Registry detail dialog */}
       {detailFor && (
@@ -368,6 +367,19 @@ export default function AdminPluginsPanel() {
         title={t('admin.plugins.uninstallTitle')}
         message={t('admin.plugins.uninstallBody')}
       />
+
+      {/* Re-consent gate: the update installed but needs approval for new rights */}
+      {consentUpdate && (
+        <UpdateConsentDialog
+          data={consentUpdate}
+          t={t}
+          onApprove={async () => {
+            const c = consentUpdate; setConsentUpdate(null)
+            await act(c.plugin.id, () => adminApi.pluginActivate(c.plugin.id), t('admin.plugins.updated'))
+          }}
+          onLater={() => { setConsentUpdate(null); toast.success(t('admin.plugins.updateKeptOff')) }}
+        />
+      )}
     </div>
   )
 }
@@ -573,6 +585,109 @@ function PluginDetailModal({ item, installed, busy, onInstall, onClose, t, local
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// A permission rendered human-readable when known, else as its raw code.
+function PermLabel({ perm, t }: { perm: string; t: T }) {
+  return PERM_KEYS.includes(perm)
+    ? <span>{t(`admin.plugins.perm.${perm}` as never)}</span>
+    : <code className="font-mono text-[11px] bg-surface-tertiary px-1.5 py-0.5 rounded">{perm}</code>
+}
+
+// Shown when an update wants rights the admin never granted. The server already
+// installed the new code but left the plugin OFF; approving here activates it
+// with the widened set, declining leaves it off.
+function UpdateConsentDialog({ data, t, onApprove, onLater }: {
+  data: { plugin: PluginRow; version: string; newPermissions: string[]; newEgress: string[] }
+  t: T
+  onApprove: () => void
+  onLater: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onLater}>
+      <div className="bg-surface-card border border-edge rounded-xl w-full max-w-md shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="px-5 py-4 border-b border-edge-secondary flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-amber-500/10 grid place-items-center shrink-0">
+            <ShieldCheck size={18} className="text-amber-600" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-content">{t('admin.plugins.updateConsentTitle')}</h3>
+            <p className="text-xs text-content-muted mt-1">{t('admin.plugins.updateConsentBody', { name: data.plugin.name, version: data.version })}</p>
+          </div>
+        </div>
+        <div className="p-5 space-y-4">
+          {data.newPermissions.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-content-muted">{t('admin.plugins.updateNewPermissions')}</h4>
+              <ul className="mt-2 space-y-1.5">
+                {data.newPermissions.map(perm => (
+                  <li key={perm} className="flex items-start gap-2 text-xs text-content-muted">
+                    <Check size={13} className="text-amber-600 mt-0.5 shrink-0" /><PermLabel perm={perm} t={t} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {data.newEgress.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-content-muted">{t('admin.plugins.updateNewEgress')}</h4>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {data.newEgress.map(host => (
+                  <code key={host} className="font-mono text-[11px] bg-surface-tertiary px-1.5 py-0.5 rounded text-content-muted">{host}</code>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="px-5 py-3.5 border-t border-edge-secondary bg-surface-secondary flex items-center justify-end gap-2">
+          <button onClick={onLater} className="text-xs font-medium px-3.5 py-2 rounded-lg border border-edge text-content-muted hover:text-content hover:bg-surface-tertiary transition-colors">
+            {t('admin.plugins.updateLater')}
+          </button>
+          <button onClick={onApprove} className="text-xs font-semibold px-4 py-2 rounded-lg bg-accent text-accent-text hover:opacity-90 transition-opacity">
+            {t('admin.plugins.updateApprove')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Footer: a plain-language note on what "Reviewed" means, plus a collapsible
+// panel that lays out — transparently — how plugins are contained, where the
+// limits are, and what a hostile plugin could do at worst.
+function SecurityInfo({ t }: { t: T }) {
+  const [open, setOpen] = useState(false)
+  const sections: Array<[string, string]> = [
+    ['admin.plugins.security.isolationTitle', 'admin.plugins.security.isolationBody'],
+    ['admin.plugins.security.permsTitle', 'admin.plugins.security.permsBody'],
+    ['admin.plugins.security.limitsTitle', 'admin.plugins.security.limitsBody'],
+    ['admin.plugins.security.worstTitle', 'admin.plugins.security.worstBody'],
+    ['admin.plugins.security.reviewedTitle', 'admin.plugins.security.reviewedBody'],
+    ['admin.plugins.security.trustTitle', 'admin.plugins.security.trustBody'],
+  ]
+  return (
+    <div className="border-t border-edge-secondary bg-surface-secondary">
+      <div className="px-6 py-3.5 flex items-start gap-2">
+        <ShieldCheck size={14} className="text-content-faint shrink-0 mt-0.5" />
+        <p className="text-xs text-content-faint">{t('admin.plugins.reviewedMeaning')}</p>
+      </div>
+      <button onClick={() => setOpen(o => !o)}
+        className="w-full px-6 py-2.5 border-t border-edge-secondary flex items-center justify-between gap-2 text-xs font-medium text-content-muted hover:text-content hover:bg-surface-tertiary transition-colors">
+        <span className="flex items-center gap-2"><Lock size={13} /> {t('admin.plugins.security.title')}</span>
+        <ChevronDown size={15} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="px-6 py-4 border-t border-edge-secondary space-y-4">
+          {sections.map(([h, b]) => (
+            <div key={h}>
+              <h4 className="text-xs font-semibold text-content">{t(h as never)}</h4>
+              <p className="text-xs text-content-faint mt-1 leading-relaxed">{t(b as never)}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

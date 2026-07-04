@@ -177,7 +177,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Plugin verwijderd',
   'admin.plugins.uninstallTitle': 'Plugin verwijderen?',
   'admin.plugins.uninstallBody': 'Dit stopt de plugin, verwijdert de code en wist alle bijbehorende gegevens. Dit kan niet ongedaan worden gemaakt.',
-  'admin.plugins.trustNote': 'Plugins draaien geïsoleerd met alleen de machtigingen die je goedkeurt. Installeer alleen code van auteurs die je vertrouwt.',
   'admin.plugins.status.starting': 'Wordt gestart…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Pagina',
@@ -222,8 +221,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': "Foto's aanleveren voor de Foto's-sectie",
   'admin.plugins.perm.hook:calendar-source': 'Evenementen aanleveren voor de kalender',
   'admin.plugins.perm.http:outbound': 'Uitgaande verzoeken doen naar de opgegeven hosts',
-  'admin.plugins.riskTitle': 'Installeren op eigen risico',
-  'admin.plugins.riskBody': 'Plugins zijn code van derden. Ook na een eerdere korte beoordeling kan een plugin nog steeds schadelijke inhoud bevatten — controleer een plugin bij twijfel zelf voordat je deze installeert. TREK aanvaardt geen enkele verantwoordelijkheid.',
+  'admin.plugins.updateConsentTitle': 'Deze update vereist nieuwe machtigingen',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} vraagt om rechten die je nog niet hebt verleend. De nieuwe versie is geïnstalleerd, maar blijft uit totdat je deze goedkeurt.',
+  'admin.plugins.updateNewPermissions': 'Nieuw aangevraagde machtigingen',
+  'admin.plugins.updateNewEgress': 'Nieuwe uitgaande verbindingen',
+  'admin.plugins.updateApprove': 'Goedkeuren en inschakelen',
+  'admin.plugins.updateLater': 'Voorlopig uit laten',
+  'admin.plugins.updateKeptOff': 'Update geïnstalleerd — uit gelaten totdat je de nieuwe machtigingen goedkeurt',
+  'admin.plugins.reviewedMeaning':
+    '"Beoordeeld" betekent dat een TREK-beheerder deze plugin bij elke versie op malware heeft gecontroleerd — niet op kwaliteit of op de vraag of hij werkt. Het is geen garantie dat een plugin ongevaarlijk is.',
+  'admin.plugins.security.title': 'Hoe plugins worden ingeperkt — en de grenzen',
+  'admin.plugins.security.isolationTitle': 'Elke plugin draait afgeschermd',
+  'admin.plugins.security.isolationBody':
+    "Een plugin draait als een eigen afgeschermd proces dat alleen zijn eigen bestanden kan lezen. Hij kan je database, je login-geheim of je versleutelingssleutel niet lezen, kan geen andere programma's starten en kan nergens bestanden wegschrijven. De interface draait in een afgesloten browserframe dat je sessiecookie niet kan lezen en de TREK-pagina eromheen niet kan aanraken.",
+  'admin.plugins.security.permsTitle': 'Wat de machtigingen betekenen',
+  'admin.plugins.security.permsBody':
+    'De machtigingen die vóór het installeren worden getoond, zijn een harde grens die TREK afdwingt zolang de plugin draait — hij kan letterlijk niets doen wat niet op de lijst staat. Maar ze vertellen je wat een plugin kán doen, niet wat hij daadwerkelijk doet. Een plugin die je reizen mag lezen en een server mag bereiken, kan je reizen naar die server sturen; lees dus de machtigingen en de uitgaande hosts, niet alleen de beschrijving.',
+  'admin.plugins.security.limitsTitle': 'Wat we niet kunnen beloven',
+  'admin.plugins.security.limitsBody':
+    'De isolatie is een sterke softwaregrens, geen absolute. Een plugin handelt met precies de rechten die je goedkeurt, dus binnen die rechten kan hij zich anders gedragen dan zijn beschrijving suggereert, en kan hij gegevens die hij rechtmatig bezit naar de door hem opgegeven hosts sturen. TREK leest of beoordeelt niet wat de code van een plugin daadwerkelijk doet.',
+  'admin.plugins.security.worstTitle': 'Het ergste geval',
+  'admin.plugins.security.worstBody':
+    "Een kwaadwillende plugin die je inschakelt, kan de gegevens en verbindingen die je hebt verleend misbruiken — bijvoorbeeld de reizen lekken die hij mag lezen. Hij kan geen wachtwoorden stelen, geen beheerderslogin vervalsen, geen commando's op je server uitvoeren en geen gegevens bereiken die je niet hebt verleend. De schade blijft binnen wat je hebt goedgekeurd, en de plugin uitschakelen stopt hem.",
+  'admin.plugins.security.reviewedTitle': 'Wat "Beoordeeld" betekent',
+  'admin.plugins.security.reviewedBody':
+    'Een beoordeelde plugin is bij elke versie handmatig door een TREK-beheerder op malware gecontroleerd — gecontroleerd op kwaadaardige code, niet op de vraag of hij goed werkt. Het is geen belofte dat de plugin ongevaarlijk is.',
+  'admin.plugins.security.trustTitle': 'De conclusie',
+  'admin.plugins.security.trustBody':
+    'Een plugin installeren is als het installeren van elke andere app van derden: voeg alleen code toe van auteurs die je vertrouwt en controleer deze bij twijfel eerst zelf. TREK aanvaardt geen enkele verantwoordelijkheid voor plugins van derden.',
   'admin.addons.title': 'Add-ons',
   'admin.addons.subtitle': 'Schakel functies in of uit om je TREK-ervaring aan te passen.',
   'admin.addons.catalog.memories.name': "Foto's (Immich)",

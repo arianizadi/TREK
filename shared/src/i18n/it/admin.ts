@@ -176,7 +176,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Plugin disinstallato',
   'admin.plugins.uninstallTitle': 'Disinstallare il plugin?',
   'admin.plugins.uninstallBody': 'Il plugin verrà arrestato, il suo codice rimosso e tutti i suoi dati eliminati. Questa operazione non può essere annullata.',
-  'admin.plugins.trustNote': 'I plugin vengono eseguiti in isolamento e solo con i permessi che approvi. Installa solo codice di autori di cui ti fidi.',
   'admin.plugins.status.starting': 'Avvio in corso…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Pagina',
@@ -221,8 +220,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': 'Fornire foto alla sezione Foto',
   'admin.plugins.perm.hook:calendar-source': 'Fornire eventi al calendario',
   'admin.plugins.perm.http:outbound': 'Effettuare richieste in uscita verso gli host dichiarati',
-  'admin.plugins.riskTitle': 'Installazione a proprio rischio',
-  'admin.plugins.riskBody': 'I plugin sono codice di terze parti. Anche dopo una rapida revisione preliminare, un plugin può comunque contenere contenuti dannosi — in caso di dubbio, ispeziona personalmente il plugin prima di installarlo. TREK non si assume alcuna responsabilità.',
+  'admin.plugins.updateConsentTitle': 'Questo aggiornamento richiede nuovi permessi',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} richiede permessi che non hai ancora concesso. La nuova versione è installata ma resta disattivata finché non la approvi.',
+  'admin.plugins.updateNewPermissions': 'Nuovi permessi richiesti',
+  'admin.plugins.updateNewEgress': 'Nuove connessioni in uscita',
+  'admin.plugins.updateApprove': 'Approva e attiva',
+  'admin.plugins.updateLater': 'Lascia disattivato per ora',
+  'admin.plugins.updateKeptOff': 'Aggiornamento installato — resta disattivato finché non approvi i nuovi permessi',
+  'admin.plugins.reviewedMeaning':
+    '"Verificato" significa che un manutentore di TREK ha esaminato questo plugin alla ricerca di malware a ogni versione — non ne ha valutato la qualità né il funzionamento. Non è una garanzia che il plugin sia innocuo.',
+  'admin.plugins.security.title': 'Come vengono isolati i plugin — e i limiti',
+  'admin.plugins.security.isolationTitle': 'Ogni plugin viene eseguito in isolamento',
+  'admin.plugins.security.isolationBody':
+    'Un plugin viene eseguito come un proprio processo isolato che può leggere solo i propri file. Non può leggere il tuo database, il tuo segreto di accesso o la tua chiave di crittografia, non può avviare altri programmi e non può scrivere file da nessuna parte. La sua interfaccia viene eseguita in un frame del browser sigillato che non può leggere il cookie di sessione né toccare la pagina di TREK circostante.',
+  'admin.plugins.security.permsTitle': 'Cosa significano i permessi',
+  'admin.plugins.security.permsBody':
+    "I permessi mostrati prima dell'installazione sono un limite rigido che TREK impone mentre il plugin è in esecuzione — letteralmente non può fare nulla che non sia nell'elenco. Ma ti dicono cosa un plugin può fare, non cosa fa davvero. Un plugin autorizzato a leggere i tuoi viaggi e a raggiungere un server può inviare i tuoi viaggi a quel server, quindi leggi i permessi e gli host in uscita, non solo la descrizione.",
+  'admin.plugins.security.limitsTitle': 'Cosa non possiamo garantire',
+  'admin.plugins.security.limitsBody':
+    "L'isolamento è un confine software robusto, ma non assoluto. Un plugin agisce esattamente con i permessi che approvi, quindi entro tali permessi può comportarsi diversamente da quanto suggerisce la sua descrizione e può inviare i dati che detiene legittimamente agli host che ha dichiarato. TREK non legge né giudica cosa fa davvero il codice di un plugin.",
+  'admin.plugins.security.worstTitle': 'Il caso peggiore',
+  'admin.plugins.security.worstBody':
+    'Un plugin ostile che attivi può abusare dei dati e delle connessioni che gli hai concesso — ad esempio, divulgare i viaggi che è autorizzato a leggere. Non può rubare password, falsificare un accesso da amministratore, eseguire comandi sul tuo server o raggiungere dati che non hai concesso. Il danno resta entro ciò che hai approvato e disattivare il plugin lo ferma.',
+  'admin.plugins.security.reviewedTitle': 'Cosa significa "Verificato"',
+  'admin.plugins.security.reviewedBody':
+    'Un plugin verificato è stato esaminato manualmente alla ricerca di malware da un manutentore di TREK a ogni versione — controllato per individuare codice ostile, non per valutare se funziona bene. Non è una promessa che il plugin sia innocuo.',
+  'admin.plugins.security.trustTitle': 'In conclusione',
+  'admin.plugins.security.trustBody':
+    'Installare un plugin è come installare una qualsiasi app di terze parti: aggiungi solo codice di autori di cui ti fidi e, in caso di dubbio, ispezionalo personalmente prima. TREK non si assume alcuna responsabilità per i plugin di terze parti.',
   'admin.addons.title': 'Moduli',
   'admin.addons.subtitle': 'Abilita o disabilita le funzionalità per personalizzare la tua esperienza TREK.',
   'admin.addons.catalog.packing.name': 'Liste',

@@ -221,7 +221,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Eklenti kaldırıldı',
   'admin.plugins.uninstallTitle': 'Eklenti kaldırılsın mı?',
   'admin.plugins.uninstallBody': 'Bu, eklentiyi durdurur, kodunu kaldırır ve tüm verilerini siler. Bu işlem geri alınamaz.',
-  'admin.plugins.trustNote': 'Eklentiler yalnızca onayladığınız izinlerle yalıtılmış olarak çalışır. Yalnızca güvendiğiniz geliştiricilerin kodunu yükleyin.',
   'admin.plugins.status.starting': 'Başlatılıyor…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Sayfa',
@@ -266,8 +265,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': 'Fotoğraflar bölümüne fotoğraf sağlar',
   'admin.plugins.perm.hook:calendar-source': 'Takvime etkinlik sağlar',
   'admin.plugins.perm.http:outbound': 'Bildirdiği ana bilgisayarlara giden istekler yapar',
-  'admin.plugins.riskTitle': 'Riski size ait olmak üzere yükleyin',
-  'admin.plugins.riskBody': 'Eklentiler üçüncü taraf kodlardır. Önceden yapılan hızlı bir incelemeye rağmen bir eklenti yine de zararlı içerik barındırabilir — şüpheye düştüğünüzde, yüklemeden önce eklentiyi kendiniz inceleyin. TREK hiçbir sorumluluk kabul etmez.',
+  'admin.plugins.updateConsentTitle': 'Bu güncelleme yeni izinler gerektiriyor',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version}, henüz vermediğiniz haklar istiyor. Yeni sürüm yüklendi ancak siz onaylayana kadar kapalı kalır.',
+  'admin.plugins.updateNewPermissions': 'Yeni istenen izinler',
+  'admin.plugins.updateNewEgress': 'Yeni giden bağlantılar',
+  'admin.plugins.updateApprove': 'Onayla ve aç',
+  'admin.plugins.updateLater': 'Şimdilik kapalı tut',
+  'admin.plugins.updateKeptOff': 'Güncelleme yüklendi — yeni izinleri onaylayana kadar kapalı bırakıldı',
+  'admin.plugins.reviewedMeaning':
+    '„İncelendi", bir TREK sorumlusunun bu eklentiyi her sürümde kötü amaçlı yazılıma karşı taradığı anlamına gelir — kalite ya da çalışıp çalışmadığı için değil. Bir eklentinin zararsız olduğunun garantisi değildir.',
+  'admin.plugins.security.title': 'Eklentiler nasıl sınırlandırılır — ve bunun sınırları',
+  'admin.plugins.security.isolationTitle': 'Her eklenti izole şekilde çalışır',
+  'admin.plugins.security.isolationBody':
+    'Bir eklenti, yalnızca kendi dosyalarını okuyabilen, kilitlenmiş kendi süreci olarak çalışır. Veritabanınızı, oturum açma gizli anahtarınızı veya şifreleme anahtarınızı okuyamaz, başka programlar başlatamaz ve hiçbir yere dosya yazamaz. Arayüzü, oturum çerezinizi okuyamayan veya çevresindeki TREK sayfasına dokunamayan, yalıtılmış bir tarayıcı çerçevesinde çalışır.',
+  'admin.plugins.security.permsTitle': 'İzinler ne anlama gelir',
+  'admin.plugins.security.permsBody':
+    "Yüklemeden önce gösterilen izinler, eklenti çalışırken TREK'in uyguladığı kesin bir sınırdır — eklenti, listede olmayan hiçbir şeyi kelimenin tam anlamıyla yapamaz. Ancak bunlar bir eklentinin ne yapabileceğini söyler, gerçekte ne yaptığını değil. Seyahatlerinizi okumasına ve bir sunucuya erişmesine izin verilen bir eklenti, seyahatlerinizi o sunucuya gönderebilir; bu yüzden yalnızca açıklamayı değil, izinleri ve giden ana bilgisayarları da okuyun.",
+  'admin.plugins.security.limitsTitle': 'Söz veremeyeceğimiz şeyler',
+  'admin.plugins.security.limitsBody':
+    'Yalıtım güçlü bir yazılım sınırıdır, mutlak bir sınır değil. Bir eklenti tam olarak onayladığınız haklarla hareket eder; bu nedenle bu hakların sınırları içinde açıklamasının ima ettiğinden farklı davranabilir ve meşru olarak elinde tuttuğu verileri bildirdiği ana bilgisayarlara gönderebilir. TREK, bir eklentinin kodunun gerçekte ne yaptığını okumaz ya da değerlendirmez.',
+  'admin.plugins.security.worstTitle': 'En kötü durum',
+  'admin.plugins.security.worstBody':
+    'Açtığınız kötü niyetli bir eklenti, ona verdiğiniz verileri ve bağlantıları kötüye kullanabilir — örneğin okumasına izin verilen seyahatleri sızdırabilir. Şifreleri çalamaz, sahte bir yönetici girişi oluşturamaz, sunucunuzda komut çalıştıramaz veya vermediğiniz verilere erişemez. Zarar, onayladığınız sınırların içinde kalır ve eklentiyi kapatmak onu durdurur.',
+  'admin.plugins.security.reviewedTitle': '„İncelendi" ne anlama gelir',
+  'admin.plugins.security.reviewedBody':
+    'İncelenmiş bir eklenti, her sürümde bir TREK sorumlusu tarafından kötü amaçlı yazılıma karşı elle taranmıştır — düşmanca koda karşı kontrol edilmiştir, iyi çalışıp çalışmadığına göre değil. Bu, eklentinin zararsız olduğunun bir garantisi değildir.',
+  'admin.plugins.security.trustTitle': 'Özetle',
+  'admin.plugins.security.trustBody':
+    'Bir eklenti yüklemek, herhangi bir üçüncü taraf uygulamasını yüklemek gibidir: yalnızca güvendiğiniz geliştiricilerin kodunu ekleyin ve şüpheye düştüğünüzde önce kendiniz inceleyin. TREK, üçüncü taraf eklentiler için hiçbir sorumluluk kabul etmez.',
   'admin.addons.title': 'Eklentiler',
   'admin.addons.subtitle': 'TREK deneyiminizi özelleştirmek için özellikleri etkinleştirin veya devre dışı bırakın.',
   'admin.addons.catalog.packing.name': 'Listeler',

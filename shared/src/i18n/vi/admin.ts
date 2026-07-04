@@ -229,7 +229,6 @@ const admin: TranslationStrings = {
   'admin.plugins.uninstalled': 'Đã gỡ cài đặt plugin',
   'admin.plugins.uninstallTitle': 'Gỡ cài đặt plugin?',
   'admin.plugins.uninstallBody': 'Thao tác này sẽ dừng plugin, xóa mã nguồn và toàn bộ dữ liệu của nó. Không thể hoàn tác.',
-  'admin.plugins.trustNote': 'Plugin chạy trong môi trường cách ly và chỉ có các quyền mà bạn phê duyệt. Chỉ cài đặt mã từ những tác giả bạn tin tưởng.',
   'admin.plugins.status.starting': 'Đang khởi động…',
   'admin.plugins.type.widget': 'Widget',
   'admin.plugins.type.page': 'Trang',
@@ -274,8 +273,35 @@ const admin: TranslationStrings = {
   'admin.plugins.perm.hook:photo-provider': 'Cung cấp ảnh cho tính năng Ảnh',
   'admin.plugins.perm.hook:calendar-source': 'Cung cấp sự kiện cho lịch',
   'admin.plugins.perm.http:outbound': 'Gửi yêu cầu ra ngoài đến các máy chủ đã khai báo',
-  'admin.plugins.riskTitle': 'Cài đặt và tự chịu rủi ro',
-  'admin.plugins.riskBody': 'Plugin là mã của bên thứ ba. Ngay cả khi đã được xem xét sơ bộ trước đó, một plugin vẫn có thể chứa nội dung độc hại — nếu nghi ngờ, hãy tự kiểm tra plugin trước khi cài đặt. TREK hoàn toàn không chịu bất kỳ trách nhiệm nào.',
+  'admin.plugins.updateConsentTitle': 'Bản cập nhật này cần các quyền mới',
+  'admin.plugins.updateConsentBody':
+    '{name} v{version} đang yêu cầu các quyền mà bạn chưa cấp. Phiên bản mới đã được cài đặt nhưng vẫn tắt cho đến khi bạn phê duyệt.',
+  'admin.plugins.updateNewPermissions': 'Các quyền mới được yêu cầu',
+  'admin.plugins.updateNewEgress': 'Các kết nối ra ngoài mới',
+  'admin.plugins.updateApprove': 'Phê duyệt & bật',
+  'admin.plugins.updateLater': 'Tạm thời để tắt',
+  'admin.plugins.updateKeptOff': 'Đã cài đặt bản cập nhật — vẫn tắt cho đến khi bạn phê duyệt các quyền mới',
+  'admin.plugins.reviewedMeaning':
+    '"Đã kiểm duyệt" nghĩa là một người bảo trì TREK đã quét plugin này để tìm mã độc trên mỗi phiên bản — không phải về chất lượng hay việc nó có hoạt động hay không. Đây không phải là bảo đảm rằng plugin vô hại.',
+  'admin.plugins.security.title': 'Cách plugin được cô lập — và những giới hạn',
+  'admin.plugins.security.isolationTitle': 'Mọi plugin đều chạy trong hộp cách ly',
+  'admin.plugins.security.isolationBody':
+    'Plugin chạy như một tiến trình bị khóa riêng, chỉ có thể đọc các tệp của chính nó. Nó không thể đọc cơ sở dữ liệu, khóa bí mật đăng nhập hay khóa mã hóa của bạn, không thể khởi chạy chương trình khác và không thể ghi tệp ở bất kỳ đâu. Giao diện của nó chạy trong một khung trình duyệt được niêm phong, không thể đọc cookie phiên của bạn hay tác động đến trang TREK xung quanh.',
+  'admin.plugins.security.permsTitle': 'Các quyền có ý nghĩa gì',
+  'admin.plugins.security.permsBody':
+    'Các quyền hiển thị trước khi bạn cài đặt là một giới hạn cứng mà TREK thực thi trong khi plugin chạy — nó thực sự không thể làm bất cứ điều gì không có trong danh sách. Nhưng chúng cho bạn biết một plugin có thể làm gì, chứ không phải nó thực sự làm gì. Một plugin được phép đọc các chuyến đi của bạn và kết nối tới một máy chủ có thể gửi các chuyến đi của bạn đến máy chủ đó, vì vậy hãy đọc các quyền và các máy chủ ra ngoài, chứ không chỉ phần mô tả.',
+  'admin.plugins.security.limitsTitle': 'Những điều chúng tôi không thể hứa',
+  'admin.plugins.security.limitsBody':
+    'Sự cô lập là một ranh giới phần mềm mạnh mẽ, chứ không tuyệt đối. Một plugin hoạt động với đúng các quyền mà bạn phê duyệt, vì vậy trong phạm vi các quyền đó nó có thể hành xử khác với mô tả của nó, và nó có thể gửi dữ liệu mà nó nắm giữ hợp lệ đến các máy chủ mà nó đã khai báo. TREK không đọc hay đánh giá những gì mã của một plugin thực sự làm.',
+  'admin.plugins.security.worstTitle': 'Trường hợp xấu nhất',
+  'admin.plugins.security.worstBody':
+    'Một plugin độc hại mà bạn bật lên có thể lạm dụng dữ liệu và các kết nối mà bạn đã cấp cho nó — ví dụ, làm rò rỉ các chuyến đi mà nó được phép đọc. Nó không thể đánh cắp mật khẩu, giả mạo đăng nhập quản trị viên, chạy lệnh trên máy chủ của bạn hay truy cập dữ liệu mà bạn không cấp. Thiệt hại chỉ nằm trong phạm vi những gì bạn đã phê duyệt, và việc tắt plugin sẽ dừng nó lại.',
+  'admin.plugins.security.reviewedTitle': '"Đã kiểm duyệt" nghĩa là gì',
+  'admin.plugins.security.reviewedBody':
+    'Một plugin đã kiểm duyệt đã được người bảo trì TREK quét thủ công để tìm mã độc trên mỗi phiên bản — được kiểm tra về mã độc hại, chứ không phải về việc nó có hoạt động tốt hay không. Đây không phải là lời hứa rằng plugin vô hại.',
+  'admin.plugins.security.trustTitle': 'Điểm mấu chốt',
+  'admin.plugins.security.trustBody':
+    'Cài đặt một plugin cũng giống như cài đặt bất kỳ ứng dụng bên thứ ba nào: chỉ cài đặt mã từ những tác giả bạn tin tưởng, và khi còn nghi ngờ, hãy tự kiểm tra nó trước. TREK không chịu trách nhiệm về các plugin của bên thứ ba.',
   'admin.addons.title': 'Tiện ích bổ sung',
   'admin.addons.subtitle': 'Bật hoặc tắt các tính năng để tùy chỉnh trải nghiệm TREK của bạn.',
   'admin.addons.catalog.packing.name': 'Danh sách',
