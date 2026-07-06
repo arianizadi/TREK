@@ -271,6 +271,16 @@ The scaffold seeds a working example. A minimal client:
 | `.trek-row` | a hover-highlight list row |
 | `.trek-title` / `.trek-muted` / `.trek-faint` | text helpers |
 | `.trek-stack` / `.trek-cluster` | vertical / horizontal flex with gap |
+| `.trek-menu-enter` / `--left` | dropdown enter (scales from its trigger corner) |
+| `.trek-popover-enter` / `.trek-modal-enter` / `.trek-backdrop-enter` / `.trek-toast-enter` | the host's enter animations (`trek-modal-enter` becomes a bottom drawer below 640px) |
+| `.trek-page-enter` | subtle fade-up on mount |
+| `.trek-stagger` | children fade up with a 40ms cascade |
+| `.trek-skeleton` | shimmer loading placeholder |
+| `.trek-pie-reveal` / `.trek-bar-fill` | chart reveal animations (plus the `trek-progress-fill` keyframe, driven by `--trek-progress-to`) |
+
+All animations honour reduced motion exactly like the host: under
+`[data-reduce-motion]` or `prefers-reduced-motion` they degrade to a gentle
+120ms fade, and the skeleton stops shimmering.
 
 **The `window.trek` bridge:**
 
@@ -279,9 +289,12 @@ The scaffold seeds a working example. A minimal client:
 | `trek.onContext(cb)` | run `cb(context)` now (if already received) and on every update; returns an unsubscribe fn |
 | `trek.context` | the last context (or `null`) |
 | `trek.invoke(sub, { method, body })` | call your own route; returns a `Promise` (rejects with an `Error`, `.code` = HTTP status) |
-| `trek.notify(level, message)` | toast (`info`/`success`/`warning`/`error`) |
+| `trek.notify(level, message, duration?)` | toast (`info`/`success`/`warning`/`error`); optional duration in ms (clamped 1.5–15s) |
+| `trek.confirm({ title?, message, confirmLabel?, cancelLabel?, danger? })` | host-rendered native confirm dialog; resolves `true`/`false` (one at a time — a second concurrent request resolves `false`) |
 | `trek.navigate(to)` | in-app navigation (relative paths only) |
-| `trek.resize(px)` | override the auto height |
+| `trek.openExternal(url)` | open an `http(s)` URL in a new tab (the sandbox itself can't) |
+| `trek.onEvent(cb)` | `cb(event, tripId)` for core events on the trip in view — names only, no payloads; refetch via `invoke()`; returns an unsubscribe fn |
+| `trek.resize(px)` | override the auto height (ignored on full pages — see `trek:resize` below) |
 | `trek.ready()` / `trek.requestContext()` | re-handshake / re-request the context |
 
 **Preview it:** `npx trek-plugin-sdk dev`, then open **`/preview`** — it renders your UI
@@ -312,17 +325,21 @@ window.parent.postMessage({ type: 'trek:invoke', requestId: '1', sub: '/status',
 | `trek:ready` | — | TREK replies with `trek:context` |
 | `trek:context:request` | — | re-request the context |
 | `trek:navigate` | `{ to }` | in-app navigation (relative paths only) |
-| `trek:notify` | `{ level, message }` | toast; `level` = `info`/`success`/`warning`/`error` |
-| `trek:resize` | `{ height }` | set the iframe height (capped at 2000px) |
+| `trek:notify` | `{ level, message, duration? }` | toast; `level` = `info`/`success`/`warning`/`error`; `duration` in ms, clamped 1500–15000 |
+| `trek:resize` | `{ height }` | set the iframe height (capped at 2000px); **ignored for full pages** (`page` / `trip-page`), which always fill their host container |
 | `trek:invoke` | `{ requestId, sub, method, body }` | call your own route; resolves as `trek:response` or `trek:error` |
+| `trek:confirm` | `{ requestId, title?, message?, confirmLabel?, cancelLabel?, danger? }` | host-rendered ConfirmDialog; answered as `trek:confirm:result` |
+| `trek:openExternal` | `{ url }` | open an `http(s)` URL in a new `noopener` tab; anything else is dropped |
 
 **Messages TREK sends you:**
 
 | Message | Payload |
 |---|---|
-| `trek:context` | `{ tripId, userId, theme, locale, hostOrigin, user, formats, tokens, appearance }` (see below) — re-sent whenever the theme **or appearance** changes |
+| `trek:context` | `{ tripId, userId, theme, locale, dir, hostOrigin, user, formats, tokens, appearance }` (see below) — re-sent whenever the theme, appearance, **locale or formats** change |
 | `trek:response` | `{ requestId, data }` — a successful `trek:invoke` |
 | `trek:error` | `{ requestId, code, message }` — a failed `trek:invoke` (`code` is the HTTP status or `"error"`) |
+| `trek:confirm:result` | `{ requestId, confirmed }` — the user's answer to your `trek:confirm` |
+| `trek:event` | `{ event, tripId }` — a core event fired on the trip in view; **names only, never payloads** — refetch what you need via `trek:invoke` |
 
 The frame's CSP is locked down per plugin: `default-src 'none'`, own inline
 scripts/styles only, `connect-src` limited to the hosts you were **granted** via
@@ -334,6 +351,7 @@ scripts/styles only, `connect-src` limited to the hosts you were **granted** via
 |---|---|
 | `tripId` | `number \| null` — the trip in view (a `trip-page` tab, or a widget on a trip), else `null` |
 | `placeId` | `number \| null` — the place in view (a `place-detail` slot), else `null` |
+| `dir` | `'ltr' \| 'rtl'` — the host's text direction; the kit mirrors it onto your `<html>` so RTL hosts get RTL plugin UIs |
 | `userId` | `string \| null` |
 | `theme` | `'light' \| 'dark'` |
 | `locale` | e.g. `'en'` |
