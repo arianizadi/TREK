@@ -300,8 +300,9 @@ export default function TripPlannerPage(): React.ReactElement | null {
       {/* Offset by navbar + tab bar (44px) */}
       <div style={{ position: 'fixed', top: 'calc(var(--nav-h) + 44px)', left: 0, right: 0, bottom: 0, overflow: 'hidden', overscrollBehavior: 'contain' }}>
 
-        {/* Plugin validation/warning contributions (#1429) — non-blocking overlay. */}
-        <TripWarningsBanner tripId={tripId} />
+        {/* Plugin validation/warning contributions (#1429) — navbar chips for
+            plugins with a tab here, floating bottom overlay for the rest. */}
+        <TripWarningsBanner tripId={tripId} onOpenPluginTab={(pid) => handleTabChange(`plugin:${pid}`)} />
 
         {activeTab === 'plan' && (
           <div style={{ position: 'absolute', inset: 0 }}>
@@ -718,7 +719,7 @@ export default function TripPlannerPage(): React.ReactElement | null {
 
         {activeTab.startsWith('plugin:') && (
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 'var(--bottom-nav-h)', overflow: 'hidden' }}>
-            <PluginFrame pluginId={activeTab.slice('plugin:'.length)} tripId={String(tripId)} className="w-full h-full" />
+            <PluginFrame pluginId={activeTab.slice('plugin:'.length)} tripId={String(tripId)} fill className="w-full h-full" />
           </div>
         )}
       </div>
