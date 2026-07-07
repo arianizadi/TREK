@@ -360,7 +360,14 @@ function actionPlanJsonSchema() {
             operationSchema('create_budget_item', { data: budgetDataSchema }),
             operationSchema('create_packing_item', { data: packingDataSchema }),
             operationSchema('create_poll', { data: pollDataSchema }),
-            operationSchema('import_reservation', { data: reservationDataSchema }),
+            operationSchema('import_reservation', { data: reservationDataSchema(['title']) }),
+            operationSchema('update_reservation', {
+              reservationId: stringOrNumberSchema,
+              data: reservationDataSchema([]),
+            }),
+            operationSchema('delete_reservation', {
+              reservationId: stringOrNumberSchema,
+            }),
           ],
         },
       },
@@ -458,22 +465,54 @@ const pollDataSchema = {
   },
 } as const;
 
-const reservationDataSchema = {
-  type: 'object',
-  additionalProperties: true,
-  required: ['title'],
-  properties: {
-    title: { type: 'string' },
-    type: { type: 'string' },
-    day_id: stringOrNumberSchema,
-    end_day_id: stringOrNumberSchema,
-    place_id: stringOrNumberSchema,
-    assignment_id: stringOrNumberSchema,
-    reservation_time: nullableStringSchema,
-    reservation_end_time: nullableStringSchema,
-    location: nullableStringSchema,
-    notes: nullableStringSchema,
-    status: { type: 'string' },
-    url: nullableStringSchema,
-  },
-} as const;
+function reservationDataSchema(required: string[] = []) {
+  return {
+    type: 'object',
+    additionalProperties: true,
+    required,
+    properties: {
+      title: { type: 'string' },
+      type: { type: 'string' },
+      day_id: stringOrNumberSchema,
+      end_day_id: stringOrNumberSchema,
+      place_id: stringOrNumberSchema,
+      assignment_id: stringOrNumberSchema,
+      reservation_time: nullableStringSchema,
+      reservation_end_time: nullableStringSchema,
+      location: nullableStringSchema,
+      confirmation_number: nullableStringSchema,
+      notes: nullableStringSchema,
+      status: { type: 'string' },
+      url: nullableStringSchema,
+      metadata: {},
+      needs_review: { type: 'boolean' },
+      create_budget_entry: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          total_price: { type: 'number' },
+          category: { type: 'string' },
+        },
+      },
+      endpoints: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['role', 'name', 'lat', 'lng'],
+          properties: {
+            role: { type: 'string', enum: ['from', 'to', 'stop'] },
+            sequence: { type: 'number' },
+            name: { type: 'string' },
+            code: nullableStringSchema,
+            lat: { type: 'number' },
+            lng: { type: 'number' },
+            timezone: nullableStringSchema,
+            local_time: nullableStringSchema,
+            local_date: nullableStringSchema,
+          },
+        },
+      },
+    },
+  } as const;
+}
