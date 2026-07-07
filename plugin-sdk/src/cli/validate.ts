@@ -54,6 +54,19 @@ export function validatePluginDir(dir: string): ValidateReport {
     }
   }
 
+  // Client UI: a raw <select> without the design kit falls back to the OS-drawn
+  // dropdown, which can't match TREK. The kit auto-upgrades selects, so nudge the
+  // author to inline it (or opt a field out on purpose).
+  const clientHtml = path.join(dir, 'client', 'index.html');
+  if (fs.existsSync(clientHtml)) {
+    const html = fs.readFileSync(clientHtml, 'utf8');
+    const rawSelect = /<select(?![^>]*\bdata-trek-native\b)(\s|>)/i.test(html);
+    const usesKit = html.includes('<!-- trek:ui -->') || html.includes('data-trek-ui');
+    if (rawSelect && !usesKit) {
+      warnings.push('client/index.html has a <select> but does not inline the design kit — native dropdowns will not match TREK. Add the <!-- trek:ui --> marker so selects are auto-styled, or mark a field data-trek-native to opt out.');
+    }
+  }
+
   // Server entry present
   if (!fs.existsSync(path.join(dir, 'server', 'index.js'))) errors.push('server/index.js is missing (build your plugin first)');
 

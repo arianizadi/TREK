@@ -150,6 +150,44 @@ body.trek-ui {
 }
 .trek-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
 
+/* Enhanced select — the kit upgrades a native <select> into this listbox so the
+   dropdown matches the host (a native popup is drawn by the OS and can't be
+   themed). The real <select> stays in the DOM as the value source. */
+.trek-select-wrap { position: relative; }
+.trek-select-native-hidden {
+  position: absolute !important; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0;
+}
+.trek-select-trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  text-align: start; cursor: pointer;
+}
+.trek-select-trigger:disabled { opacity: .5; cursor: not-allowed; }
+.trek-select-trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 22%, transparent);
+}
+.trek-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trek-select-caret { flex: none; display: inline-flex; color: var(--text-faint); transition: transform .15s; }
+.trek-select-trigger[aria-expanded="true"] .trek-select-caret { transform: rotate(180deg); }
+.trek-select-menu {
+  position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+  margin-top: 6px; padding: 4px;
+  max-height: 260px; overflow-y: auto;
+  background: var(--bg-card); color: var(--text-primary);
+  border: 1px solid var(--border-primary); border-radius: 10px;
+  box-shadow: var(--shadow-md);
+}
+.trek-select-menu[data-placement="top"] { top: auto; bottom: 100%; margin-top: 0; margin-bottom: 6px; }
+.trek-select-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 7px; cursor: pointer;
+  font-size: 13px; white-space: nowrap;
+}
+.trek-select-option.trek-active { background: var(--bg-hover); }
+.trek-select-option[aria-selected="true"] { color: var(--accent); font-weight: 600; }
+.trek-select-option[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+
 /* Chips + badges ----------------------------------------------------------- */
 .trek-chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -294,8 +332,9 @@ body.trek-ui {
   animation: trek-backdrop-enter 120ms ease-out both;
 }
 [data-reduce-motion] .trek-skeleton { animation: none; background: var(--bg-tertiary); }
+[data-reduce-motion] .trek-select-caret { transition: none; }
 @media (prefers-reduced-motion: reduce) {
-  .trek-interactive, .trek-btn, .trek-row, .trek-input, .trek-textarea, .trek-select { transition: none; }
+  .trek-interactive, .trek-btn, .trek-row, .trek-input, .trek-textarea, .trek-select, .trek-select-caret { transition: none; }
   .trek-interactive:hover, .trek-btn:active { transform: none; }
   .trek-menu-enter, .trek-menu-enter-left, .trek-popover-enter,
   .trek-modal-enter, .trek-toast-enter, .trek-stagger > *, .trek-page-enter {
@@ -448,8 +487,172 @@ export const TREK_THEME_JS = `(function () {
   };
   window.trek = api;
 
+  // --- Native <select> -> host-styled listbox ---------------------------------
+  // A native select's popup is drawn by the OS and can't match TREK. Upgrade each
+  // one to a keyboard-accessible listbox that uses the kit tokens, while the real
+  // <select> stays in the DOM as the value/form source (kept in sync both ways).
+  // Opt out per field with data-trek-native; multi/size selects are left alone.
+  function dispatch(el, type) {
+    var ev;
+    try { ev = new Event(type, { bubbles: true }); }
+    catch (e) { ev = document.createEvent('Event'); ev.initEvent(type, true, false); }
+    el.dispatchEvent(ev);
+  }
+  function enhanceSelect(sel) {
+    if (!sel || sel.__trekSelect || sel.hasAttribute('data-trek-native')) { return; }
+    if (sel.multiple || sel.size > 1 || !sel.parentNode) { return; }
+    sel.__trekSelect = true;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'trek-select-wrap';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+    sel.classList.add('trek-select-native-hidden');
+    sel.setAttribute('tabindex', '-1');
+    sel.setAttribute('aria-hidden', 'true');
+
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'trek-select trek-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    if (sel.disabled) { trigger.disabled = true; }
+    var valueEl = document.createElement('span');
+    valueEl.className = 'trek-select-value';
+    var caret = document.createElement('span');
+    caret.className = 'trek-select-caret';
+    caret.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+    trigger.appendChild(valueEl);
+    trigger.appendChild(caret);
+    wrap.appendChild(trigger);
+
+    var menu = document.createElement('div');
+    menu.className = 'trek-select-menu';
+    menu.setAttribute('role', 'listbox');
+    menu.hidden = true;
+    wrap.appendChild(menu);
+
+    var activeIdx = -1;
+
+    function syncTrigger() {
+      var o = sel.options[sel.selectedIndex];
+      valueEl.textContent = o ? o.text : '';
+    }
+    function buildMenu() {
+      menu.innerHTML = '';
+      for (var i = 0; i < sel.options.length; i++) {
+        var o = sel.options[i];
+        var item = document.createElement('div');
+        item.className = 'trek-select-option';
+        item.setAttribute('role', 'option');
+        item.setAttribute('data-idx', String(i));
+        item.setAttribute('aria-selected', i === sel.selectedIndex ? 'true' : 'false');
+        if (o.disabled) { item.setAttribute('aria-disabled', 'true'); }
+        item.textContent = o.text;
+        menu.appendChild(item);
+      }
+    }
+    function highlight(idx) {
+      var opts = menu.children;
+      for (var i = 0; i < opts.length; i++) {
+        opts[i].className = i === idx ? 'trek-select-option trek-active' : 'trek-select-option';
+      }
+      if (idx >= 0 && opts[idx] && opts[idx].scrollIntoView) { opts[idx].scrollIntoView({ block: 'nearest' }); }
+      activeIdx = idx;
+    }
+    function onDocDown(e) { if (!wrap.contains(e.target)) { closeMenu(); } }
+    function openMenu() {
+      if (trigger.disabled || !menu.hidden) { return; }
+      buildMenu();
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      // Flip above the trigger when there isn't room below in the frame viewport.
+      var r = trigger.getBoundingClientRect();
+      var below = window.innerHeight - r.bottom;
+      if (below < Math.min(260, menu.scrollHeight + 12) && r.top > below) { menu.setAttribute('data-placement', 'top'); }
+      else { menu.removeAttribute('data-placement'); }
+      highlight(sel.selectedIndex);
+      reportHeight();
+      document.addEventListener('mousedown', onDocDown, true);
+    }
+    function closeMenu() {
+      if (menu.hidden) { return; }
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('mousedown', onDocDown, true);
+      reportHeight();
+    }
+    function nextEnabled(from, dir) {
+      var i = from;
+      for (var n = 0; n < sel.options.length; n++) {
+        i += dir;
+        if (i < 0) { i = sel.options.length - 1; }
+        if (i >= sel.options.length) { i = 0; }
+        if (!sel.options[i].disabled) { return i; }
+      }
+      return from;
+    }
+    function commit(idx) {
+      if (idx < 0 || idx >= sel.options.length || sel.options[idx].disabled) { return; }
+      if (sel.selectedIndex !== idx) { sel.selectedIndex = idx; dispatch(sel, 'input'); dispatch(sel, 'change'); }
+      syncTrigger();
+      closeMenu();
+      trigger.focus();
+    }
+
+    trigger.addEventListener('click', function () { if (menu.hidden) { openMenu(); } else { closeMenu(); } });
+    trigger.addEventListener('keydown', function (e) {
+      var k = e.key;
+      if (menu.hidden) {
+        if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Enter' || k === ' ' || k === 'Spacebar') { e.preventDefault(); openMenu(); }
+        return;
+      }
+      if (k === 'Escape') { e.preventDefault(); closeMenu(); trigger.focus(); }
+      else if (k === 'ArrowDown') { e.preventDefault(); highlight(nextEnabled(activeIdx, 1)); }
+      else if (k === 'ArrowUp') { e.preventDefault(); highlight(nextEnabled(activeIdx, -1)); }
+      else if (k === 'Home') { e.preventDefault(); highlight(nextEnabled(-1, 1)); }
+      else if (k === 'End') { e.preventDefault(); highlight(nextEnabled(0, -1)); }
+      else if (k === 'Enter' || k === ' ' || k === 'Spacebar') { e.preventDefault(); commit(activeIdx); }
+      else if (k === 'Tab') { closeMenu(); }
+    });
+    menu.addEventListener('mousedown', function (e) { e.preventDefault(); }); // keep focus on the trigger
+    menu.addEventListener('click', function (e) {
+      var t = e.target;
+      while (t && t !== menu && !(t.getAttribute && t.hasAttribute('data-idx'))) { t = t.parentNode; }
+      if (t && t.getAttribute && t.hasAttribute('data-idx')) { commit(parseInt(t.getAttribute('data-idx'), 10)); }
+    });
+    menu.addEventListener('mousemove', function (e) {
+      var t = e.target;
+      while (t && t !== menu && !(t.getAttribute && t.hasAttribute('data-idx'))) { t = t.parentNode; }
+      if (t && t.getAttribute && t.hasAttribute('data-idx')) { highlight(parseInt(t.getAttribute('data-idx'), 10)); }
+    });
+    // The plugin may set select.value itself — mirror it back to the trigger.
+    sel.addEventListener('change', syncTrigger);
+    syncTrigger();
+  }
+  function enhanceAllSelects(root) {
+    var live = (root || document).getElementsByTagName('select');
+    var arr = [];
+    for (var i = 0; i < live.length; i++) { arr.push(live[i]); }
+    for (var j = 0; j < arr.length; j++) { enhanceSelect(arr[j]); }
+  }
+
   function boot() {
     if (document.body) { document.body.classList.add('trek-ui'); }
+    enhanceAllSelects(document);
+    if (typeof MutationObserver !== 'undefined' && document.body) {
+      new MutationObserver(function (muts) {
+        for (var i = 0; i < muts.length; i++) {
+          var added = muts[i].addedNodes;
+          for (var j = 0; j < added.length; j++) {
+            var n = added[j];
+            if (!n || n.nodeType !== 1) { continue; }
+            if (n.tagName === 'SELECT') { enhanceSelect(n); }
+            else if (n.getElementsByTagName) { enhanceAllSelects(n); }
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    }
     api.ready();
     reportHeight();
     if (typeof ResizeObserver !== 'undefined' && document.body) {

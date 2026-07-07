@@ -282,6 +282,13 @@ All animations honour reduced motion: under `[data-reduce-motion]` or
 `prefers-reduced-motion` they degrade to a gentle 120ms fade, and the skeleton
 stops shimmering.
 
+**Selects are auto-upgraded.** With the kit inlined, every native `<select>` becomes
+a host-styled, keyboard-accessible dropdown that matches TREK — the OS-drawn popup
+can't be themed, so the kit replaces it while keeping the real `<select>` as the
+value/form source (it still fires `change`). Write a plain `<select>` and it just
+works. Add `data-trek-native` to a field to keep the browser default; `multiple` and
+`size` selects are always left native.
+
 **The `window.trek` bridge:**
 
 | Call | Does |
