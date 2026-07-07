@@ -24,7 +24,7 @@ import { AuthService } from './auth.service';
 import { RateLimitService } from './rate-limit.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './current-user.decorator';
-import { writeAudit, getClientIp } from '../../services/auditLog';
+import { getAuditRequestContext, writeAudit } from '../../services/auditLog';
 import { isDemoEmail } from '../../services/demo';
 import type { User } from '../../types';
 
@@ -86,7 +86,7 @@ export class AuthController {
     // Refresh this device's cookie with the new password_version so the user
     // stays logged in here while all other sessions are invalidated.
     if (result.token) this.auth.setAuthCookie(res, result.token, req);
-    writeAudit({ userId: user.id, action: 'user.password_change', ip: getClientIp(req) });
+    writeAudit({ userId: user.id, action: 'user.password_change', ...getAuditRequestContext(req) });
     return { success: true };
   }
 
@@ -96,7 +96,7 @@ export class AuthController {
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status!);
     }
-    writeAudit({ userId: user.id, action: 'user.account_delete', ip: getClientIp(req) });
+    writeAudit({ userId: user.id, action: 'user.account_delete', ...getAuditRequestContext(req) });
     return { success: true };
   }
 
@@ -175,7 +175,7 @@ export class AuthController {
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status!);
     }
-    writeAudit({ userId: user.id, action: 'settings.app_update', ip: getClientIp(req), details: result.auditSummary, debugDetails: result.auditDebugDetails });
+    writeAudit({ userId: user.id, action: 'settings.app_update', ...getAuditRequestContext(req), details: result.auditSummary, debugDetails: result.auditDebugDetails });
     return { success: true };
   }
 
@@ -208,7 +208,7 @@ export class AuthController {
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status!);
     }
-    writeAudit({ userId: user.id, action: 'user.mfa_enable', ip: getClientIp(req) });
+    writeAudit({ userId: user.id, action: 'user.mfa_enable', ...getAuditRequestContext(req) });
     return { success: true, mfa_enabled: result.mfa_enabled, backup_codes: result.backup_codes };
   }
 
@@ -220,7 +220,7 @@ export class AuthController {
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status!);
     }
-    writeAudit({ userId: user.id, action: 'user.mfa_disable', ip: getClientIp(req) });
+    writeAudit({ userId: user.id, action: 'user.mfa_disable', ...getAuditRequestContext(req) });
     return { success: true, mfa_enabled: result.mfa_enabled };
   }
 

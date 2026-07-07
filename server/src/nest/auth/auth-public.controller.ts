@@ -3,7 +3,7 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RateLimitService } from './rate-limit.service';
 import { OptionalJwtGuard } from './optional-jwt.guard';
-import { writeAudit, getClientIp } from '../../services/auditLog';
+import { getAuditRequestContext, writeAudit } from '../../services/auditLog';
 import { willDropSecureCookie } from '../../services/cookie';
 import type { User } from '../../types';
 
@@ -66,7 +66,7 @@ export class AuthPublicController {
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status!);
     }
-    writeAudit({ userId: result.auditUserId!, action: 'user.register', ip: getClientIp(req), details: result.auditDetails });
+    writeAudit({ userId: result.auditUserId!, action: 'user.register', ...getAuditRequestContext(req), details: result.auditDetails });
     this.auth.setAuthCookie(res, result.token!, req);
     return { token: result.token, user: result.user };
   }
@@ -78,7 +78,7 @@ export class AuthPublicController {
     const started = Date.now();
     const result = this.auth.loginUser(body);
     if (result.auditAction) {
-      writeAudit({ userId: result.auditUserId ?? null, action: result.auditAction, ip: getClientIp(req), details: result.auditDetails });
+      writeAudit({ userId: result.auditUserId ?? null, action: result.auditAction, ...getAuditRequestContext(req), details: result.auditDetails });
     }
     const elapsed = Date.now() - started;
     if (elapsed < LOGIN_MIN_LATENCY_MS) await delay(LOGIN_MIN_LATENCY_MS - elapsed);
@@ -104,21 +104,22 @@ export class AuthPublicController {
     this.limit('forgot', req, 3);
     const started = Date.now();
     const rawEmail = typeof body?.email === 'string' ? body.email : '';
-    const ip = getClientIp(req);
+    const auditContext = getAuditRequestContext(req);
+    const ip = auditContext.ip;
 
     const outcome = this.auth.requestPasswordReset(rawEmail, ip);
     if (outcome.reason === 'issued' && outcome.tokenForDelivery && outcome.userEmail) {
       const origin = this.auth.getAppUrl();
       const url = `${origin.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(outcome.tokenForDelivery)}`;
-      writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ip, details: { delivered: 'pending' } });
+      writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ...auditContext, details: { delivered: 'pending' } });
       try {
         const delivery = await this.auth.sendPasswordResetEmail(outcome.userEmail, url, outcome.userId);
-        writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ip, details: { delivered: delivery.delivered } });
+        writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ...auditContext, details: { delivered: delivery.delivered } });
       } catch {
-        writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ip, details: { delivered: 'failed' } });
+        writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ...auditContext, details: { delivered: 'failed' } });
       }
     } else {
-      writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ip, details: { reason: outcome.reason } });
+      writeAudit({ userId: outcome.userId, action: 'user.password_reset_request', ...auditContext, details: { reason: outcome.reason } });
     }
     const elapsed = Date.now() - started;
     if (elapsed < FORGOT_MIN_LATENCY_MS) await delay(FORGOT_MIN_LATENCY_MS - elapsed);
@@ -131,16 +132,16 @@ export class AuthPublicController {
     // Per-IP brute-force guard, parity with the legacy resetLimiter (5 / 15 min on
     // a dedicated bucket) — without it reset tokens could be guessed unthrottled.
     this.limit('reset', req, 5);
-    const ip = getClientIp(req);
+    const auditContext = getAuditRequestContext(req);
     const result = this.auth.resetPassword(body);
     if (result.error) {
-      writeAudit({ userId: null, action: 'user.password_reset_fail', ip, details: { reason: result.error } });
+      writeAudit({ userId: null, action: 'user.password_reset_fail', ...auditContext, details: { reason: result.error } });
       throw new HttpException({ error: result.error }, result.status!);
     }
     if (result.mfa_required) {
       return { mfa_required: true };
     }
-    writeAudit({ userId: result.userId ?? null, action: 'user.password_reset_success', ip });
+    writeAudit({ userId: result.userId ?? null, action: 'user.password_reset_success', ...auditContext });
     return { success: true };
   }
 
@@ -152,7 +153,7 @@ export class AuthPublicController {
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status!);
     }
-    writeAudit({ userId: result.auditUserId!, action: 'user.login', ip: getClientIp(req), details: { mfa: true } });
+    writeAudit({ userId: result.auditUserId!, action: 'user.login', ...getAuditRequestContext(req), details: { mfa: true } });
     this.auth.setAuthCookie(res, result.token!, req, result.remember);
     return { token: result.token, user: result.user };
   }

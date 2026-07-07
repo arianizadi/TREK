@@ -638,7 +638,10 @@ function runMigrations(db: Database.Database): void {
           action TEXT NOT NULL,
           resource TEXT,
           details TEXT,
-          ip TEXT
+          ip TEXT,
+          country_code TEXT,
+          region_code TEXT,
+          region_name TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at DESC);
       `);
@@ -3479,6 +3482,56 @@ function runMigrations(db: Database.Database): void {
     () => {
       try {
         db.exec("ALTER TABLE plugins ADD COLUMN dependencies TEXT NOT NULL DEFAULT '{}'");
+      } catch (err: any) {
+        if (!err.message?.includes('duplicate column name')) throw err;
+      }
+    },
+    // AI copilot usage + full admin audit log. Payloads intentionally live in
+    // this admin-only table rather than the process log, so prompts/responses can
+    // be reviewed without copying sensitive trip text into rotated log files.
+    () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS ai_usage_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          trip_id INTEGER REFERENCES trips(id) ON DELETE SET NULL,
+          request_kind TEXT NOT NULL,
+          provider TEXT NOT NULL DEFAULT 'openrouter',
+          model TEXT,
+          status TEXT NOT NULL DEFAULT 'ok',
+          prompt_tokens INTEGER,
+          completion_tokens INTEGER,
+          total_tokens INTEGER,
+          reasoning_tokens INTEGER,
+          cost REAL,
+          request_payload TEXT,
+          response_payload TEXT,
+          error TEXT,
+          ip TEXT,
+          duration_ms INTEGER
+        );
+        CREATE INDEX IF NOT EXISTS idx_ai_usage_created ON ai_usage_events(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_ai_usage_user ON ai_usage_events(user_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_ai_usage_trip ON ai_usage_events(trip_id, created_at DESC);
+      `);
+    },
+    // Preserve normalized request geo context on audit rows when a proxy/CDN
+    // provides it. All columns are nullable because self-hosted installs often
+    // have no IP geolocation source at all.
+    () => {
+      try {
+        db.exec('ALTER TABLE audit_log ADD COLUMN country_code TEXT');
+      } catch (err: any) {
+        if (!err.message?.includes('duplicate column name')) throw err;
+      }
+      try {
+        db.exec('ALTER TABLE audit_log ADD COLUMN region_code TEXT');
+      } catch (err: any) {
+        if (!err.message?.includes('duplicate column name')) throw err;
+      }
+      try {
+        db.exec('ALTER TABLE audit_log ADD COLUMN region_name TEXT');
       } catch (err: any) {
         if (!err.message?.includes('duplicate column name')) throw err;
       }

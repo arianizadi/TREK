@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CookieAuthGuard } from '../auth/cookie-auth.guard';
 import { OptionalJwtGuard } from '../auth/optional-jwt.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { getClientIp } from '../../services/auditLog';
+import { getAuditRequestContext } from '../../services/auditLog';
 import type { User } from '../../types';
 import type { AuthorizeParams } from '../../services/oauthService';
 
@@ -71,7 +71,7 @@ export class OauthApiController {
     client_id: string; redirect_uri: string; scope: string; state?: string;
     code_challenge: string; code_challenge_method: string; approved: boolean; resource?: string;
   }, @Req() req: Request) {
-    const ip = getClientIp(req);
+    const auditContext = getAuditRequestContext(req);
     if (!this.oauth.mcpEnabled()) {
       throw new HttpException({ error: 'MCP is not enabled' }, 403);
     }
@@ -97,7 +97,7 @@ export class OauthApiController {
       throw new HttpException({ error: validation.error, error_description: validation.error_description }, 400);
     }
     const scopes = validation.scopes!;
-    this.oauth.saveConsent(body.client_id, user.id, scopes, ip);
+    this.oauth.saveConsent(body.client_id, user.id, scopes, auditContext);
     const code = this.oauth.createAuthCode({
       clientId: body.client_id,
       userId: user.id,
@@ -128,7 +128,7 @@ export class OauthApiController {
   @UseGuards(CookieAuthGuard)
   createClient(@CurrentUser() user: User, @Body() body: { name: string; redirect_uris?: string[]; allowed_scopes: string[]; allows_client_credentials?: boolean }, @Req() req: Request) {
     this.requireMcp403();
-    const result = this.oauth.createOAuthClient(user.id, body.name, body.redirect_uris ?? [], body.allowed_scopes, getClientIp(req), { allowsClientCredentials: body.allows_client_credentials });
+    const result = this.oauth.createOAuthClient(user.id, body.name, body.redirect_uris ?? [], body.allowed_scopes, getAuditRequestContext(req), { allowsClientCredentials: body.allows_client_credentials });
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status || 400);
     }
@@ -140,7 +140,7 @@ export class OauthApiController {
   @UseGuards(CookieAuthGuard)
   rotateClient(@CurrentUser() user: User, @Param('id') id: string, @Req() req: Request) {
     this.requireMcp403();
-    const result = this.oauth.rotateOAuthClientSecret(user.id, id, getClientIp(req));
+    const result = this.oauth.rotateOAuthClientSecret(user.id, id, getAuditRequestContext(req));
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status || 400);
     }
@@ -151,7 +151,7 @@ export class OauthApiController {
   @UseGuards(CookieAuthGuard)
   deleteClient(@CurrentUser() user: User, @Param('id') id: string, @Req() req: Request) {
     this.requireMcp403();
-    const result = this.oauth.deleteOAuthClient(user.id, id, getClientIp(req));
+    const result = this.oauth.deleteOAuthClient(user.id, id, getAuditRequestContext(req));
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status || 400);
     }
@@ -169,7 +169,7 @@ export class OauthApiController {
   @UseGuards(CookieAuthGuard)
   revokeSession(@CurrentUser() user: User, @Param('id') id: string, @Req() req: Request) {
     this.requireMcp403();
-    const result = this.oauth.revokeSession(user.id, Number(id), getClientIp(req));
+    const result = this.oauth.revokeSession(user.id, Number(id), getAuditRequestContext(req));
     if (result.error) {
       throw new HttpException({ error: result.error }, result.status || 400);
     }

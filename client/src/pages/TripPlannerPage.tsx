@@ -20,6 +20,7 @@ import { TransportModal } from '../components/Planner/TransportModal'
 import TransitJourneyModal from '../components/Planner/TransitJourneyModal'
 import BookingImportModal from '../components/Planner/BookingImportModal'
 import AirTrailImportModal from '../components/Planner/AirTrailImportModal'
+import AskTrekDrawer from '../components/AiCopilot/AskTrekDrawer'
 // MemoriesPanel moved to Journey addon
 import ReservationsPanel from '../components/Planner/ReservationsPanel'
 import PackingListPanel from '../components/Packing/PackingListPanel'
@@ -34,7 +35,7 @@ import PluginFrame from '../components/Plugins/PluginFrame'
 import TripWarningsBanner from '../components/Planner/TripWarningsBanner'
 import Navbar from '../components/Layout/Navbar'
 import { useToast } from '../components/shared/Toast'
-import { Map, X, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Ticket, PackageCheck, Wallet, FolderOpen, Users, Train } from 'lucide-react'
+import { Map, X, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Ticket, PackageCheck, Wallet, FolderOpen, Users, Train, Sparkles } from 'lucide-react'
 import { useTranslation } from '../i18n'
 import { addonsApi, accommodationsApi, authApi, tripsApi, assignmentsApi, mapsApi } from '../api/client'
 import { accommodationRepo } from '../repo/accommodationRepo'
@@ -216,6 +217,7 @@ export default function TripPlannerPage(): React.ReactElement | null {
 
   const poi = usePoiExplore()
   const [glMap, setGlMap] = useState<CompassMap | null>(null)
+  const [showAskTrek, setShowAskTrek] = useState(false)
   const poiPillEnabled = useSettingsStore(s => s.settings.map_poi_pill_enabled) !== false
 
   // Costs expense editor opened from a booking modal (save-then-open). Lives at the
@@ -279,22 +281,51 @@ export default function TripPlannerPage(): React.ReactElement | null {
 
       <div className="bg-surface-elevated border-b border-edge-faint" style={{
         position: 'fixed', top: 'var(--nav-h)', left: 0, right: 0, zIndex: 40,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
         padding: '0 12px',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         height: 44,
       }}>
-        <SlidingTabs
-          tabs={TRIP_TABS.map(tab => ({
-            id: tab.id,
-            label: <span className="hidden sm:inline">{tab.shortLabel || tab.label}</span>,
-            title: tab.label,
-            icon: tab.icon,
-          }))}
-          activeTab={activeTab}
-          onChange={handleTabChange}
-        />
+        <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+          <SlidingTabs
+            className="max-w-full"
+            tabs={TRIP_TABS.map(tab => ({
+              id: tab.id,
+              label: <span className="hidden sm:inline">{tab.shortLabel || tab.label}</span>,
+              title: tab.label,
+              icon: tab.icon,
+            }))}
+            activeTab={activeTab}
+            onChange={handleTabChange}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAskTrek(true)}
+          className="bg-accent text-accent-text"
+          title="Ask TREK"
+          style={{
+            flex: '0 0 auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 7,
+            border: 'none',
+            borderRadius: 10,
+            padding: '8px 11px',
+            minWidth: 38,
+            minHeight: 34,
+            fontSize: 'calc(13px * var(--fs-scale-body, 1))',
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            fontFamily: 'inherit',
+          }}
+        >
+          <Sparkles size={15} />
+          <span className="hidden sm:inline">Ask TREK</span>
+        </button>
       </div>
 
       {/* Offset by navbar + tab bar (44px) */}
@@ -722,6 +753,21 @@ export default function TripPlannerPage(): React.ReactElement | null {
           </div>
         )}
       </div>
+
+      <AskTrekDrawer
+        isOpen={showAskTrek}
+        onClose={() => setShowAskTrek(false)}
+        tripId={tripId}
+        trip={trip}
+        days={days}
+        places={places}
+        reservations={reservations}
+        budgetItems={budgetItems}
+        packingItems={packingItems}
+        selectedDayId={selectedDayId}
+        activeTab={activeTab}
+        onApplied={() => tripActions.hydrateActiveTrip(tripId)}
+      />
 
       <PlaceFormModal isOpen={showPlaceForm} onClose={() => { setShowPlaceForm(false); setEditingPlace(null); setEditingAssignmentId(null); setPrefillCoords(null) }} onSave={handleSavePlace} place={editingPlace} prefillCoords={prefillCoords} assignmentId={editingAssignmentId} dayAssignments={editingPlace ? Object.values(assignments).flat() : []} tripId={tripId} categories={categories} onCategoryCreated={cat => tripActions.addCategory?.(cat)} isMobile={isMobile} />
       <TripFormModal

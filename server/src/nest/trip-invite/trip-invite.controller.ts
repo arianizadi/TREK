@@ -5,7 +5,7 @@ import { TripInviteService } from './trip-invite.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { RateLimitService } from '../auth/rate-limit.service';
-import { writeAudit, getClientIp } from '../../services/auditLog';
+import { getAuditRequestContext, writeAudit } from '../../services/auditLog';
 
 const RL_WINDOW = 15 * 60 * 1000;
 
@@ -48,7 +48,7 @@ export class TripInviteLinkController {
       ? parseInt(String(body.expires_in_days))
       : null;
     const info = this.invites.createOrRotate(tripId, user.id, Number.isFinite(days as number) ? days : null);
-    writeAudit({ userId: user.id, action: 'trip.invite_link_create', resource: tripId, ip: getClientIp(req), details: { expires_in_days: days } });
+    writeAudit({ userId: user.id, action: 'trip.invite_link_create', resource: tripId, ...getAuditRequestContext(req), details: { expires_in_days: days } });
     return info;
   }
 
@@ -56,7 +56,7 @@ export class TripInviteLinkController {
   remove(@CurrentUser() user: User, @Param('tripId') tripId: string, @Req() req: Request) {
     this.requireManage(tripId, user);
     this.invites.remove(tripId);
-    writeAudit({ userId: user.id, action: 'trip.invite_link_delete', resource: tripId, ip: getClientIp(req) });
+    writeAudit({ userId: user.id, action: 'trip.invite_link_delete', resource: tripId, ...getAuditRequestContext(req) });
     return { success: true };
   }
 }
@@ -94,7 +94,7 @@ export class TripInviteController {
     const resolved = this.invites.resolve(token);
     if (!resolved) throw new HttpException({ error: 'Invalid or expired invite link' }, 404);
     const result = this.invites.join(resolved.trip_id, user.id);
-    writeAudit({ userId: user.id, action: 'trip.invite_link_join', resource: String(resolved.trip_id), ip: getClientIp(req), details: { joined: result.joined } });
+    writeAudit({ userId: user.id, action: 'trip.invite_link_join', resource: String(resolved.trip_id), ...getAuditRequestContext(req), details: { joined: result.joined } });
     return { trip_id: resolved.trip_id, joined: result.joined };
   }
 }

@@ -11,6 +11,16 @@ import type { PackingItem, PackingBag } from '../../types'
 import { BAG_COLORS, PACKING_PLACEHOLDER_NAME } from './packingListPanel.constants'
 import { parseImportLines } from './packingListPanel.helpers'
 
+const ZERO_WIDTH_SPACES_RE = /\u200B/g
+
+function visibleCategoryName(category: string): string {
+  return category.replace(ZERO_WIDTH_SPACES_RE, '').trim()
+}
+
+function categoryKey(category: string): string {
+  return visibleCategoryName(category).toLocaleLowerCase()
+}
+
 export interface TripMember {
   id: number
   username: string
@@ -118,6 +128,16 @@ export function usePackingList({ tripId, items, openImportSignal = 0, clearCheck
   const abgehakt = viewItems.filter(i => i.checked).length
   const fortschritt = viewItems.length > 0 ? Math.round((abgehakt / viewItems.length) * 100) : 0
 
+  const commonCategoryByVisibleName = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const item of items.filter(i => !i.is_private)) {
+      const cat = item.category || t('packing.defaultCategory')
+      const key = categoryKey(cat)
+      if (!map.has(key)) map.set(key, cat)
+    }
+    return map
+  }, [items, t])
+
   const handleAddItemToCategory = async (category: string, name: string) => {
     try {
       // Reuse the '...' placeholder slot when the category already has one, so a
@@ -187,6 +207,40 @@ export function usePackingList({ tripId, items, openImportSignal = 0, clearCheck
       try { await deletePackingItem(tripId, item.id) } catch { failed = true }
     }
     if (failed) toast.error(t('packing.toast.deleteError'))
+  }
+
+  const handleMoveCategoryToCommon = async (category: string, catItems: PackingItem[]) => {
+    const visibleName = visibleCategoryName(category) || category
+    const existingCommonCategory = commonCategoryByVisibleName.get(categoryKey(category))
+    const merging = existingCommonCategory !== undefined
+    const targetCategory = existingCommonCategory ?? category
+
+    if (merging && !confirm(t('packing.confirm.mergeToShared', { name: visibleName }))) return
+
+    let changed = 0
+    let failed = false
+    for (const item of Array.from(catItems)) {
+      try {
+        if (merging && item.name === PACKING_PLACEHOLDER_NAME) {
+          await deletePackingItem(tripId, item.id)
+          changed += 1
+          continue
+        }
+        if ((item.category || t('packing.defaultCategory')) !== targetCategory) {
+          await updatePackingItem(tripId, item.id, { category: targetCategory })
+        }
+        await setPackingItemSharing(tripId, item.id, 'common', [])
+        changed += 1
+      } catch {
+        failed = true
+      }
+    }
+
+    if (changed > 0) {
+      toast.success(t('packing.toast.movedToShared', { name: visibleName }))
+      setView('common')
+    }
+    if (failed) toast.error(t('packing.toast.moveToSharedError'))
   }
 
   const handleClearChecked = async () => {
@@ -367,7 +421,7 @@ export function usePackingList({ tripId, items, openImportSignal = 0, clearCheck
     tripId, items, inlineHeader, t, canEdit, isAdmin, font, reorderPackingItems,
     filter, setFilter, addingCategory, setAddingCategory, newCatName, setNewCatName,
     tripMembers, categoryAssignees, handleSetAssignees, allCategories, gruppiert, abgehakt, fortschritt,
-    handleAddItemToCategory, handleAddNewCategory, handleRenameCategory, handleDeleteCategory, handleDeleteItem, handleClearChecked,
+    handleAddItemToCategory, handleAddNewCategory, handleRenameCategory, handleDeleteCategory, handleMoveCategoryToCommon, handleDeleteItem, handleClearChecked,
     bagTrackingEnabled, bags, newBagName, setNewBagName, showAddBag, setShowAddBag, showBagModal, setShowBagModal,
     handleCreateBag, handleCreateBagByName, handleDeleteBag, handleUpdateBag, handleSetBagMembers,
     availableTemplates, showTemplateDropdown, setShowTemplateDropdown, applyingTemplate,

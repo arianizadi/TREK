@@ -20,16 +20,18 @@ vi.mock('../../../src/db/database', () => ({
   db: { prepare: () => ({ get: vi.fn(), run: vi.fn() }) },
 }));
 
-import { getClientIp } from '../../../src/services/auditLog';
+import { getAuditRequestContext, getClientIp } from '../../../src/services/auditLog';
 import type { Request } from 'express';
 
 function makeReq(options: {
   xff?: string | string[];
   remoteAddress?: string;
+  headers?: Record<string, string | string[]>;
 } = {}): Request {
   return {
     headers: {
       ...(options.xff !== undefined ? { 'x-forwarded-for': options.xff } : {}),
+      ...(options.headers ?? {}),
     },
     socket: { remoteAddress: options.remoteAddress ?? undefined },
   } as unknown as Request;
@@ -66,5 +68,51 @@ describe('getClientIp', () => {
       socket: { remoteAddress: undefined },
     } as unknown as Request;
     expect(getClientIp(req)).toBeNull();
+  });
+});
+
+describe('getAuditRequestContext', () => {
+  it('returns normalized country and US state from proxy geo headers', () => {
+    expect(
+      getAuditRequestContext(makeReq({
+        xff: '203.0.113.4',
+        headers: {
+          'x-vercel-ip-country': 'us',
+          'x-vercel-ip-country-region': 'ca',
+        },
+      })),
+    ).toEqual({
+      ip: '203.0.113.4',
+      countryCode: 'US',
+      regionCode: 'US-CA',
+      regionName: 'California',
+    });
+  });
+
+  it('uses explicit region names when a proxy provides them', () => {
+    expect(
+      getAuditRequestContext(makeReq({
+        remoteAddress: '198.51.100.2',
+        headers: {
+          'cloudfront-viewer-country': 'US',
+          'cloudfront-viewer-country-region': 'NY',
+          'cloudfront-viewer-country-region-name': 'New%20York',
+        },
+      })),
+    ).toEqual({
+      ip: '198.51.100.2',
+      countryCode: 'US',
+      regionCode: 'US-NY',
+      regionName: 'New York',
+    });
+  });
+
+  it('leaves geo fields null when no geo headers are present', () => {
+    expect(getAuditRequestContext(makeReq({ remoteAddress: '10.0.0.2' }))).toEqual({
+      ip: '10.0.0.2',
+      countryCode: null,
+      regionCode: null,
+      regionName: null,
+    });
   });
 });

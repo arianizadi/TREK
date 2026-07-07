@@ -16,6 +16,9 @@ const ENTRY_1 = {
   resource: '/trips/42',
   details: { title: 'Test' },
   ip: '127.0.0.1',
+  country_code: 'US',
+  region_code: 'US-CA',
+  region_name: 'California',
 };
 
 const ENTRY_2 = {
@@ -79,6 +82,7 @@ describe('AuditLogPanel', () => {
     expect(screen.getByText('alice')).toBeInTheDocument();
     expect(screen.getByText('/trips/42')).toBeInTheDocument();
     expect(screen.getByText('127.0.0.1')).toBeInTheDocument();
+    expect(screen.getByText('California, US')).toBeInTheDocument();
     expect(screen.getByText('{"title":"Test"}')).toBeInTheDocument();
   });
 

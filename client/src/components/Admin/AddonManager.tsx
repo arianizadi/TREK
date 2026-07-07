@@ -317,6 +317,11 @@ export default function AddonManager({ bagTrackingEnabled, onToggleBagTracking, 
 
 const MASKED = '••••••••'
 const DEFAULT_OLLAMA_URL = 'http://localhost:11434/v1'
+type ReasoningEffort = 'low' | 'medium' | 'high'
+
+function asReasoningEffort(value: unknown): ReasoningEffort {
+  return value === 'low' || value === 'medium' || value === 'high' ? value : 'medium'
+}
 
 /** Curated models the local extractor is tuned for, pullable via Ollama. The router drives
  *  one model per document via Ollama's grammar-constrained `format`; "thinking" is disabled
@@ -338,7 +343,10 @@ function LlmParsingConfig({ addon }: { addon: Addon }) {
   const [model, setModel] = useState<string>((cfg.model as string) ?? '')
   const [baseUrl, setBaseUrl] = useState<string>((cfg.baseUrl as string) ?? '')
   const [apiKey, setApiKey] = useState<string>((cfg.apiKey as string) ?? '')
+  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort>(asReasoningEffort(cfg.reasoningEffort))
   const [saving, setSaving] = useState(false)
+  const [testingAi, setTestingAi] = useState(false)
+  const [testResult, setTestResult] = useState<string>('')
 
   // Local-provider model management.
   const [installed, setInstalled] = useState<string[]>([])
@@ -399,12 +407,42 @@ function LlmParsingConfig({ addon }: { addon: Addon }) {
     setSaving(true)
     try {
       // Send the masked sentinel unchanged so the server keeps the stored key.
-      await adminApi.updateAddon(addon.id, { config: { provider, model: model.trim(), baseUrl: baseUrl.trim(), apiKey, multimodal: cfg.multimodal === true } })
+      await adminApi.updateAddon(addon.id, { config: { provider, model: model.trim(), baseUrl: baseUrl.trim(), apiKey, multimodal: cfg.multimodal === true, reasoningEffort } })
       toast.success('Saved')
     } catch {
       toast.error('Failed to save')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const testOpenRouter = async () => {
+    setTestingAi(true)
+    setTestResult('')
+    try {
+      const result = await adminApi.testAiConnection({
+        provider: 'openrouter',
+        model: model.trim() || undefined,
+        baseUrl: baseUrl.trim() || undefined,
+        apiKey: apiKey && apiKey !== MASKED ? apiKey : undefined,
+        reasoningEffort,
+      })
+      const details = [
+        result.ok ? 'Connected' : 'Failed',
+        result.model,
+        `reasoning effort ${result.reasoningEffort === 'medium' ? 'normal' : result.reasoningEffort || reasoningEffort}`,
+        `reasoning ${result.supportsReasoning ? 'yes' : 'no'}`,
+        `structured outputs ${result.supportsStructuredOutputs ? 'yes' : 'no'}`,
+      ].join(' · ')
+      setTestResult(result.message ? `${details} · ${result.message}` : details)
+      if (result.ok) toast.success('OpenRouter connection works')
+      else toast.error(result.message || 'OpenRouter test failed')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'OpenRouter test failed'
+      setTestResult(message)
+      toast.error(message)
+    } finally {
+      setTestingAi(false)
     }
   }
 
@@ -415,6 +453,7 @@ function LlmParsingConfig({ addon }: { addon: Addon }) {
   const providerOptions = [
     { value: 'local', label: 'Local · OpenAI-compatible', icon: <Server size={14} />, badge: 'Ollama' },
     { value: 'openai', label: 'OpenAI', icon: <Cloud size={14} /> },
+    { value: 'openrouter', label: 'OpenRouter', icon: <Cloud size={14} /> },
     { value: 'anthropic', label: 'Anthropic', icon: <Sparkles size={14} /> },
   ]
 
@@ -435,13 +474,29 @@ function LlmParsingConfig({ addon }: { addon: Addon }) {
           {provider !== 'anthropic' && (
             <label className="block">
               <span className={labelCls}>Base URL</span>
-              <input type="url" autoComplete="off" className={fieldCls} value={baseUrl} onChange={e => setBaseUrl(e.target.value)} onBlur={loadModels} placeholder={provider === 'local' ? 'http://localhost:11434/v1' : 'https://api.openai.com/v1'} />
+              <input type="url" autoComplete="off" className={fieldCls} value={baseUrl} onChange={e => setBaseUrl(e.target.value)} onBlur={loadModels} placeholder={provider === 'local' ? 'http://localhost:11434/v1' : provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1'} />
             </label>
           )}
           <label className="block">
             <span className={labelCls}>API key</span>
             <input type="password" className={fieldCls} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={apiKey === MASKED ? MASKED : provider === 'local' ? '(often not required)' : 'sk-…'} />
           </label>
+          {provider === 'openrouter' && (
+            <div className="rounded-lg border border-edge-secondary bg-surface p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={testOpenRouter}
+                  disabled={testingAi}
+                  className="rounded-lg bg-accent px-3 py-2 text-xs font-medium text-accent-text transition-opacity disabled:opacity-60"
+                >
+                  {testingAi ? 'Testing...' : 'Test OpenRouter'}
+                </button>
+                <span className="text-xs text-content-faint">Checks model metadata, reasoning, structured output, and a tiny chat request.</span>
+              </div>
+              {testResult && <div className="mt-2 text-xs text-content-secondary">{testResult}</div>}
+            </div>
+          )}
           {provider === 'anthropic' && (
             <p className="text-xs text-content-faint">Anthropic reads PDFs (including scans) natively. Local/OpenAI models receive extracted text — scanned PDFs need Anthropic.</p>
           )}
@@ -451,8 +506,24 @@ function LlmParsingConfig({ addon }: { addon: Addon }) {
         <section className="space-y-3">
           <div className={sectionCls}>Model</div>
           <label className="block">
-            <input autoComplete="off" className={fieldCls} value={model} onChange={e => setModel(e.target.value)} placeholder={provider === 'anthropic' ? 'claude-opus-4-8' : provider === 'openai' ? 'gpt-4o' : 'select or pull below'} />
+            <input autoComplete="off" className={fieldCls} value={model} onChange={e => setModel(e.target.value)} placeholder={provider === 'anthropic' ? 'claude-opus-4-8' : provider === 'openrouter' ? 'qwen/qwen3.5-397b-a17b' : provider === 'openai' ? 'gpt-4o' : 'select or pull below'} />
           </label>
+
+          {provider === 'openrouter' && (
+            <div>
+              <span className={labelCls}>Reasoning effort</span>
+              <CustomSelect
+                value={reasoningEffort}
+                onChange={v => setReasoningEffort(asReasoningEffort(v))}
+                options={[
+                  { value: 'medium', label: 'Normal · balanced speed and quality' },
+                  { value: 'low', label: 'Low · faster, less reasoning' },
+                  { value: 'high', label: 'High · deeper, slower' },
+                ]}
+              />
+              <p className="mt-1 text-xs text-content-faint">Ask TREK sends this as OpenRouter reasoning effort. Normal uses OpenRouter&apos;s medium effort.</p>
+            </div>
+          )}
 
           {/* Local model management (Ollama) */}
           {provider === 'local' && (

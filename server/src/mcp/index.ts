@@ -11,7 +11,7 @@ import { registerResources } from './resources';
 import { registerTools } from './tools';
 import { McpSession, sessions, revokeUserSessions, revokeUserSessionsForClient } from './sessionManager';
 import { resolveSessionTtlMs, resolveKeepaliveMs } from './config';
-import { writeAudit, getClientIp } from '../services/auditLog';
+import { getAuditRequestContext, writeAudit } from '../services/auditLog';
 import { getMcpSafeUrl } from '../services/notifications';
 
 export { revokeUserSessions, revokeUserSessionsForClient };
@@ -242,7 +242,7 @@ function logToolCallAudit(req: Request, userId: number, clientId: string | null)
     action: 'mcp.tool_call',
     resource: toolName,
     details: { clientId: clientId ?? 'native' },
-    ip: getClientIp(req),
+    ...getAuditRequestContext(req),
   });
 }
 

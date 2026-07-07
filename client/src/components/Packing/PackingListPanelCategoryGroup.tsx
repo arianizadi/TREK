@@ -4,7 +4,7 @@ import { useToast } from '../shared/Toast'
 import { useTranslation } from '../../i18n'
 import {
   Trash2, Plus, ChevronDown, ChevronRight,
-  X, Pencil, Check, MoreHorizontal, CheckCheck, RotateCcw, UserPlus,
+  X, Pencil, Check, MoreHorizontal, CheckCheck, RotateCcw, UserPlus, Users,
 } from 'lucide-react'
 import type { PackingItem, PackingBag } from '../../types'
 import { katColor } from './packingListPanel.helpers'
@@ -19,6 +19,7 @@ interface KategorieGruppeProps {
   allCategories: string[]
   onRename: (oldName: string, newName: string) => Promise<void>
   onDeleteAll: (items: PackingItem[]) => Promise<void>
+  onMoveToShared?: (category: string, items: PackingItem[]) => Promise<void>
   onDeleteItem: (item: PackingItem) => Promise<void>
   onAddItem: (category: string, name: string) => Promise<void>
   assignees: CategoryAssignee[]
@@ -28,6 +29,7 @@ interface KategorieGruppeProps {
   bags?: PackingBag[]
   onCreateBag: (name: string) => Promise<PackingBag | undefined>
   canEdit?: boolean
+  view: 'common' | 'personal'
   // Drag-to-reorder (#969): the full ordered item list + a persist callback. The
   // order is global, so a within-category drag is mapped back onto the full list.
   allItems: PackingItem[]
@@ -40,7 +42,7 @@ interface KategorieGruppeProps {
   onLeave?: (id: number, userId: number) => void
 }
 
-export function KategorieGruppe({ kategorie, items, tripId, allCategories, onRename, onDeleteAll, onDeleteItem, onAddItem, assignees, tripMembers, onSetAssignees, bagTrackingEnabled, bags, onCreateBag, canEdit = true, allItems, onReorder, currentUserId, onSetSharing, onClone, onJoin, onLeave }: KategorieGruppeProps) {
+export function KategorieGruppe({ kategorie, items, tripId, allCategories, onRename, onDeleteAll, onMoveToShared, onDeleteItem, onAddItem, assignees, tripMembers, onSetAssignees, bagTrackingEnabled, bags, onCreateBag, canEdit = true, view, allItems, onReorder, currentUserId, onSetSharing, onClone, onJoin, onLeave }: KategorieGruppeProps) {
   const [offen, setOffen] = useState(true)
   const [dragId, setDragId] = useState<number | null>(null)
   const [overId, setOverId] = useState<number | null>(null)
@@ -250,6 +252,7 @@ export function KategorieGruppe({ kategorie, items, tripId, allCategories, onRen
               <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowMenu(false)} />
               <div style={{ position: 'fixed', right: rect ? window.innerWidth - rect.right : 0, top: rect ? rect.bottom + 4 : 0, zIndex: 100, background: 'var(--bg-card)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', padding: 4, minWidth: 170 }}>
                 {canEdit && <MenuItem icon={<Pencil size={13} />} label={t('packing.menuRename')} onClick={() => { setEditingName(true); setShowMenu(false) }} />}
+                {canEdit && view === 'personal' && onMoveToShared && <MenuItem icon={<Users size={13} />} label={t('packing.menuMoveToShared')} onClick={() => { setShowMenu(false); void onMoveToShared(kategorie, items) }} />}
                 <MenuItem icon={<CheckCheck size={13} />} label={t('packing.menuCheckAll')} onClick={() => { handleCheckAll(); setShowMenu(false) }} />
                 <MenuItem icon={<RotateCcw size={13} />} label={t('packing.menuUncheckAll')} onClick={() => { handleUncheckAll(); setShowMenu(false) }} />
                 {canEdit && <>

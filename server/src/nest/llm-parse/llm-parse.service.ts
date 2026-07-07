@@ -62,7 +62,7 @@ export class LlmParseService {
         const MAX_EXTRACT_CHARS =
           config.provider !== 'local' ? 4000 : detectFlightNumbers(input.text).length > 0 ? 16000 : 6000;
         if (input.text.length > MAX_EXTRACT_CHARS) input.text = input.text.slice(0, MAX_EXTRACT_CHARS);
-        console.debug(`[DEBUG] Extracted text from ${file.originalName} (${input.text.length} chars):\n`, input.text);
+        console.debug(`[DEBUG] Extracted text from ${file.originalName} (${input.text.length} chars)`);
         if (!input.text.trim()) {
           return {
             kiItems: [],
@@ -100,7 +100,7 @@ export class LlmParseService {
     let raw: Record<string, unknown>[];
     try {
       raw = await createLlmClient(config).extract(input);
-      console.debug('[DEBUG] Raw LLM Response: ', raw);
+      console.debug(`[DEBUG] LLM returned ${raw.length} reservation candidate(s) for ${file.originalName}`);
     } catch (err) {
       return {
         kiItems: [],

@@ -242,10 +242,14 @@ export function getAuditLog(query: { limit?: string; offset?: string }) {
     resource: string | null;
     details: string | null;
     ip: string | null;
+    country_code: string | null;
+    region_code: string | null;
+    region_name: string | null;
   };
 
   const rows = db.prepare(`
-    SELECT a.id, a.created_at, a.user_id, u.username, u.email as user_email, a.action, a.resource, a.details, a.ip
+    SELECT a.id, a.created_at, a.user_id, u.username, u.email as user_email, a.action, a.resource, a.details, a.ip,
+      a.country_code, a.region_code, a.region_name
     FROM audit_log a
     LEFT JOIN users u ON u.id = a.user_id
     ORDER BY a.id DESC

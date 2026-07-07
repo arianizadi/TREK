@@ -86,6 +86,187 @@ export function getClientIp(req: Request): string | null {
   return req.socket?.remoteAddress || null;
 }
 
+export interface AuditRequestContext {
+  ip: string | null;
+  countryCode: string | null;
+  regionCode: string | null;
+  regionName: string | null;
+}
+
+const COUNTRY_HEADERS = [
+  'cf-ipcountry',
+  'x-vercel-ip-country',
+  'cloudfront-viewer-country',
+  'x-appengine-country',
+  'fastly-geo-country-code',
+  'x-country-code',
+  'x-geo-country-code',
+  'x-geo-country',
+  'x-client-country',
+  'x-ip-country',
+];
+
+const REGION_CODE_HEADERS = [
+  'x-vercel-ip-country-region',
+  'cloudfront-viewer-country-region',
+  'x-appengine-region',
+  'fastly-geo-region',
+  'cf-region-code',
+  'x-region-code',
+  'x-geo-region-code',
+  'x-geo-region',
+  'x-client-region',
+  'x-ip-region',
+];
+
+const REGION_NAME_HEADERS = [
+  'cloudfront-viewer-country-region-name',
+  'cf-region',
+  'x-region-name',
+  'x-geo-region-name',
+  'x-vercel-ip-region',
+];
+
+const US_REGION_NAMES: Record<string, string> = {
+  AL: 'Alabama',
+  AK: 'Alaska',
+  AZ: 'Arizona',
+  AR: 'Arkansas',
+  CA: 'California',
+  CO: 'Colorado',
+  CT: 'Connecticut',
+  DE: 'Delaware',
+  DC: 'District of Columbia',
+  FL: 'Florida',
+  GA: 'Georgia',
+  HI: 'Hawaii',
+  ID: 'Idaho',
+  IL: 'Illinois',
+  IN: 'Indiana',
+  IA: 'Iowa',
+  KS: 'Kansas',
+  KY: 'Kentucky',
+  LA: 'Louisiana',
+  ME: 'Maine',
+  MD: 'Maryland',
+  MA: 'Massachusetts',
+  MI: 'Michigan',
+  MN: 'Minnesota',
+  MS: 'Mississippi',
+  MO: 'Missouri',
+  MT: 'Montana',
+  NE: 'Nebraska',
+  NV: 'Nevada',
+  NH: 'New Hampshire',
+  NJ: 'New Jersey',
+  NM: 'New Mexico',
+  NY: 'New York',
+  NC: 'North Carolina',
+  ND: 'North Dakota',
+  OH: 'Ohio',
+  OK: 'Oklahoma',
+  OR: 'Oregon',
+  PA: 'Pennsylvania',
+  RI: 'Rhode Island',
+  SC: 'South Carolina',
+  SD: 'South Dakota',
+  TN: 'Tennessee',
+  TX: 'Texas',
+  UT: 'Utah',
+  VT: 'Vermont',
+  VA: 'Virginia',
+  WA: 'Washington',
+  WV: 'West Virginia',
+  WI: 'Wisconsin',
+  WY: 'Wyoming',
+  AS: 'American Samoa',
+  GU: 'Guam',
+  MP: 'Northern Mariana Islands',
+  PR: 'Puerto Rico',
+  VI: 'U.S. Virgin Islands',
+};
+
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function firstHeader(req: Request, names: string[]): string | null {
+  for (const name of names) {
+    const raw = req.headers[name];
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    if (typeof value === 'string' && value.trim()) {
+      return safeDecode(value.split(',')[0]!.trim());
+    }
+  }
+  return null;
+}
+
+function parseEdgescape(req: Request): Record<string, string> {
+  const raw = req.headers['akamai-edgescape'];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof value !== 'string' || !value.trim()) return {};
+
+  const fields: Record<string, string> = {};
+  for (const part of value.split(',')) {
+    const [key, ...rest] = part.split('=');
+    const normalizedKey = key?.trim().toLowerCase();
+    const normalizedValue = rest.join('=').trim();
+    if (normalizedKey && normalizedValue) fields[normalizedKey] = safeDecode(normalizedValue);
+  }
+  return fields;
+}
+
+function normalizeCountryCode(value: string | null): string | null {
+  const code = value?.trim().toUpperCase();
+  if (!code || code === 'XX' || code === 'UNKNOWN') return null;
+  return /^[A-Z]{2}$/.test(code) ? code : null;
+}
+
+function normalizeRegionCode(value: string | null, countryCode: string | null): string | null {
+  const raw = value?.trim().toUpperCase().replace(/_/g, '-');
+  if (!raw || raw === 'XX' || raw === 'UNKNOWN') return null;
+  if (!/^[A-Z0-9][A-Z0-9.-]{0,31}$/.test(raw)) return null;
+  if (countryCode && raw.startsWith(`${countryCode}-`)) return raw;
+  if (countryCode && /^[A-Z0-9]{1,3}$/.test(raw)) return `${countryCode}-${raw}`;
+  return raw;
+}
+
+function normalizeRegionName(value: string | null): string | null {
+  const decoded = value?.trim();
+  if (!decoded || decoded.toLowerCase() === 'unknown') return null;
+  const normalized = decoded.replace(/[^\p{L}\p{N} ._'()-]/gu, '').trim();
+  return normalized ? normalized.slice(0, 80) : null;
+}
+
+function regionNameFromCode(countryCode: string | null, regionCode: string | null): string | null {
+  if (countryCode !== 'US' || !regionCode?.startsWith('US-')) return null;
+  const stateCode = regionCode.slice(3);
+  return US_REGION_NAMES[stateCode] ?? null;
+}
+
+export function getAuditRequestContext(req: Request): AuditRequestContext {
+  const edgescape = parseEdgescape(req);
+  const countryCode = normalizeCountryCode(
+    firstHeader(req, COUNTRY_HEADERS) ?? edgescape.country_code ?? edgescape.country ?? null,
+  );
+  const regionCode = normalizeRegionCode(
+    firstHeader(req, REGION_CODE_HEADERS) ?? edgescape.region_code ?? edgescape.region ?? edgescape.georegion ?? null,
+    countryCode,
+  );
+  const explicitRegionName = normalizeRegionName(firstHeader(req, REGION_NAME_HEADERS) ?? edgescape.region_name ?? null);
+
+  return {
+    ip: getClientIp(req),
+    countryCode,
+    regionCode,
+    regionName: explicitRegionName ?? regionNameFromCode(countryCode, regionCode),
+  };
+}
+
 function resolveUserEmail(userId: number | null): string {
   if (!userId) return 'anonymous';
   try {
@@ -119,17 +300,30 @@ export function writeAudit(entry: {
   details?: Record<string, unknown>;
   debugDetails?: Record<string, unknown>;
   ip?: string | null;
+  countryCode?: string | null;
+  regionCode?: string | null;
+  regionName?: string | null;
 }): void {
   try {
     const detailsJson = entry.details && Object.keys(entry.details).length > 0 ? JSON.stringify(entry.details) : null;
     db.prepare(
-      `INSERT INTO audit_log (user_id, action, resource, details, ip) VALUES (?, ?, ?, ?, ?)`
-    ).run(entry.userId, entry.action, entry.resource ?? null, detailsJson, entry.ip ?? null);
+      `INSERT INTO audit_log (user_id, action, resource, details, ip, country_code, region_code, region_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      entry.userId,
+      entry.action,
+      entry.resource ?? null,
+      detailsJson,
+      entry.ip ?? null,
+      entry.countryCode ?? null,
+      entry.regionCode ?? null,
+      entry.regionName ?? null,
+    );
 
     const email = resolveUserEmail(entry.userId);
     const label = ACTION_LABELS[entry.action] || entry.action;
     const brief = buildInfoSummary(entry.action, entry.details);
-    logInfo(`${email} ${label}${brief} ip=${entry.ip || '-'}`);
+    const location = formatAuditLocation(entry.countryCode ?? null, entry.regionCode ?? null, entry.regionName ?? null);
+    logInfo(`${email} ${label}${brief} ip=${entry.ip || '-'}${location ? ` location=${location}` : ''}`);
 
     if (entry.debugDetails && Object.keys(entry.debugDetails).length > 0) {
       logDebug(`AUDIT ${entry.action} userId=${entry.userId} ${JSON.stringify(entry.debugDetails)}`);
@@ -139,6 +333,12 @@ export function writeAudit(entry: {
   } catch (e) {
     logError(`Audit write failed: ${e instanceof Error ? e.message : e}`);
   }
+}
+
+function formatAuditLocation(countryCode: string | null, regionCode: string | null, regionName: string | null): string | null {
+  if (regionName && countryCode) return `${regionName},${countryCode}`;
+  if (regionCode && countryCode) return `${regionCode},${countryCode}`;
+  return countryCode || regionName || regionCode || null;
 }
 
 function buildInfoSummary(action: string, details?: Record<string, unknown>): string {

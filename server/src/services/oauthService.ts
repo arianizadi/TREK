@@ -4,7 +4,7 @@ import { isAddonEnabled } from './adminService';
 import { validateScopes } from '../mcp/scopes';
 import { ADDON_IDS } from '../addons';
 import { User } from '../types';
-import { writeAudit, logWarn } from './auditLog';
+import { writeAudit, logWarn, type AuditRequestContext } from './auditLog';
 import { revokeUserSessionsForClient } from '../mcp/sessionManager';
 import { getMcpSafeUrl } from './notifications';
 
@@ -15,6 +15,19 @@ import { getMcpSafeUrl } from './notifications';
 const ACCESS_TOKEN_TTL_S   = 60 * 60;                          // 1 hour
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;        // 30 days rolling
 const AUTH_CODE_TTL_MS     = 2 * 60 * 1000;                   // 2 minutes
+type AuditContextInput = string | null | undefined | Partial<AuditRequestContext>;
+
+function auditFields(input: AuditContextInput): AuditRequestContext {
+  if (input && typeof input === 'object') {
+    return {
+      ip: input.ip ?? null,
+      countryCode: input.countryCode ?? null,
+      regionCode: input.regionCode ?? null,
+      regionName: input.regionName ?? null,
+    };
+  }
+  return { ip: typeof input === 'string' ? input : null, countryCode: null, regionCode: null, regionName: null };
+}
 
 // PKCE format (RFC 7636)
 const CODE_CHALLENGE_RE = /^[A-Za-z0-9_-]{43}$/;
@@ -123,9 +136,10 @@ export function createOAuthClient(
   name: string,
   redirectUris: string[],
   allowedScopes: string[],
-  ip?: string | null,
+  auditInput?: AuditContextInput,
   options?: { isPublic?: boolean; createdVia?: string; allowsClientCredentials?: boolean },
 ): { error?: string; status?: number; client?: Record<string, unknown> } {
+  const audit = auditFields(auditInput);
   if (!name?.trim()) return { error: 'Name is required', status: 400 };
   if (name.trim().length > 100) return { error: 'Name must be 100 characters or less', status: 400 };
   const isMachineClient = Boolean(options?.allowsClientCredentials);
@@ -174,7 +188,7 @@ export function createOAuthClient(
     'SELECT id, user_id, name, client_id, redirect_uris, allowed_scopes, created_at, is_public, created_via, allows_client_credentials FROM oauth_clients WHERE id = ?'
   ).get(id) as OAuthClientRow;
 
-  writeAudit({ userId, action: 'oauth.client.create', details: { client_id: clientId, name: name.trim(), is_public: isPublic, allows_client_credentials: isMachineClient }, ip });
+  writeAudit({ userId, action: 'oauth.client.create', details: { client_id: clientId, name: name.trim(), is_public: isPublic, allows_client_credentials: isMachineClient }, ...audit });
 
   return {
     client: {
@@ -197,8 +211,9 @@ export function createOAuthClient(
 export function rotateOAuthClientSecret(
   userId: number,
   clientRowId: string,
-  ip?: string | null,
+  auditInput?: AuditContextInput,
 ): { error?: string; status?: number; client_secret?: string } {
+  const audit = auditFields(auditInput);
   const row = db.prepare('SELECT id, client_id, is_public FROM oauth_clients WHERE id = ? AND user_id = ?').get(clientRowId, userId) as OAuthClientRow | undefined;
   if (!row) return { error: 'Client not found', status: 404 };
   if (row.is_public) return { error: 'Public clients do not use a client secret', status: 400 };
@@ -215,7 +230,7 @@ export function rotateOAuthClientSecret(
 
   revokeUserSessionsForClient(userId, row.client_id);
 
-  writeAudit({ userId, action: 'oauth.client.rotate_secret', details: { client_id: row.client_id }, ip });
+  writeAudit({ userId, action: 'oauth.client.rotate_secret', details: { client_id: row.client_id }, ...audit });
 
   return { client_secret: rawSecret };
 }
@@ -223,12 +238,13 @@ export function rotateOAuthClientSecret(
 export function deleteOAuthClient(
   userId: number,
   clientRowId: string,
-  ip?: string | null,
+  auditInput?: AuditContextInput,
 ): { error?: string; status?: number; success?: boolean } {
+  const audit = auditFields(auditInput);
   const row = db.prepare('SELECT id, client_id FROM oauth_clients WHERE id = ? AND user_id = ?').get(clientRowId, userId) as OAuthClientRow | undefined;
   if (!row) return { error: 'Client not found', status: 404 };
   db.prepare('DELETE FROM oauth_clients WHERE id = ?').run(clientRowId);
-  writeAudit({ userId, action: 'oauth.client.delete', details: { client_id: row.client_id }, ip });
+  writeAudit({ userId, action: 'oauth.client.delete', details: { client_id: row.client_id }, ...audit });
   return { success: true };
 }
 
@@ -270,14 +286,15 @@ export function getConsent(clientId: string, userId: number): string[] | null {
   return row ? JSON.parse(row.scopes) : null;
 }
 
-export function saveConsent(clientId: string, userId: number, scopes: string[], ip?: string | null): void {
+export function saveConsent(clientId: string, userId: number, scopes: string[], auditInput?: AuditContextInput): void {
+  const audit = auditFields(auditInput);
   // Union existing consent with newly approved scopes (M5: never narrow stored consent)
   const existing = getConsent(clientId, userId) ?? [];
   const merged = Array.from(new Set([...existing, ...scopes]));
   db.prepare(
     'INSERT OR REPLACE INTO oauth_consents (client_id, user_id, scopes, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)'
   ).run(clientId, userId, JSON.stringify(merged));
-  writeAudit({ userId, action: 'oauth.consent.grant', details: { client_id: clientId, scopes: merged }, ip });
+  writeAudit({ userId, action: 'oauth.consent.grant', details: { client_id: clientId, scopes: merged }, ...audit });
 }
 
 export function isConsentSufficient(existingScopes: string[], requestedScopes: string[]): boolean {
@@ -433,8 +450,10 @@ export function refreshTokens(
   rawRefreshToken: string,
   clientId: string,
   clientSecret: string | undefined,
-  ip?: string | null,
+  auditInput?: AuditContextInput,
 ): { error?: string; status?: number; tokens?: ReturnType<typeof issueTokens> } {
+  const audit = auditFields(auditInput);
+  const ip = audit.ip;
   const client = db.prepare('SELECT client_id, client_secret_hash, is_public FROM oauth_clients WHERE client_id = ?').get(clientId) as OAuthClientRow | undefined;
   if (!client) return { error: 'invalid_client', status: 401 };
   if (!client.is_public) {
@@ -465,7 +484,7 @@ export function refreshTokens(
       userId: row.user_id,
       action: 'oauth.token.replay_detected',
       details: { client_id: clientId },
-      ip,
+      ...audit,
     });
     logWarn(`[OAuth] Refresh token replay detected for user=${row.user_id} client=${clientId} ip=${ip ?? '-'}`);
 
@@ -482,7 +501,7 @@ export function refreshTokens(
   revokeUserSessionsForClient(row.user_id, clientId);
 
   const tokens = issueTokens(clientId, row.user_id, JSON.parse(row.scopes), row.id, row.audience ?? null);
-  writeAudit({ userId: row.user_id, action: 'oauth.token.refresh', details: { client_id: clientId }, ip });
+  writeAudit({ userId: row.user_id, action: 'oauth.token.refresh', details: { client_id: clientId }, ...audit });
 
   return { tokens };
 }
@@ -491,7 +510,8 @@ export function refreshTokens(
 // Token revocation
 // ---------------------------------------------------------------------------
 
-export function revokeToken(rawToken: string, clientId: string, userId?: number, ip?: string | null): void {
+export function revokeToken(rawToken: string, clientId: string, userId?: number, auditInput?: AuditContextInput): void {
+  const audit = auditFields(auditInput);
   const hash = hashToken(rawToken);
 
   // Get the user_id for the token so we can revoke its MCP sessions
@@ -509,7 +529,7 @@ export function revokeToken(rawToken: string, clientId: string, userId?: number,
   if (affectedUserId) {
   
     revokeUserSessionsForClient(affectedUserId, clientId);
-    writeAudit({ userId: affectedUserId, action: 'oauth.token.revoke', details: { client_id: clientId, method: 'token' }, ip });
+    writeAudit({ userId: affectedUserId, action: 'oauth.token.revoke', details: { client_id: clientId, method: 'token' }, ...audit });
   }
 }
 
@@ -534,8 +554,9 @@ export function listOAuthSessions(userId: number): Record<string, unknown>[] {
 export function revokeSession(
   userId: number,
   sessionId: number,
-  ip?: string | null,
+  auditInput?: AuditContextInput,
 ): { error?: string; status?: number; success?: boolean } {
+  const audit = auditFields(auditInput);
   const row = db.prepare('SELECT id, client_id FROM oauth_tokens WHERE id = ? AND user_id = ?').get(sessionId, userId) as { id: number; client_id: string } | undefined;
   if (!row) return { error: 'Session not found', status: 404 };
 
@@ -544,7 +565,7 @@ export function revokeSession(
 
   revokeUserSessionsForClient(userId, row.client_id);
 
-  writeAudit({ userId, action: 'oauth.token.revoke', details: { client_id: row.client_id, method: 'session' }, ip });
+  writeAudit({ userId, action: 'oauth.token.revoke', details: { client_id: row.client_id, method: 'session' }, ...audit });
 
   return { success: true };
 }

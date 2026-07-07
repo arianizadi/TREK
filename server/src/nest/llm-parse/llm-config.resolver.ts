@@ -2,10 +2,32 @@ import { db } from '../../db/database';
 import { ADDON_IDS } from '../../addons';
 import { isAddonEnabled } from '../../services/adminService';
 import { getUserSettings, getDecryptedUserSetting } from '../../services/settingsService';
-import { decryptLlmApiKey, LLM_PROVIDERS, type LlmProvider, type ResolvedLlmConfig } from '../../services/llmConfig';
+import {
+  decryptLlmApiKey,
+  LLM_PROVIDERS,
+  normalizeOpenRouterReasoningEffort,
+  type LlmProvider,
+  type ResolvedLlmConfig,
+} from '../../services/llmConfig';
+
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const OPENROUTER_MODEL = 'qwen/qwen3.5-397b-a17b';
 
 function asProvider(v: unknown): LlmProvider | null {
   return typeof v === 'string' && (LLM_PROVIDERS as string[]).includes(v) ? (v as LlmProvider) : null;
+}
+
+function resolveBaseUrl(provider: LlmProvider, raw: unknown, usingServerOpenRouterKey = false): string | undefined {
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+  if (provider === 'openrouter' && usingServerOpenRouterKey && trimmed && !isOpenRouterBase(trimmed)) {
+    return OPENROUTER_BASE_URL;
+  }
+  if (trimmed) return trimmed;
+  return provider === 'openrouter' ? OPENROUTER_BASE_URL : undefined;
+}
+
+function envOpenRouterKey(): string | undefined {
+  return process.env.OPENROUTER_API_KEY || process.env.openrouter || undefined;
 }
 
 function readInstanceConfig(): ResolvedLlmConfig | null {
@@ -20,12 +42,15 @@ function readInstanceConfig(): ResolvedLlmConfig | null {
   const provider = asProvider(cfg.provider);
   const model = typeof cfg.model === 'string' ? cfg.model.trim() : '';
   if (!provider || !model) return null;
+  const storedApiKey = decryptLlmApiKey(cfg.apiKey);
+  const usingEnvOpenRouterKey = provider === 'openrouter' && !storedApiKey;
   return {
     provider,
     model,
-    baseUrl: typeof cfg.baseUrl === 'string' && cfg.baseUrl.trim() ? cfg.baseUrl.trim() : undefined,
-    apiKey: decryptLlmApiKey(cfg.apiKey),
+    baseUrl: resolveBaseUrl(provider, cfg.baseUrl, usingEnvOpenRouterKey),
+    apiKey: storedApiKey ?? (provider === 'openrouter' ? envOpenRouterKey() : undefined),
     multimodal: cfg.multimodal === true,
+    reasoningEffort: provider === 'openrouter' ? normalizeOpenRouterReasoningEffort(cfg.reasoningEffort) : undefined,
   };
 }
 
@@ -35,12 +60,26 @@ function readUserConfig(userId: number): ResolvedLlmConfig | null {
   const model = typeof settings.llm_model === 'string' ? settings.llm_model.trim() : '';
   if (!provider || !model) return null;
   const apiKey = getDecryptedUserSetting(userId, 'llm_api_key') ?? undefined;
+  const usingEnvOpenRouterKey = provider === 'openrouter' && !apiKey;
   return {
     provider,
     model,
-    baseUrl: typeof settings.llm_base_url === 'string' && settings.llm_base_url.trim() ? settings.llm_base_url.trim() : undefined,
-    apiKey,
+    baseUrl: resolveBaseUrl(provider, settings.llm_base_url, usingEnvOpenRouterKey),
+    apiKey: apiKey ?? (provider === 'openrouter' ? envOpenRouterKey() : undefined),
     multimodal: settings.llm_multimodal === true,
+  };
+}
+
+function readEnvConfig(): ResolvedLlmConfig | null {
+  const apiKey = envOpenRouterKey();
+  if (!apiKey) return null;
+  return {
+    provider: 'openrouter',
+    model: process.env.OPENROUTER_MODEL || OPENROUTER_MODEL,
+    baseUrl: process.env.OPENROUTER_BASE_URL || OPENROUTER_BASE_URL,
+    apiKey,
+    multimodal: true,
+    reasoningEffort: normalizeOpenRouterReasoningEffort(process.env.OPENROUTER_REASONING_EFFORT),
   };
 }
 
@@ -51,5 +90,13 @@ function readUserConfig(userId: number): ResolvedLlmConfig | null {
  */
 export function resolveLlmConfig(userId: number): ResolvedLlmConfig | null {
   if (!isAddonEnabled(ADDON_IDS.LLM_PARSING)) return null;
-  return readInstanceConfig() ?? readUserConfig(userId);
+  return readInstanceConfig() ?? readUserConfig(userId) ?? readEnvConfig();
+}
+
+function isOpenRouterBase(baseUrl: string): boolean {
+  try {
+    return new URL(baseUrl).hostname === 'openrouter.ai';
+  } catch {
+    return false;
+  }
 }

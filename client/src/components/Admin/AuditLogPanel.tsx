@@ -13,6 +13,9 @@ interface AuditEntry {
   resource: string | null
   details: Record<string, unknown> | null
   ip: string | null
+  country_code?: string | null
+  region_code?: string | null
+  region_name?: string | null
 }
 
 interface AuditLogPanelProps {
@@ -96,6 +99,18 @@ export default function AuditLogPanel({ serverTimezone }: AuditLogPanelProps): R
     return '—'
   }
 
+  const locationLabel = (e: AuditEntry) => {
+    const country = e.country_code?.trim().toUpperCase()
+    const regionCode = e.region_code?.trim().toUpperCase()
+    const regionName = e.region_name?.trim()
+
+    if (regionName && country) return `${regionName}, ${country}`
+    if (regionName) return regionName
+    if (regionCode && country) return regionCode.startsWith(`${country}-`) ? regionCode : `${country}-${regionCode}`
+    if (regionCode) return regionCode
+    return country || null
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -139,16 +154,24 @@ export default function AuditLogPanel({ serverTimezone }: AuditLogPanelProps): R
               </tr>
             </thead>
             <tbody>
-              {entries.map((e) => (
-                <tr key={e.id} className="border-b align-top border-edge-secondary">
-                  <td className="p-3 whitespace-nowrap font-mono text-xs text-content">{fmtTime(e.created_at)}</td>
-                  <td className="p-3 text-content">{userLabel(e)}</td>
-                  <td className="p-3 font-mono text-xs text-content">{e.action}</td>
-                  <td className="p-3 font-mono text-xs break-all max-w-[140px] text-content-muted">{e.resource || '—'}</td>
-                  <td className="p-3 font-mono text-xs whitespace-nowrap text-content-muted">{e.ip || '—'}</td>
-                  <td className="p-3 font-mono text-xs break-all max-w-[280px] text-content-faint">{fmtDetails(e.details)}</td>
-                </tr>
-              ))}
+              {entries.map((e) => {
+                const location = locationLabel(e)
+                return (
+                  <tr key={e.id} className="border-b align-top border-edge-secondary">
+                    <td className="p-3 whitespace-nowrap font-mono text-xs text-content">{fmtTime(e.created_at)}</td>
+                    <td className="p-3 text-content">{userLabel(e)}</td>
+                    <td className="p-3 font-mono text-xs text-content">{e.action}</td>
+                    <td className="p-3 font-mono text-xs break-all max-w-[140px] text-content-muted">{e.resource || '—'}</td>
+                    <td className="p-3 font-mono text-xs whitespace-nowrap text-content-muted">
+                      <div>{e.ip || '—'}</div>
+                      {location && (
+                        <div className="font-sans text-[11px] leading-4 text-content-faint">{location}</div>
+                      )}
+                    </td>
+                    <td className="p-3 font-mono text-xs break-all max-w-[280px] text-content-faint">{fmtDetails(e.details)}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

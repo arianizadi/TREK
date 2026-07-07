@@ -30,6 +30,7 @@ const packing: TranslationStrings = {
   'packing.emptyHint': 'Add items or use the suggestions',
   'packing.emptyFiltered': 'No items match this filter',
   'packing.menuRename': 'Rename',
+  'packing.menuMoveToShared': 'Move to Shared',
   'packing.menuCheckAll': 'Check All',
   'packing.menuUncheckAll': 'Uncheck All',
   'packing.menuDeleteCat': 'Delete Category',
@@ -69,12 +70,15 @@ const packing: TranslationStrings = {
   'packing.alsoBringingStop': "I'm not bringing it",
   'packing.cloneToMine': 'Copy to my list',
   'packing.confirm.clearChecked': 'Are you sure you want to remove {count} checked items?',
+  'packing.confirm.mergeToShared': 'Shared already has "{name}". Merge this My list category into it?',
   'packing.confirm.deleteCat': 'Are you sure you want to delete the category "{name}" with {count} items?',
   'packing.defaultCategory': 'Other',
   'packing.toast.saveError': 'Failed to save',
   'packing.toast.deleteError': 'Failed to delete',
   'packing.toast.renameError': 'Failed to rename',
   'packing.toast.addError': 'Failed to add',
+  'packing.toast.movedToShared': 'Moved "{name}" to Shared',
+  'packing.toast.moveToSharedError': 'Some items could not be moved to Shared',
   'packing.suggestions.items': [
     {
       name: 'Passport',

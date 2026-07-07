@@ -44,7 +44,7 @@ export default function LlmConnectionSection(): React.ReactElement {
   }, [isLoaded, settings.llm_provider, settings.llm_model, settings.llm_base_url, settings.llm_multimodal, settings.llm_api_key])
 
   const needsKey = provider !== 'local'
-  const showBaseUrl = provider === 'local' || provider === 'openai'
+  const showBaseUrl = provider === 'local' || provider === 'openai' || provider === 'openrouter'
 
   const handleSave = async () => {
     setSaving(true)
@@ -84,6 +84,7 @@ export default function LlmConnectionSection(): React.ReactElement {
               { value: 'local', label: t('settings.aiParsing.providerLocal') },
               { value: 'openai', label: t('settings.aiParsing.providerOpenai') },
               { value: 'anthropic', label: t('settings.aiParsing.providerAnthropic') },
+              { value: 'openrouter', label: 'OpenRouter' },
             ]}
           />
         </div>
@@ -95,7 +96,7 @@ export default function LlmConnectionSection(): React.ReactElement {
             autoComplete="off"
             value={model}
             onChange={e => setModel(e.target.value)}
-            placeholder="qwen3:8b"
+            placeholder={provider === 'openrouter' ? 'qwen/qwen3.5-397b-a17b' : 'qwen3:8b'}
             className="w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 border-edge bg-surface-secondary text-content"
           />
         </div>
@@ -108,7 +109,7 @@ export default function LlmConnectionSection(): React.ReactElement {
               autoComplete="off"
               value={baseUrl}
               onChange={e => setBaseUrl(e.target.value)}
-              placeholder="http://localhost:11434"
+              placeholder={provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'http://localhost:11434'}
               className="w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 border-edge bg-surface-secondary text-content"
             />
             <p className="mt-1 text-xs text-content-faint">{t('settings.aiParsing.baseUrlHint')}</p>

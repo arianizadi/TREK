@@ -6,7 +6,7 @@ import { AnthropicClient } from './clients/anthropic.client';
 /**
  * Pick the provider client for a resolved config.
  *  - 'anthropic'        → Anthropic Messages API client
- *  - 'openai' | 'local' → OpenAI-compatible client (cloud or local base URL)
+ *  - 'openai' | 'local' | 'openrouter' → OpenAI-compatible client
  */
 export function createLlmClient(config: ResolvedLlmConfig): LlmExtractionClient {
   switch (config.provider) {
@@ -14,6 +14,7 @@ export function createLlmClient(config: ResolvedLlmConfig): LlmExtractionClient 
       return new AnthropicClient();
     case 'openai':
     case 'local':
+    case 'openrouter':
       return new OpenAiCompatibleClient();
     // TODO(nuextract): add a NuExtract template adapter here (local vision model
     // with its own template-fill API) once the OpenAI-compatible path proves

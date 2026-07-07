@@ -5,9 +5,9 @@ import { KategorieGruppe } from './PackingListPanelCategoryGroup'
 export function PackingList(S: PackingState) {
   const {
     items, gruppiert, t, tripId, allCategories, handleRenameCategory, handleDeleteCategory, handleDeleteItem,
-    handleAddItemToCategory, categoryAssignees, tripMembers, handleSetAssignees,
+    handleAddItemToCategory, handleMoveCategoryToCommon, categoryAssignees, tripMembers, handleSetAssignees,
     bagTrackingEnabled, bags, handleCreateBagByName, canEdit, reorderPackingItems,
-    currentUserId, handleSetSharing, handleCloneItem, handleJoinItem, handleLeaveItem,
+    view, currentUserId, handleSetSharing, handleCloneItem, handleJoinItem, handleLeaveItem,
   } = S
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0 16px' }}>
@@ -32,6 +32,7 @@ export function PackingList(S: PackingState) {
               allCategories={allCategories}
               onRename={handleRenameCategory}
               onDeleteAll={handleDeleteCategory}
+              onMoveToShared={handleMoveCategoryToCommon}
               onDeleteItem={handleDeleteItem}
               onAddItem={handleAddItemToCategory}
               assignees={categoryAssignees[kat] || []}
@@ -41,6 +42,7 @@ export function PackingList(S: PackingState) {
               bags={bags}
               onCreateBag={handleCreateBagByName}
               canEdit={canEdit}
+              view={view}
               allItems={items}
               onReorder={(orderedIds) => reorderPackingItems(tripId, orderedIds)}
               currentUserId={currentUserId}

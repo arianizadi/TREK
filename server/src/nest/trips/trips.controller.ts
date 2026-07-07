@@ -26,7 +26,7 @@ import type { User } from '../../types';
 import { TripsService } from './trips.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { writeAudit, getClientIp, logInfo } from '../../services/auditLog';
+import { getAuditRequestContext, writeAudit, logInfo } from '../../services/auditLog';
 import { isDemoEmail } from '../../services/demo';
 import { NotFoundError, ValidationError } from '../../services/tripService';
 import { saveUnsplashCover, isUnsplashCoverUrl } from '../../services/unsplashService';
@@ -106,7 +106,7 @@ export class TripsController {
     }
     const parsedDayCount = day_count ? Math.min(Math.max(Number(day_count) || 7, 1), 365) : undefined;
     const { trip, tripId, reminderDays } = this.trips.create(user.id, { title, description, start_date, end_date, currency, reminder_days, day_count: parsedDayCount });
-    writeAudit({ userId: user.id, action: 'trip.create', ip: getClientIp(req), details: { tripId, title, reminder_days: reminderDays === 0 ? 'none' : `${reminderDays} days` } });
+    writeAudit({ userId: user.id, action: 'trip.create', ...getAuditRequestContext(req), details: { tripId, title, reminder_days: reminderDays === 0 ? 'none' : `${reminderDays} days` } });
     if (reminderDays > 0) logInfo(`${user.email} set ${reminderDays}-day reminder for trip "${title}"`);
     return { trip };
   }
@@ -158,7 +158,7 @@ export class TripsController {
         this.trips.deleteOldCover(oldCover);
       }
       if (Object.keys(result.changes).length > 0) {
-        writeAudit({ userId: user.id, action: 'trip.update', ip: getClientIp(req), details: { tripId: Number(id), trip: result.newTitle, ...(result.ownerEmail ? { owner: result.ownerEmail } : {}), ...result.changes } });
+        writeAudit({ userId: user.id, action: 'trip.update', ...getAuditRequestContext(req), details: { tripId: Number(id), trip: result.newTitle, ...(result.ownerEmail ? { owner: result.ownerEmail } : {}), ...result.changes } });
         if (result.isAdminEdit && result.ownerEmail) logInfo(`Admin ${user.email} edited trip "${result.newTitle}" owned by ${result.ownerEmail}`);
       }
       if (result.newReminder !== result.oldReminder) {
@@ -211,7 +211,7 @@ export class TripsController {
     }
     try {
       const newTripId = this.trips.copy(id, user.id, title);
-      writeAudit({ userId: user.id, action: 'trip.copy', ip: getClientIp(req), details: { sourceTripId: Number(id), newTripId, title } });
+      writeAudit({ userId: user.id, action: 'trip.copy', ...getAuditRequestContext(req), details: { sourceTripId: Number(id), newTripId, title } });
       return { trip: this.trips.getCopiedTrip(newTripId, user.id) };
     } catch {
       throw new HttpException({ error: 'Failed to copy trip' }, 500);
@@ -228,7 +228,7 @@ export class TripsController {
       throw new HttpException({ error: 'No permission to delete this trip' }, 403);
     }
     const info = this.trips.remove(id, user.id, user.role);
-    writeAudit({ userId: user.id, action: 'trip.delete', ip: getClientIp(req), details: { tripId: info.tripId, trip: info.title, ...(info.ownerEmail ? { owner: info.ownerEmail } : {}) } });
+    writeAudit({ userId: user.id, action: 'trip.delete', ...getAuditRequestContext(req), details: { tripId: info.tripId, trip: info.title, ...(info.ownerEmail ? { owner: info.ownerEmail } : {}) } });
     if (info.isAdminDelete && info.ownerEmail) logInfo(`Admin ${user.email} deleted trip "${info.title}" owned by ${info.ownerEmail}`);
     this.trips.broadcast(String(info.tripId), 'trip:deleted', { id: info.tripId }, socketId);
     return { success: true };
@@ -301,7 +301,7 @@ export class TripsController {
     }
     try {
       const result = this.trips.transferOwnership(id, newOwnerId, user.id);
-      writeAudit({ userId: user.id, action: 'trip.transfer_ownership', ip: getClientIp(req), details: { tripId: Number(id), trip: result.tripTitle, from: result.fromEmail, to: result.toEmail } });
+      writeAudit({ userId: user.id, action: 'trip.transfer_ownership', ...getAuditRequestContext(req), details: { tripId: Number(id), trip: result.tripTitle, from: result.fromEmail, to: result.toEmail } });
       // Nudge everyone viewing the trip to re-read it so the new ownership and the
       // recomputed permissions take effect live.
       const updatedTrip = this.trips.get(id, user.id);

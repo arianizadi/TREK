@@ -13,7 +13,11 @@ import { maybe_encrypt_api_key, decrypt_api_key } from './apiKeyCrypto';
  * per-user encrypted-settings pattern in settingsService.ts.
  */
 
-export type LlmProvider = 'local' | 'openai' | 'anthropic';
+export type LlmProvider = 'local' | 'openai' | 'anthropic' | 'openrouter';
+export type OpenRouterReasoningEffort = 'low' | 'medium' | 'high';
+
+export const DEFAULT_OPENROUTER_REASONING_EFFORT: OpenRouterReasoningEffort = 'medium';
+export const OPENROUTER_REASONING_EFFORTS: OpenRouterReasoningEffort[] = ['low', 'medium', 'high'];
 
 /** Fully-resolved config the clients consume. */
 export interface ResolvedLlmConfig {
@@ -22,6 +26,7 @@ export interface ResolvedLlmConfig {
   baseUrl?: string;
   apiKey?: string;
   multimodal: boolean;
+  reasoningEffort?: OpenRouterReasoningEffort;
 }
 
 /** Shape of the admin instance config stored in `addons.config` (apiKey encrypted). */
@@ -31,10 +36,20 @@ export interface LlmAddonConfig {
   baseUrl?: string;
   apiKey?: string;
   multimodal?: boolean;
+  reasoningEffort?: OpenRouterReasoningEffort;
 }
 
-export const LLM_PROVIDERS: LlmProvider[] = ['local', 'openai', 'anthropic'];
+export const LLM_PROVIDERS: LlmProvider[] = ['local', 'openai', 'anthropic', 'openrouter'];
 export const MASKED_VALUE = '••••••••';
+
+export function normalizeOpenRouterReasoningEffort(value: unknown): OpenRouterReasoningEffort | undefined {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'normal') return 'medium';
+  return (OPENROUTER_REASONING_EFFORTS as string[]).includes(normalized)
+    ? normalized as OpenRouterReasoningEffort
+    : undefined;
+}
 
 /**
  * Prepare an admin config blob for persistence: encrypt a freshly-entered apiKey,

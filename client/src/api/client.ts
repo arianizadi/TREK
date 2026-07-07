@@ -44,6 +44,16 @@ import {
   type BookingImportPreviewResponse,
   type BookingImportConfirmResponse,
   type BookingImportMode,
+  type AiActionApplyRequest,
+  type AiActionApplyResult,
+  type AiActionPlan,
+  type AiActionPreviewRequest,
+  type AiActionUndoRequest,
+  type AiActionUndoResult,
+  type AiChatRequest,
+  type AiTestConnectionRequest,
+  type AiTestConnectionResponse,
+  type AiUsage,
 } from '@trek/shared'
 import { getSocketId } from './websocket'
 import { probeNow } from '../sync/connectivity'
@@ -448,6 +458,69 @@ export const categoriesApi = {
   delete: (id: number) => apiClient.delete(`/categories/${id}`).then(r => r.data),
 }
 
+export interface AdminAiUsageEvent {
+  id: number
+  created_at: string
+  user_id: number | null
+  username: string | null
+  user_email: string | null
+  trip_id: number | null
+  trip_title: string | null
+  request_kind: 'chat' | 'preview' | 'apply' | 'test'
+  provider: string
+  model: string | null
+  status: 'ok' | 'error'
+  prompt_tokens: number | null
+  completion_tokens: number | null
+  total_tokens: number | null
+  reasoning_tokens: number | null
+  cost: number | null
+  request_payload: unknown
+  response_payload: unknown
+  error: string | null
+  ip: string | null
+  duration_ms: number | null
+}
+
+export interface AdminAiUsageResponse {
+  days: number
+  totals: {
+    requests: number
+    errors: number
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+    reasoning_tokens: number
+    cost: number
+  }
+  byUser: Array<{
+    user_id: number | null
+    username: string | null
+    user_email: string | null
+    requests: number
+    errors: number
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+    reasoning_tokens: number
+    cost: number
+    last_used_at: string | null
+  }>
+  byModel: Array<{
+    provider: string
+    model: string | null
+    requests: number
+    errors: number
+    total_tokens: number
+    reasoning_tokens: number
+    cost: number
+  }>
+  events: AdminAiUsageEvent[]
+  total: number
+  limit: number
+  offset: number
+}
+
 export const adminApi = {
   users: () => apiClient.get('/admin/users').then(r => r.data),
   createUser: (data: Record<string, unknown>) => apiClient.post('/admin/users', data).then(r => r.data),
@@ -476,6 +549,10 @@ export const adminApi = {
   // Local LLM (Ollama) management for the AI-parsing addon.
   llmLocalModels: (baseUrl: string): Promise<{ models: { name: string; size: number }[] }> =>
     apiClient.get('/admin/llm/local/models', { params: { baseUrl } }).then(r => r.data),
+  testAiConnection: (data: AiTestConnectionRequest): Promise<AiTestConnectionResponse> =>
+    apiClient.post('/admin/ai/test-connection', data, { timeout: 0 }).then(r => r.data),
+  aiUsage: (params?: { days?: number; limit?: number; offset?: number }): Promise<AdminAiUsageResponse> =>
+    apiClient.get('/admin/ai/usage', { params }).then(r => r.data),
   /** Pull a model, streaming Ollama's NDJSON progress to `onProgress`. */
   llmLocalPull: async (
     baseUrl: string,
@@ -549,6 +626,84 @@ export const adminApi = {
   updateNotificationPreferences: (prefs: Record<string, Record<string, boolean>>) => apiClient.put('/admin/notification-preferences', prefs).then(r => r.data),
   getDefaultUserSettings: () => apiClient.get('/admin/default-user-settings').then(r => r.data),
   updateDefaultUserSettings: (settings: Record<string, unknown>) => apiClient.put('/admin/default-user-settings', settings).then(r => r.data),
+}
+
+export interface AiStreamHandlers {
+  signal?: AbortSignal
+  onStatus?: (message: string) => void
+  onToken?: (token: string) => void
+  onUsage?: (usage: AiUsage) => void
+  onDone?: () => void
+  onError?: (message: string) => void
+}
+
+export const aiApi = {
+  chatStream: async (data: AiChatRequest, handlers: AiStreamHandlers): Promise<void> => {
+    const sid = getSocketId()
+    const res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      credentials: 'include',
+      signal: handlers.signal,
+      headers: {
+        'content-type': 'application/json',
+        ...(sid ? { 'X-Socket-Id': sid } : {}),
+      },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok || !res.body) {
+      let message = `AI chat failed (${res.status})`
+      try { message = (await res.json())?.error ?? message } catch { /* non-json */ }
+      throw new Error(message)
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    try {
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const chunks = buffer.split('\n\n')
+        buffer = chunks.pop() ?? ''
+        for (const chunk of chunks) {
+          const event = parseSseEvent(chunk)
+          if (!event) continue
+          if (event.event === 'status' && typeof event.data?.message === 'string') handlers.onStatus?.(event.data.message)
+          else if (event.event === 'token' && typeof event.data?.token === 'string') handlers.onToken?.(event.data.token)
+          else if (event.event === 'usage') handlers.onUsage?.(event.data as AiUsage)
+          else if (event.event === 'done') handlers.onDone?.()
+          else if (event.event === 'error') {
+            const message = typeof event.data?.error === 'string' ? event.data.error : 'AI chat failed'
+            handlers.onError?.(message)
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock()
+    }
+  },
+  preview: (data: AiActionPreviewRequest): Promise<{ plan: AiActionPlan }> =>
+    apiClient.post('/ai/actions/preview', data, { timeout: 0 }).then(r => r.data),
+  apply: (data: AiActionApplyRequest): Promise<AiActionApplyResult> =>
+    apiClient.post('/ai/actions/apply', data, { timeout: 0 }).then(r => r.data),
+  undo: (data: AiActionUndoRequest): Promise<AiActionUndoResult> =>
+    apiClient.post('/ai/actions/undo', data, { timeout: 0 }).then(r => r.data),
+}
+
+function parseSseEvent(chunk: string): { event: string; data: Record<string, unknown> | null } | null {
+  let event = 'message'
+  const dataLines: string[] = []
+  for (const line of chunk.split('\n')) {
+    if (line.startsWith('event:')) event = line.slice('event:'.length).trim()
+    if (line.startsWith('data:')) dataLines.push(line.slice('data:'.length).trimStart())
+  }
+  if (!dataLines.length) return null
+  try {
+    return { event, data: JSON.parse(dataLines.join('\n')) as Record<string, unknown> }
+  } catch {
+    return { event, data: null }
+  }
 }
 
 export const addonsApi = {

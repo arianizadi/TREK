@@ -29,8 +29,8 @@ export class OauthService {
 
   listOAuthClients(userId: number) { return oauth.listOAuthClients(userId); }
   createOAuthClient(...args: Parameters<typeof oauth.createOAuthClient>) { return oauth.createOAuthClient(...args); }
-  rotateOAuthClientSecret(userId: number, id: string, ip: string | undefined) { return oauth.rotateOAuthClientSecret(userId, id, ip); }
-  deleteOAuthClient(userId: number, id: string, ip: string | undefined) { return oauth.deleteOAuthClient(userId, id, ip); }
+  rotateOAuthClientSecret(...args: Parameters<typeof oauth.rotateOAuthClientSecret>) { return oauth.rotateOAuthClientSecret(...args); }
+  deleteOAuthClient(...args: Parameters<typeof oauth.deleteOAuthClient>) { return oauth.deleteOAuthClient(...args); }
   listOAuthSessions(userId: number) { return oauth.listOAuthSessions(userId); }
-  revokeSession(userId: number, id: number, ip: string | undefined) { return oauth.revokeSession(userId, id, ip); }
+  revokeSession(...args: Parameters<typeof oauth.revokeSession>) { return oauth.revokeSession(...args); }
 }

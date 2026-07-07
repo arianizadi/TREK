@@ -72,6 +72,12 @@ export class OpenAiCompatibleClient implements LlmExtractionClient {
         headers: {
           'content-type': 'application/json',
           ...(input.apiKey ? { authorization: `Bearer ${input.apiKey}` } : {}),
+          ...(isOpenRouterBase(base)
+            ? {
+                'HTTP-Referer': process.env.APP_URL || 'http://localhost',
+                'X-OpenRouter-Title': 'TREK',
+              }
+            : {}),
         },
         body: JSON.stringify(body),
       });
@@ -89,6 +95,14 @@ export class OpenAiCompatibleClient implements LlmExtractionClient {
     };
     const content = data.choices?.[0]?.message?.content;
     return nuextract ? parseNuExtract(content) : parseReservations(content);
+  }
+}
+
+function isOpenRouterBase(baseUrl: string): boolean {
+  try {
+    return new URL(baseUrl).hostname === 'openrouter.ai';
+  } catch {
+    return baseUrl.includes('openrouter.ai');
   }
 }
 
