@@ -4,7 +4,7 @@ import { collabPollCreateRequestSchema } from '../collab/collab.schema';
 import { dayNoteCreateRequestSchema } from '../day/day.schema';
 import { packingCreateItemRequestSchema } from '../packing/packing.schema';
 import { placeCreateRequestSchema } from '../place/place.schema';
-import { reservationCreateRequestSchema } from '../reservation/reservation.schema';
+import { reservationCreateRequestSchema, reservationUpdateRequestSchema } from '../reservation/reservation.schema';
 
 import { z } from 'zod';
 
@@ -87,6 +87,19 @@ export const aiImportReservationOperationSchema = z.object({
   data: reservationCreateRequestSchema,
 });
 
+export const aiUpdateReservationOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('update_reservation'),
+  reservationId: z.union([z.number(), z.string()]),
+  data: reservationUpdateRequestSchema,
+});
+
+export const aiDeleteReservationOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('delete_reservation'),
+  reservationId: z.union([z.number(), z.string()]),
+});
+
 export const aiActionOperationSchema = z.discriminatedUnion('type', [
   aiCreatePlaceOperationSchema,
   aiAssignPlaceToDayOperationSchema,
@@ -96,6 +109,8 @@ export const aiActionOperationSchema = z.discriminatedUnion('type', [
   aiCreatePackingItemOperationSchema,
   aiCreatePollOperationSchema,
   aiImportReservationOperationSchema,
+  aiUpdateReservationOperationSchema,
+  aiDeleteReservationOperationSchema,
 ]).superRefine((operation, ctx) => {
   if (
     operation.type === 'assign_place_to_day' &&
@@ -170,6 +185,8 @@ export const aiActionUndoOperationSchema = z.object({
     'delete_packing_item',
     'delete_poll',
     'delete_reservation',
+    'restore_updated_reservation',
+    'recreate_reservation',
   ]),
   data: z.record(z.string(), z.unknown()).default({}),
 });

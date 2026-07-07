@@ -667,6 +667,10 @@ function describeOperation(operation: AiActionOperation, dayLabels: Map<string, 
       return `Create poll "${operation.data.question}".`
     case 'import_reservation':
       return `Create reservation "${operation.data.title}".`
+    case 'update_reservation':
+      return `Update reservation ${operation.reservationId}${operation.data.title ? ` to "${operation.data.title}"` : ''}.`
+    case 'delete_reservation':
+      return `Delete reservation ${operation.reservationId}.`
     default:
       return 'Apply a TREK change.'
   }

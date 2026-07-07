@@ -289,6 +289,7 @@ export function MapViewGL({
       pitch: enableMapbox3d ? 45 : 0,
       attributionControl: true,
       antialias: mapboxQuality,
+      cooperativeGestures: true,
     }
     if (!isMapLibre) mapOptions.projection = mapboxQuality ? 'globe' : 'mercator'
 

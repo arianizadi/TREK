@@ -53,6 +53,13 @@ export class ReservationsService {
     return svc.getReservation(id, tripId);
   }
 
+  getReservationDetails(id: string, tripId: string) {
+    const reservation = svc.getReservationWithJoins(id);
+    return reservation && String((reservation as { trip_id?: string | number }).trip_id) === String(tripId)
+      ? reservation
+      : undefined;
+  }
+
   update(id: string, tripId: string, data: Parameters<typeof svc.updateReservation>[2], current: Parameters<typeof svc.updateReservation>[3]) {
     return svc.updateReservation(id, tripId, data, current);
   }
