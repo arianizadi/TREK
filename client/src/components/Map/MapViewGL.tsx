@@ -54,6 +54,11 @@ function buildPlaceClusterData(places: Place[]) {
   }
 }
 
+function hasTouchInput(): boolean {
+  if (typeof window === 'undefined') return false
+  return navigator.maxTouchPoints > 0 || window.matchMedia?.('(pointer: coarse)').matches === true
+}
+
 interface RouteSegment {
   mid: [number, number]
   from: [number, number]
@@ -417,6 +422,7 @@ export function MapViewGL({
         })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const zoomToCluster = (e: any) => {
+          if (hasTouchInput()) return
           const features = typeof map.queryRenderedFeatures === 'function'
             ? map.queryRenderedFeatures(e.point, { layers: [PLACE_CLUSTER_CIRCLE_LAYER_ID, PLACE_CLUSTER_COUNT_LAYER_ID] })
             : []

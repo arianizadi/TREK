@@ -657,6 +657,8 @@ export const MapView = memo(function MapView({
       center={center}
       zoom={zoom}
       zoomControl={false}
+      doubleClickZoom={false}
+      scrollWheelZoom={false}
       className="w-full h-full bg-[#e5e7eb]"
     >
       <TileLayer
@@ -686,7 +688,7 @@ export const MapView = memo(function MapView({
         disableClusteringAtZoom={11}
         spiderfyOnMaxZoom
         showCoverageOnHover={false}
-        zoomToBoundsOnClick
+        zoomToBoundsOnClick={!isTouchDevice}
         animate={false}
         iconCreateFunction={clusterIconCreateFunction}
       >

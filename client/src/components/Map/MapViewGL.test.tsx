@@ -165,6 +165,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 0 })
   vi.clearAllMocks()
   resetAllStores()
 })
@@ -283,6 +284,34 @@ describe('MapViewGL', () => {
     }))
     expect(glMap.addLayer).toHaveBeenCalledWith(expect.objectContaining({ id: 'trip-place-clusters-circle' }))
     expect(glMap.addLayer).toHaveBeenCalledWith(expect.objectContaining({ id: 'trip-place-clusters-count' }))
+  })
+
+  it('FE-COMP-MAPVIEWGL-015: ignores cluster taps on touch devices', async () => {
+    Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 1 })
+    glMap.on.mockImplementation((event: string, handlerOrLayer: unknown) => {
+      if (event === 'load' && typeof handlerOrLayer === 'function') (handlerOrLayer as () => void)()
+      return glMap
+    })
+    useSettingsStore.setState({
+      settings: {
+        ...useSettingsStore.getState().settings,
+        map_provider: 'maplibre-gl',
+        mapbox_access_token: '',
+        maplibre_style: 'https://tiles.openfreemap.org/styles/liberty',
+      },
+    } as any)
+
+    render(<MapViewGL places={[buildMapPlace({ id: 1, lat: 48.8584, lng: 2.2945 })]} fitKey={1} glProvider="maplibre-gl" />)
+    await act(async () => {})
+
+    const clusterTap = glMap.on.mock.calls
+      .find(c => c[0] === 'click' && c[1] === 'trip-place-clusters-circle')?.[2] as ((event: unknown) => void) | undefined
+    expect(clusterTap).toBeTypeOf('function')
+
+    glMap.easeTo.mockClear()
+    act(() => { clusterTap!({ point: { x: 1, y: 1 } }) })
+
+    expect(glMap.easeTo).not.toHaveBeenCalled()
   })
 
   function touchEvent(type: string, touches: Array<{ clientX: number; clientY: number }>) {

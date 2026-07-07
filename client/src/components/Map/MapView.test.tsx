@@ -16,9 +16,14 @@ const mapMock = vi.hoisted(() => ({
   off: vi.fn(),
   panBy: vi.fn(),
 }))
+const mapContainerProps = vi.hoisted(() => vi.fn())
+const markerClusterGroupProps = vi.hoisted(() => vi.fn())
 
 vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: any) => <div data-testid="map-container">{children}</div>,
+  MapContainer: ({ children, ...props }: any) => {
+    mapContainerProps(props)
+    return <div data-testid="map-container">{children}</div>
+  },
   TileLayer: () => <div data-testid="tile-layer" />,
   Marker: ({ children, eventHandlers, position }: any) => (
     <div
@@ -44,7 +49,10 @@ vi.mock('react-leaflet', () => ({
 }))
 
 vi.mock('react-leaflet-cluster', () => ({
-  default: ({ children }: any) => <div data-testid="cluster-group">{children}</div>,
+  default: ({ children, ...props }: any) => {
+    markerClusterGroupProps(props)
+    return <div data-testid="cluster-group">{children}</div>
+  },
 }))
 
 vi.mock('leaflet', () => ({
@@ -83,6 +91,7 @@ function buildMapPlace(overrides: Record<string, any> = {}) {
 }
 
 afterEach(() => {
+  Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 0 })
   vi.clearAllMocks()
   resetAllStores()
 })
@@ -301,5 +310,24 @@ describe('MapView', () => {
     rerender(<MapView places={dayPlaces} dayPlaces={dayPlaces} route={[[[47.9, 1.9], [48.05, 2.05], [48.2, 2.2]]]} fitKey={5} />)
     expect(L.latLngBounds).toHaveBeenCalled()
     expect(lastBounds()).toHaveLength(5) // 2 destinations + 3 route points
+  })
+
+  it('FE-COMP-MAPVIEW-023: disables accidental Leaflet tap and wheel zoom gestures', () => {
+    render(<MapView />)
+
+    expect(mapContainerProps).toHaveBeenCalledWith(expect.objectContaining({
+      doubleClickZoom: false,
+      scrollWheelZoom: false,
+    }))
+  })
+
+  it('FE-COMP-MAPVIEW-024: disables cluster tap zoom on touch devices', () => {
+    Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 1 })
+
+    render(<MapView places={[buildMapPlace({ id: 1, lat: 48.8584, lng: 2.2945 })]} />)
+
+    expect(markerClusterGroupProps).toHaveBeenCalledWith(expect.objectContaining({
+      zoomToBoundsOnClick: false,
+    }))
   })
 })
