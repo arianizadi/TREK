@@ -72,7 +72,7 @@ export default function TripWarningsBanner({ tripId, onOpenPluginTab }: { tripId
                 padding: '4px 10px', borderRadius: 999, border: 'none',
                 background: s.bg, color: s.color, cursor: onOpenPluginTab ? 'pointer' : 'default',
                 fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500,
-                maxWidth: 340, minWidth: 0,
+                maxWidth: 'min(44vw, 520px)', minWidth: 0,
               }}
             >
               <s.Icon size={13} style={{ flexShrink: 0 }} />
