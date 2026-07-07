@@ -35,6 +35,7 @@ const glMap = vi.hoisted(() => ({
   unproject: vi.fn(() => ({ lng: 2.3522, lat: 48.8566 })),
   getBounds: vi.fn(() => ({ getSouth: () => 0, getWest: () => 0, getNorth: () => 1, getEast: () => 1 })),
   easeTo: vi.fn(),
+  doubleClickZoom: { disable: vi.fn() },
 }))
 
 vi.mock('mapbox-gl', () => ({
@@ -242,6 +243,19 @@ describe('MapViewGL', () => {
     // The MapLibre engine builds the map even without a token; Mapbox is not used.
     expect(maplibregl.Map).toHaveBeenCalled()
     expect(mapboxgl.Map).not.toHaveBeenCalled()
+  })
+
+  it('FE-COMP-MAPVIEWGL-014: disables built-in double tap zoom on GL maps', async () => {
+    const mapboxgl = (await import('mapbox-gl')).default
+
+    render(<MapViewGL places={[]} fitKey={1} />)
+    await act(async () => {})
+
+    expect(mapboxgl.Map).toHaveBeenCalledWith(expect.objectContaining({
+      cooperativeGestures: true,
+      doubleClickZoom: false,
+    }))
+    expect(glMap.doubleClickZoom.disable).toHaveBeenCalled()
   })
 
   it('FE-COMP-MAPVIEWGL-005: adds the clustered place source + layers so markers group on zoom-out (#1385)', async () => {

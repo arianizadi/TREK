@@ -290,10 +290,12 @@ export function MapViewGL({
       attributionControl: true,
       antialias: mapboxQuality,
       cooperativeGestures: true,
+      doubleClickZoom: false,
     }
     if (!isMapLibre) mapOptions.projection = mapboxQuality ? 'globe' : 'mercator'
 
     const map = new gl.Map(mapOptions as any)
+    map.doubleClickZoom?.disable?.()
     mapRef.current = map
     popupRef.current = new gl.Popup({
       closeButton: false,
@@ -961,16 +963,17 @@ export function MapViewGL({
     else map.once('load', run)
   }, [fitKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // flyTo selected place
+  // Pan selected places into view without changing zoom. The Leaflet map does
+  // this already; keeping GL the same avoids iPhone taps feeling like zoom
+  // controls whenever a marker opens the inspector.
   useEffect(() => {
     const map = mapRef.current
     if (!map || !selectedPlaceId) return
     const target = places.find(p => p.id === selectedPlaceId) || dayPlaces.find(p => p.id === selectedPlaceId)
     if (!target?.lat || !target?.lng) return
     try {
-      map.flyTo({
+      map.easeTo({
         center: [target.lng, target.lat],
-        zoom: Math.max(map.getZoom(), 14),
         pitch: enableMapbox3d ? 45 : 0,
         duration: 400,
         // Account for the side panels and the bottom inspector / day-detail panel
