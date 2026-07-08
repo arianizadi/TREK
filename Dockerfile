@@ -50,7 +50,10 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends tzdata dumb-init wget ca-certificates python3 build-essential \
     libkitinerary-bin && \
     npm ci --workspace=server --omit=dev && \
-    ln -sf "$(find /usr/lib -name kitinerary-extractor -type f | head -1)" /usr/local/bin/kitinerary-extractor; \
+    extractor_path="$(find /usr/lib -name kitinerary-extractor -type f | head -1)" && \
+    if [ -z "$extractor_path" ]; then echo "kitinerary-extractor was not installed" >&2; exit 1; fi && \
+    ln -sf "$extractor_path" /usr/local/bin/kitinerary-extractor && \
+    test -x /usr/local/bin/kitinerary-extractor && \
     apt-get purge -y python3 build-essential && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
@@ -103,4 +106,4 @@ ENTRYPOINT ["dumb-init", "--"]
 # over /app (it hides the image's node_modules + dist). Fail with actionable
 # guidance instead of a cryptic "Cannot find module 'tsconfig-paths/register'".
 # cd into server/ so tsconfig-paths/register finds tsconfig.json and ../node_modules resolves correctly.
-CMD ["sh", "-c", "if [ ! -f /app/server/dist/index.js ] || [ ! -d /app/node_modules/tsconfig-paths ]; then echo 'FATAL: TREK application files are missing from the image.'; echo 'A volume is likely mounted over /app, which hides the app code.'; echo 'Mount ONLY your data and uploads dirs: -v ./data:/app/data -v ./uploads:/app/uploads'; echo 'Do NOT mount a volume at /app. See the Troubleshooting section of the README.'; exit 1; fi; chown -R node:node /app/data /app/uploads 2>/dev/null || true; cd /app/server && exec gosu node node --require tsconfig-paths/register dist/index.js"]
+CMD ["sh", "-c", "if [ ! -f /app/server/dist/index.js ] || [ ! -d /app/node_modules/tsconfig-paths ]; then echo 'FATAL: TREK application files are missing from the image.'; echo 'A volume is likely mounted over /app, which hides the image app code.'; echo 'Mount ONLY your data and uploads dirs: -v ./data:/app/data -v ./uploads:/app/uploads'; echo 'Do NOT mount a volume at /app.'; exit 1; fi; chown -R node:node /app/data /app/uploads 2>/dev/null || true; cd /app/server && gosu node node --require tsconfig-paths/register dist/db/preflight.js && exec gosu node node --require tsconfig-paths/register dist/index.js"]

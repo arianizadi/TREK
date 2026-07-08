@@ -1,6 +1,11 @@
 services:
   app:
-    image: mauriceboe/trek:dev
+    # Custom fork only: always build this checkout instead of pulling Docker Hub.
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-3.2.1}
+    image: trek:local
     container_name: trek
     read_only: true
     security_opt:
@@ -15,10 +20,12 @@ services:
       - /tmp:noexec,nosuid,size=128m
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-} # Recommended. Generate with: openssl rand -hex 32. If unset, falls back to data/.jwt_secret (existing installs) or auto-generates a key (fresh installs).
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?Set ENCRYPTION_KEY before running this compose. Prefer /home/outkast/trek/docker-compose.yml for this install.}
       - TZ=${TZ:-UTC} # Timezone for logs, reminders and scheduled tasks (e.g. Europe/Berlin)
       - LOG_LEVEL=${LOG_LEVEL:-info} # info = concise user actions; debug = verbose admin-level details
 #      - DEFAULT_LANGUAGE=en # Default language on the login page for users with no saved preference. Browser/OS language is auto-detected first; this is the fallback. Supported: de, en, es, fr, hu, nl, br, cs, pl, ru, zh, zh-TW, it, ar
@@ -51,8 +58,8 @@ services:
 #      - KITINERARY_EXTRACTOR_PATH= # Optional. Full path to kitinerary-extractor binary. Auto-detected from PATH and /usr/lib/*/libexec/kf6/ when unset.
 #      - UNSPLASH_ACCESS_KEY= # Optional. Unsplash Access Key for trip-cover / place-image search. Without one, TREK uses Unsplash's unauthenticated endpoint, which some datacenter/VPS IPs are blocked from (#1449). Free key at unsplash.com/developers. Can also be set per-admin in Admin > Settings; the env var overrides that.
     volumes:
-      - ./data:/app/data
-      - ./uploads:/app/uploads
+      - ../data:/app/data
+      - ../uploads:/app/uploads
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]

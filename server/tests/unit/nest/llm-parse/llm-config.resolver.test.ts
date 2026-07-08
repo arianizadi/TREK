@@ -43,6 +43,7 @@ describe('resolveLlmConfig', () => {
       baseUrl: undefined,
       apiKey: 'sk-plain',
       multimodal: true,
+      allowUnsafeLocalBaseUrl: true,
     });
   });
 
@@ -56,6 +57,7 @@ describe('resolveLlmConfig', () => {
       baseUrl: 'http://x/v1',
       apiKey: 'user-key',
       multimodal: true,
+      allowUnsafeLocalBaseUrl: false,
     });
     expect(getDecryptedUserSetting).toHaveBeenCalledWith(7, 'llm_api_key');
   });

@@ -113,6 +113,12 @@ export class SsrfBlockedError extends Error {
 
 export interface SafeFetchOptions {
   rejectUnauthorized?: boolean;
+  /**
+   * When true, private/internal IPs that ALLOW_INTERNAL_NETWORK would normally
+   * permit are still blocked (matches `checkSsrf(url, true)`). Loopback and
+   * link-local are always blocked regardless. Defaults to false.
+   */
+  bypassInternalIpAllowed?: boolean;
 }
 
 /**
@@ -125,7 +131,7 @@ export interface SafeFetchOptions {
  * applies — only the TLS certificate check is relaxed.
  */
 export async function safeFetch(url: string, init?: RequestInit, options?: SafeFetchOptions): Promise<Response> {
-  const ssrf = await checkSsrf(url);
+  const ssrf = await checkSsrf(url, options?.bypassInternalIpAllowed ?? false);
   if (!ssrf.allowed) {
     throw new SsrfBlockedError(ssrf.error ?? 'Request blocked by SSRF guard');
   }

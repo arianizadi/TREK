@@ -20,7 +20,7 @@ A self-hosted, real-time collaborative travel planner — with maps, budgets, pa
 
 <a href="https://demo.liketrek.com"><img alt="Demo" src="https://img.shields.io/badge/Demo-try-111827?style=for-the-badge" /></a>
 &nbsp;
-<a href="https://hub.docker.com/r/mauriceboe/trek"><img alt="Docker" src="https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge" /></a>
+<a href="local TREK build"><img alt="Docker" src="https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge" /></a>
 &nbsp;
 <a href="https://discord.gg/NhZBDSd4qW"><img alt="Discord" src="https://img.shields.io/badge/Discord-join-5865F2?style=for-the-badge" /></a>
 &nbsp;
@@ -32,7 +32,7 @@ A self-hosted, real-time collaborative travel planner — with maps, budgets, pa
 <br />
 <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL_v3-6B7280?style=flat-square" /></a>
 <a href="https://github.com/mauriceboe/TREK/releases"><img alt="Latest Release" src="https://img.shields.io/github/v/release/mauriceboe/TREK?include_prereleases&style=flat-square&color=6B7280" /></a>
-<a href="https://hub.docker.com/r/mauriceboe/trek"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/mauriceboe/trek?style=flat-square&color=6B7280" /></a>
+<a href="local TREK build"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/trek:local?style=flat-square&color=6B7280" /></a>
 <a href="https://github.com/mauriceboe/TREK"><img alt="Stars" src="https://img.shields.io/github/stars/mauriceboe/TREK?style=flat-square&color=6B7280" /></a>
 
 </div>
@@ -41,7 +41,7 @@ A self-hosted, real-time collaborative travel planner — with maps, budgets, pa
 
 <div align="center">
 
-<img src="https://github.com/mauriceboe/trek-media/releases/download/readme-assets/TREK1.gif" alt="TREK — 60-second tour" width="100%" />
+<img src="https://github.com/trek:local-media/releases/download/readme-assets/TREK1.gif" alt="TREK — 60-second tour" width="100%" />
 
 </div>
 
@@ -174,9 +174,11 @@ A self-hosted, real-time collaborative travel planner — with maps, budgets, pa
 ## Get started in 30 seconds
 
 ```bash
-ENCRYPTION_KEY=$(openssl rand -hex 32) docker run -d -p 3000:3000 \
-  -e ENCRYPTION_KEY=$ENCRYPTION_KEY \
-  -v ./data:/app/data -v ./uploads:/app/uploads mauriceboe/trek
+ENCRYPTION_KEY="$(openssl rand -hex 32)"
+printf 'TREK encryption key: %s\n' "$ENCRYPTION_KEY"
+docker run -d -p 3000:3000 \
+  -e "ENCRYPTION_KEY=$ENCRYPTION_KEY" \
+  -v ./data:/app/data -v ./uploads:/app/uploads trek:local
 ```
 
 Open `http://localhost:3000`. On first boot TREK seeds an admin account — if you set `ADMIN_EMAIL`/`ADMIN_PASSWORD` those are used, otherwise the credentials are printed to the container log (`docker logs trek`).
@@ -217,7 +219,7 @@ Real-time sync via WebSocket (`ws`). Backend on NestJS 11. State with Zustand. A
 ```yaml
 services:
   app:
-    image: mauriceboe/trek:latest
+    image: trek:local
     container_name: trek
     read_only: true
     security_opt:
@@ -296,18 +298,20 @@ TREK then launches fullscreen with its own icon, just like a native app.
 
 ## Updating
 
-**Docker Compose:**
+**Custom fork Docker Compose:**
 
 ```bash
-docker compose pull && docker compose up -d
+cd /home/outkast/trek
+./update-from-upstream.sh
 ```
 
-**Docker run** — reuse the original volume paths:
+This pulls from the configured git `upstream/main`, rebuilds your local `trek:local` image, runs the startup migration preflight, and verifies the container is healthy.
+
+**Manual rebuild** — when you have already pulled the source:
 
 ```bash
-docker pull mauriceboe/trek
-docker rm -f trek
-docker run -d --name trek -p 3000:3000 -v ./data:/app/data -v ./uploads:/app/uploads --restart unless-stopped mauriceboe/trek
+cd /home/outkast/trek
+docker compose up -d --build app
 ```
 
 > Not sure which paths you used? `docker inspect trek --format '{{json .Mounts}}'` before removing the container.
@@ -322,7 +326,7 @@ Your data stays in the mounted `data` and `uploads` volumes — updates never to
 If you need to rotate `ENCRYPTION_KEY` (e.g. upgrading from a version that derived encryption from `JWT_SECRET`):
 
 ```bash
-docker exec -it trek node --import tsx scripts/migrate-encryption.ts
+docker exec -it -w /app/server trek node --import tsx scripts/migrate-encryption.ts
 ```
 
 The script creates a timestamped DB backup before making changes and prompts for old + new keys (input is not echoed).
@@ -456,4 +460,3 @@ for full third-party attributions.
 ## License
 
 TREK is [AGPL v3](LICENSE). Self-host freely for personal or internal company use. If you modify and offer TREK as a network service to third parties, your modifications must be open-sourced under the same licence.
-

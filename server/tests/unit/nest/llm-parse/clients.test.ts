@@ -1,4 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const { safeFetchFollow } = vi.hoisted(() => ({
+  safeFetchFollow: vi.fn((url: string, init?: RequestInit) => fetch(url, init)),
+}));
+vi.mock('../../../../src/utils/ssrfGuard', () => ({ safeFetchFollow }));
+
 import { OpenAiCompatibleClient } from '../../../../src/nest/llm-parse/clients/openai-compatible.client';
 import { AnthropicClient } from '../../../../src/nest/llm-parse/clients/anthropic.client';
 import type { LlmExtractionInput } from '../../../../src/nest/llm-parse/llm-provider.interface';
@@ -20,7 +26,11 @@ function jsonResponse(body: unknown, ok = true, status = 200): Response {
   return { ok, status, json: async () => body, text: async () => JSON.stringify(body) } as unknown as Response;
 }
 
-beforeEach(() => vi.unstubAllGlobals());
+beforeEach(() => {
+  vi.unstubAllGlobals();
+  safeFetchFollow.mockClear();
+  safeFetchFollow.mockImplementation((url: string, init?: RequestInit) => fetch(url, init));
+});
 
 describe('OpenAiCompatibleClient', () => {
   it('posts to {baseUrl}/chat/completions and returns the reservations array', async () => {
@@ -30,6 +40,27 @@ describe('OpenAiCompatibleClient', () => {
     const out = await new OpenAiCompatibleClient().extract({ ...baseInput, baseUrl: 'http://localhost:11434/v1/' });
     expect(out).toEqual([{ '@type': 'FlightReservation' }]);
     expect(fetchFn.mock.calls[0][0]).toBe('http://localhost:11434/v1/chat/completions');
+  });
+
+  it('SSRF-guards untrusted base URLs and bypasses internal-network allowlists', async () => {
+    mockFetch(() => jsonResponse({ choices: [{ message: { content: '{"reservations":[]}' } }] }));
+    await new OpenAiCompatibleClient().extract({ ...baseInput, baseUrl: 'https://llm.example/v1' });
+    expect(safeFetchFollow).toHaveBeenCalledWith(
+      'https://llm.example/v1/chat/completions',
+      expect.objectContaining({ method: 'POST' }),
+      { maxRedirects: 3, bypassInternalIpAllowed: true },
+    );
+  });
+
+  it('uses raw fetch for operator-trusted local base URLs', async () => {
+    const fetchFn = mockFetch(() => jsonResponse({ choices: [{ message: { content: '{"reservations":[]}' } }] }));
+    await new OpenAiCompatibleClient().extract({
+      ...baseInput,
+      baseUrl: 'http://localhost:11434/v1',
+      allowUnsafeLocalBaseUrl: true,
+    });
+    expect(safeFetchFollow).not.toHaveBeenCalled();
+    expect(fetchFn).toHaveBeenCalledOnce();
   });
 
   it('tolerates code-fenced JSON', async () => {
@@ -121,6 +152,11 @@ describe('AnthropicClient', () => {
     const body = JSON.parse((fetchFn.mock.calls[0][1] as RequestInit).body as string);
     expect(body.tool_choice).toEqual({ type: 'tool', name: 'emit_reservations' });
     expect(body.tools[0].name).toBe('emit_reservations');
+    expect(safeFetchFollow).toHaveBeenCalledWith(
+      'https://api.anthropic.com/v1/messages',
+      expect.objectContaining({ method: 'POST' }),
+      { maxRedirects: 3, bypassInternalIpAllowed: true },
+    );
   });
 
   it('throws on a refusal stop_reason', async () => {

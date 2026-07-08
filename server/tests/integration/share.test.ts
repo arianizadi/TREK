@@ -47,7 +47,7 @@ import { buildApp } from '../../src/bootstrap';
 import { createTables } from '../../src/db/schema';
 import { runMigrations } from '../../src/db/migrations';
 import { resetTestDb, resetRateLimits } from '../helpers/test-db';
-import { createUser, createTrip, addTripMember, createDay, createPlace, createDayAssignment, createDayNote } from '../helpers/factories';
+import { createUser, createTrip, addTripMember, createDay, createPlace, createDayAssignment, createDayNote, createDayAccommodation } from '../helpers/factories';
 import { authCookie } from '../helpers/auth';
 import * as placePhotoCache from '../../src/services/placePhotoCache';
 import fs from 'node:fs';
@@ -293,6 +293,49 @@ describe('Shared trip — day assignments and notes', () => {
     expect(res.status).toBe(200);
     expect(res.body.days).toHaveLength(1);
     expect(res.body.assignments).toEqual({});
+  });
+
+  it('SHARE-024 — share_map=false redacts public place and map data', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const day = createDay(testDb, trip.id, { date: '2025-08-02' });
+    const place = createPlace(testDb, trip.id, {
+      name: 'Hidden Coordinates',
+      lat: 41.89,
+      lng: 12.49,
+      description: 'Private place description',
+    });
+    testDb.prepare('UPDATE places SET address = ?, image_url = ?, notes = ? WHERE id = ?')
+      .run('Secret address', '/api/maps/place-photo/ChIJsecret/bytes', 'Private place notes', place.id);
+    createDayAssignment(testDb, day.id, place.id, { notes: 'Visible itinerary note' });
+    createDayAccommodation(testDb, trip.id, place.id, day.id, day.id);
+
+    const { body: { token } } = await request(app)
+      .post(`/api/trips/${trip.id}/share-link`)
+      .set('Cookie', authCookie(user.id))
+      .send({ share_map: false, share_bookings: true });
+
+    const res = await request(app).get(`/api/shared/${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.permissions.share_map).toBe(false);
+    expect(res.body.places).toEqual([]);
+
+    const sharedPlace = res.body.assignments[day.id][0].place;
+    expect(sharedPlace.name).toBe('Hidden Coordinates');
+    expect(sharedPlace.lat).toBeUndefined();
+    expect(sharedPlace.lng).toBeUndefined();
+    expect(sharedPlace.address).toBeUndefined();
+    expect(sharedPlace.description).toBeUndefined();
+    expect(sharedPlace.image_url).toBeUndefined();
+    expect(sharedPlace.tags).toBeUndefined();
+
+    expect(res.body.accommodations[0].place_name).toBe('Hidden Coordinates');
+    expect(res.body.accommodations[0].place_address).toBeUndefined();
+    expect(res.body.accommodations[0].place_lat).toBeUndefined();
+    expect(res.body.accommodations[0].place_lng).toBeUndefined();
+
+    const photoRes = await request(app).get(`/api/shared/${token}/place-photo/ChIJsecret/bytes`);
+    expect(photoRes.status).toBe(404);
   });
 });
 

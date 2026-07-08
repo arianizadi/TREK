@@ -21,6 +21,36 @@ function rewritePlacePhotoUrl(url: string | null | undefined, token: string): st
   return url ?? null;
 }
 
+function publicAssignmentPlace(a: any, token: string, shareMap: boolean): Record<string, any> {
+  const category = a.category_id ? { id: a.category_id, name: a.category_name, color: a.category_color, icon: a.category_icon } : null;
+  if (!shareMap) {
+    return {
+      id: a.place_id,
+      name: a.place_name,
+      category_id: a.category_id,
+      place_time: a.place_time,
+      end_time: a.end_time,
+      category,
+    };
+  }
+  return {
+    id: a.place_id, name: a.place_name, description: a.place_description,
+    lat: a.lat, lng: a.lng, address: a.address, category_id: a.category_id,
+    price: a.price, place_time: a.place_time, end_time: a.end_time,
+    image_url: rewritePlacePhotoUrl(a.image_url, token), transport_mode: a.transport_mode,
+    category,
+    tags: a.tags || [],
+  };
+}
+
+function redactAccommodationMapFields(accommodation: any): Record<string, any> {
+  const out = { ...accommodation };
+  delete out.place_address;
+  delete out.place_lat;
+  delete out.place_lng;
+  return out;
+}
+
 interface SharePermissions {
   share_map?: boolean;
   share_bookings?: boolean;
@@ -109,6 +139,13 @@ export function getSharedTripData(token: string): Record<string, any> | null {
   if (!shareRow) return null;
 
   const tripId = shareRow.trip_id;
+  const permissions = {
+    share_map: !!shareRow.share_map,
+    share_bookings: !!shareRow.share_bookings,
+    share_packing: !!shareRow.share_packing,
+    share_budget: !!shareRow.share_budget,
+    share_collab: !!shareRow.share_collab,
+  };
 
   // Trip
   const trip = db.prepare('SELECT id, title, description, start_date, end_date, cover_image, currency FROM trips WHERE id = ?').get(tripId);
@@ -136,22 +173,16 @@ export function getSharedTripData(token: string): Record<string, any> | null {
       ORDER BY da.order_index ASC, da.created_at ASC
     `).all(...dayIds);
 
-    const placeIds = [...new Set(allAssignments.map((a: any) => a.place_id))];
-    const tagsByPlace = loadTagsByPlaceIds(placeIds, { compact: true });
+    const placeIds = permissions.share_map ? [...new Set(allAssignments.map((a: any) => a.place_id))] : [];
+    const tagsByPlace = permissions.share_map ? loadTagsByPlaceIds(placeIds, { compact: true }) : {};
 
     const byDay: Record<number, any[]> = {};
     for (const a of allAssignments as any[]) {
       if (!byDay[a.day_id]) byDay[a.day_id] = [];
+      if (permissions.share_map) a.tags = tagsByPlace[a.place_id] || [];
       byDay[a.day_id].push({
         id: a.id, day_id: a.day_id, order_index: a.order_index, notes: a.notes,
-        place: {
-          id: a.place_id, name: a.place_name, description: a.place_description,
-          lat: a.lat, lng: a.lng, address: a.address, category_id: a.category_id,
-          price: a.price, place_time: a.place_time, end_time: a.end_time,
-          image_url: rewritePlacePhotoUrl(a.image_url, token), transport_mode: a.transport_mode,
-          category: a.category_id ? { id: a.category_id, name: a.category_name, color: a.category_color, icon: a.category_icon } : null,
-          tags: tagsByPlace[a.place_id] || [],
-        }
+        place: publicAssignmentPlace(a, token, permissions.share_map)
       });
     }
     assignments = byDay;
@@ -166,11 +197,11 @@ export function getSharedTripData(token: string): Record<string, any> | null {
   }
 
   // Places
-  const places = (db.prepare(`
+  const places = permissions.share_map ? (db.prepare(`
     SELECT p.*, c.name as category_name, c.color as category_color, c.icon as category_icon
     FROM places p LEFT JOIN categories c ON p.category_id = c.id
     WHERE p.trip_id = ? ORDER BY p.created_at DESC
-  `).all(tripId) as any[]).map((p) => ({ ...p, image_url: rewritePlacePhotoUrl(p.image_url, token) }));
+  `).all(tripId) as any[]).map((p) => ({ ...p, image_url: rewritePlacePhotoUrl(p.image_url, token) })) : [];
 
   // Reservations — include per-day positions so the client can render the same order as the planner
   const reservations = db.prepare('SELECT * FROM reservations WHERE trip_id = ? ORDER BY reservation_time ASC').all(tripId) as any[];
@@ -192,11 +223,11 @@ export function getSharedTripData(token: string): Record<string, any> | null {
   }
 
   // Accommodations
-  const accommodations = db.prepare(`
+  const accommodations = (db.prepare(`
     SELECT a.*, p.name as place_name, p.address as place_address, p.lat as place_lat, p.lng as place_lng
     FROM day_accommodations a JOIN places p ON a.place_id = p.id
     WHERE a.trip_id = ?
-  `).all(tripId);
+  `).all(tripId) as any[]).map((a) => permissions.share_map ? a : redactAccommodationMapFields(a));
 
   // Packing
   const packing = db.prepare('SELECT * FROM packing_items WHERE trip_id = ? ORDER BY sort_order ASC').all(tripId);
@@ -206,14 +237,6 @@ export function getSharedTripData(token: string): Record<string, any> | null {
 
   // Categories
   const categories = db.prepare('SELECT * FROM categories').all();
-
-  const permissions = {
-    share_map: !!shareRow.share_map,
-    share_bookings: !!shareRow.share_bookings,
-    share_packing: !!shareRow.share_packing,
-    share_budget: !!shareRow.share_budget,
-    share_collab: !!shareRow.share_collab,
-  };
 
   // Collab messages (only if owner chose to share)
   const collabMessages = permissions.share_collab
@@ -255,9 +278,10 @@ export function getSharedTripData(token: string): Record<string, any> | null {
  */
 export function getSharedPlacePhotoPath(token: string, placeId: string): string | null {
   const shareRow = db.prepare(
-    "SELECT trip_id FROM share_tokens WHERE token = ? AND (expires_at IS NULL OR expires_at > datetime('now'))"
-  ).get(token) as { trip_id: string } | undefined;
+    "SELECT trip_id, share_map FROM share_tokens WHERE token = ? AND (expires_at IS NULL OR expires_at > datetime('now'))"
+  ).get(token) as { trip_id: string; share_map: number } | undefined;
   if (!shareRow) return null;
+  if (!shareRow.share_map) return null;
 
   const expectedUrl = `${PLACE_PHOTO_PROXY_PREFIX}${encodeURIComponent(placeId)}/bytes`;
   const place = db.prepare(

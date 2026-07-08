@@ -60,22 +60,16 @@ APP_URL=https://trek.example.com
 
 Uncomment and fill in the OIDC, initial setup, or MCP variables as needed. For a full description of every variable, see [Environment-Variables](Environment-Variables).
 
-## Image Tags
+## Local Image
 
-Three tag strategies are available:
+This custom-fork install builds the checkout into `trek:local`; it does not pull release tags from a registry. Keep the compose image as `trek:local`, and rebuild it when the source changes:
 
-| Tag | Example | Behavior |
-|---|---|---|
-| `latest` | `mauriceboe/trek:latest` | Always the newest release across all major versions |
-| Major version | `mauriceboe/trek:3` | Latest release pinned to that major version |
-| Full version | `mauriceboe/trek:3.0.15` | Exact release; never changes |
-
-The compose file above uses `latest`. To pin, change the `image:` line:
-
-```yaml
-image: mauriceboe/trek:3        # track major version 3
-image: mauriceboe/trek:3.0.15   # pin to exact release
+```bash
+cd /home/outkast/trek
+docker compose up -d --build app
 ```
+
+For upstream updates, use `/home/outkast/trek/update-from-upstream.sh` so the source update, backup, rebuild, and health check happen together.
 
 ## Start TREK
 

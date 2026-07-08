@@ -828,7 +828,7 @@ export const journeyApi = {
 }
 
 export const mapsApi = {
-  search: (query: string, lang?: string) => apiClient.post(`/maps/search?lang=${lang || 'en'}`, { query }).then(r => checkInDev(mapsSearchResultSchema, r.data, 'maps.search')),
+  search: (query: string, lang?: string, locationBias?: { lat: number; lng: number; radius?: number }) => apiClient.post(`/maps/search?lang=${lang || 'en'}`, { query, locationBias }).then(r => checkInDev(mapsSearchResultSchema, r.data, 'maps.search')),
   autocomplete: (input: string, lang?: string, locationBias?: { low: { lat: number; lng: number }; high: { lat: number; lng: number } }, signal?: AbortSignal) =>
       apiClient.post('/maps/autocomplete', { input, lang, locationBias }, { signal }).then(r => checkInDev(mapsAutocompleteResultSchema, r.data, 'maps.autocomplete')),
   details: (placeId: string, lang?: string) => apiClient.get(`/maps/details/${encodeURIComponent(placeId)}`, { params: { lang } }).then(r => checkInDev(mapsPlaceDetailsResultSchema, r.data, 'maps.details')),

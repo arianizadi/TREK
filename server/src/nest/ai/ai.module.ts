@@ -3,6 +3,7 @@ import { AssignmentsService } from '../assignments/assignments.service';
 import { BudgetService } from '../budget/budget.service';
 import { CollabService } from '../collab/collab.service';
 import { DayNotesService } from '../days/day-notes.service';
+import { DaysService } from '../days/days.service';
 import { MapsService } from '../maps/maps.service';
 import { PackingService } from '../packing/packing.service';
 import { PlacesService } from '../places/places.service';
@@ -25,6 +26,7 @@ import { OpenRouterAiClient } from './openrouter-ai.client';
     PlacesService,
     AssignmentsService,
     DayNotesService,
+    DaysService,
     BudgetService,
     PackingService,
     MapsService,

@@ -1,9 +1,9 @@
 import { assignmentReorderRequestSchema } from '../assignment/assignment.schema';
-import { budgetCreateItemRequestSchema } from '../budget/budget.schema';
+import { budgetCreateItemRequestSchema, budgetUpdateItemRequestSchema } from '../budget/budget.schema';
 import { collabPollCreateRequestSchema } from '../collab/collab.schema';
-import { dayNoteCreateRequestSchema } from '../day/day.schema';
-import { packingCreateItemRequestSchema } from '../packing/packing.schema';
-import { placeCreateRequestSchema } from '../place/place.schema';
+import { dayNoteCreateRequestSchema, dayNoteUpdateRequestSchema, dayUpdateRequestSchema } from '../day/day.schema';
+import { packingCreateItemRequestSchema, packingUpdateItemRequestSchema } from '../packing/packing.schema';
+import { placeCreateRequestSchema, placeUpdateRequestSchema } from '../place/place.schema';
 import { reservationCreateRequestSchema, reservationUpdateRequestSchema } from '../reservation/reservation.schema';
 
 import { z } from 'zod';
@@ -40,6 +40,19 @@ export const aiCreatePlaceOperationSchema = z.object({
   assignmentNotes: z.string().nullable().optional(),
 });
 
+export const aiUpdatePlaceOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('update_place'),
+  placeId: z.union([z.number(), z.string()]),
+  data: placeUpdateRequestSchema,
+});
+
+export const aiDeletePlaceOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('delete_place'),
+  placeId: z.union([z.number(), z.string()]),
+});
+
 export const aiAssignPlaceToDayOperationSchema = z.object({
   ...operationBase,
   type: z.literal('assign_place_to_day'),
@@ -47,6 +60,28 @@ export const aiAssignPlaceToDayOperationSchema = z.object({
   placeId: z.union([z.number(), z.string()]).optional(),
   placeOperationId: z.string().optional(),
   notes: z.string().nullable().optional(),
+});
+
+export const aiUnassignPlaceOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('unassign_place'),
+  assignmentId: z.union([z.number(), z.string()]),
+});
+
+export const aiMoveAssignmentOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('move_assignment'),
+  assignmentId: z.union([z.number(), z.string()]),
+  toDayId: z.union([z.number(), z.string()]),
+  orderIndex: z.number().optional(),
+});
+
+export const aiSetAssignmentTimeOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('set_assignment_time'),
+  assignmentId: z.union([z.number(), z.string()]),
+  time: z.string().max(40).nullable().optional(),
+  endTime: z.string().max(40).nullable().optional(),
 });
 
 export const aiReorderItineraryOperationSchema = z.object({
@@ -63,16 +98,64 @@ export const aiAddDayNoteOperationSchema = z.object({
   data: dayNoteCreateRequestSchema,
 });
 
+export const aiUpdateDayNoteOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('update_day_note'),
+  noteId: z.union([z.number(), z.string()]),
+  dayId: z.union([z.number(), z.string()]),
+  data: dayNoteUpdateRequestSchema,
+});
+
+export const aiDeleteDayNoteOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('delete_day_note'),
+  noteId: z.union([z.number(), z.string()]),
+  dayId: z.union([z.number(), z.string()]),
+});
+
+export const aiUpdateDayOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('update_day'),
+  dayId: z.union([z.number(), z.string()]),
+  data: dayUpdateRequestSchema,
+});
+
 export const aiCreateBudgetItemOperationSchema = z.object({
   ...operationBase,
   type: z.literal('create_budget_item'),
   data: budgetCreateItemRequestSchema,
 });
 
+export const aiUpdateBudgetItemOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('update_budget_item'),
+  itemId: z.union([z.number(), z.string()]),
+  data: budgetUpdateItemRequestSchema,
+});
+
+export const aiDeleteBudgetItemOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('delete_budget_item'),
+  itemId: z.union([z.number(), z.string()]),
+});
+
 export const aiCreatePackingItemOperationSchema = z.object({
   ...operationBase,
   type: z.literal('create_packing_item'),
   data: packingCreateItemRequestSchema,
+});
+
+export const aiUpdatePackingItemOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('update_packing_item'),
+  itemId: z.union([z.number(), z.string()]),
+  data: packingUpdateItemRequestSchema,
+});
+
+export const aiDeletePackingItemOperationSchema = z.object({
+  ...operationBase,
+  type: z.literal('delete_packing_item'),
+  itemId: z.union([z.number(), z.string()]),
 });
 
 export const aiCreatePollOperationSchema = z.object({
@@ -102,11 +185,23 @@ export const aiDeleteReservationOperationSchema = z.object({
 
 export const aiActionOperationSchema = z.discriminatedUnion('type', [
   aiCreatePlaceOperationSchema,
+  aiUpdatePlaceOperationSchema,
+  aiDeletePlaceOperationSchema,
   aiAssignPlaceToDayOperationSchema,
+  aiUnassignPlaceOperationSchema,
+  aiMoveAssignmentOperationSchema,
+  aiSetAssignmentTimeOperationSchema,
   aiReorderItineraryOperationSchema,
   aiAddDayNoteOperationSchema,
+  aiUpdateDayNoteOperationSchema,
+  aiDeleteDayNoteOperationSchema,
+  aiUpdateDayOperationSchema,
   aiCreateBudgetItemOperationSchema,
+  aiUpdateBudgetItemOperationSchema,
+  aiDeleteBudgetItemOperationSchema,
   aiCreatePackingItemOperationSchema,
+  aiUpdatePackingItemOperationSchema,
+  aiDeletePackingItemOperationSchema,
   aiCreatePollOperationSchema,
   aiImportReservationOperationSchema,
   aiUpdateReservationOperationSchema,
@@ -147,9 +242,26 @@ export const aiChatMessageSchema = z.object({
 });
 export type AiChatMessage = z.infer<typeof aiChatMessageSchema>;
 
+export const aiDiscoveredPlaceSchema = z.object({
+  google_place_id: z.string().nullable().optional(),
+  google_ftid: z.string().nullable().optional(),
+  osm_id: z.string().nullable().optional(),
+  name: z.string().min(1).max(240),
+  address: z.string().nullable().optional(),
+  lat: z.number().nullable().optional(),
+  lng: z.number().nullable().optional(),
+  rating: z.number().nullable().optional(),
+  website: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  types: z.array(z.string().max(80)).max(20).optional(),
+  source: z.string().max(40).optional(),
+});
+export type AiDiscoveredPlace = z.infer<typeof aiDiscoveredPlaceSchema>;
+
 export const aiContextSchema = z.object({
   selectedDayId: z.union([z.number(), z.string()]).nullable().optional(),
   activeTab: z.string().optional(),
+  discoveredPlaces: z.array(aiDiscoveredPlaceSchema).max(20).optional(),
 });
 export type AiContext = z.infer<typeof aiContextSchema>;
 
@@ -157,6 +269,7 @@ export const aiChatRequestSchema = z.object({
   tripId: z.union([z.number(), z.string()]),
   messages: z.array(aiChatMessageSchema).min(1).max(20),
   context: aiContextSchema.optional(),
+  reasoningEffort: z.enum(['low', 'medium', 'high']).optional(),
 });
 export type AiChatRequest = z.infer<typeof aiChatRequestSchema>;
 
@@ -164,6 +277,7 @@ export const aiActionPreviewRequestSchema = z.object({
   tripId: z.union([z.number(), z.string()]),
   prompt: z.string().min(1).max(8000),
   context: aiContextSchema.optional(),
+  reasoningEffort: z.enum(['low', 'medium', 'high']).optional(),
 });
 export type AiActionPreviewRequest = z.infer<typeof aiActionPreviewRequestSchema>;
 
@@ -178,11 +292,23 @@ export const aiActionUndoOperationSchema = z.object({
   id: z.string().min(1).optional(),
   type: z.enum([
     'delete_created_place',
+    'restore_updated_place',
+    'recreate_place',
     'delete_assignment',
+    'recreate_assignment',
+    'restore_moved_assignment',
+    'restore_assignment_time',
     'restore_itinerary_order',
     'delete_day_note',
+    'restore_updated_day_note',
+    'recreate_day_note',
+    'restore_updated_day',
     'delete_budget_item',
+    'restore_updated_budget_item',
+    'recreate_budget_item',
     'delete_packing_item',
+    'restore_updated_packing_item',
+    'recreate_packing_item',
     'delete_poll',
     'delete_reservation',
     'restore_updated_reservation',

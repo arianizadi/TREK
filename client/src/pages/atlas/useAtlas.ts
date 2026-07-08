@@ -19,6 +19,36 @@ function useCountryNames(language: string): (code: string) => string {
   return resolver
 }
 
+function renderRegionTooltip(
+  target: HTMLDivElement,
+  { regionName, countryName, count }: { regionName: string; countryName: string; count: number | null },
+): void {
+  target.replaceChildren()
+
+  const region = document.createElement('div')
+  region.style.fontWeight = '600'
+  region.style.marginBottom = '3px'
+  region.textContent = regionName
+  target.append(region)
+
+  const country = document.createElement('div')
+  country.style.opacity = '0.5'
+  country.style.fontSize = '10px'
+  country.textContent = countryName
+  target.append(country)
+
+  if (count != null) {
+    const places = document.createElement('div')
+    places.style.marginTop = '5px'
+    places.style.fontSize = '11px'
+
+    const value = document.createElement('b')
+    value.textContent = String(count)
+    places.append(value, ` ${count === 1 ? 'place' : 'places'}`)
+    target.append(places)
+  }
+}
+
 /**
  * Atlas page logic — the whole interactive globe lives here: atlas/bucket-list
  * loading, the Leaflet map lifecycle (country + sub-national region layers,
@@ -512,9 +542,7 @@ export function useAtlas() {
             tt.style.display = 'block'
             tt.style.left = e.originalEvent.clientX + 12 + 'px'
             tt.style.top = e.originalEvent.clientY - 10 + 'px'
-            tt.innerHTML = visited
-              ? `<div style="font-weight:600;margin-bottom:3px">${regionName}</div><div style="opacity:0.5;font-size:10px">${countryName}</div><div style="margin-top:5px;font-size:11px"><b>${count}</b> ${count === 1 ? 'place' : 'places'}</div>`
-              : `<div style="font-weight:600;margin-bottom:3px">${regionName}</div><div style="opacity:0.5;font-size:10px">${countryName}</div>`
+            renderRegionTooltip(tt, { regionName, countryName, count: visited ? count : null })
           }
         })
         layer.on('mousemove', (e: any) => {

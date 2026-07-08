@@ -13,6 +13,11 @@ export interface LlmExtractionInput {
   model: string;
   baseUrl?: string;
   apiKey?: string;
+  /**
+   * Operator-controlled LLM endpoints may be local/private. User-controlled
+   * endpoints must leave this false so outbound requests use the SSRF guard.
+   */
+  allowUnsafeLocalBaseUrl?: boolean;
   /** Pre-extracted text (text-like files, or text-only-model mode). */
   text?: string;
   /** Native binary (PDF) for multimodal providers. */

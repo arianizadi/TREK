@@ -246,6 +246,33 @@ describe('MapViewGL', () => {
     expect(mapboxgl.Map).not.toHaveBeenCalled()
   })
 
+  it('FE-COMP-MAPVIEWGL-016: escapes photo marker image URLs before injecting marker HTML', async () => {
+    glMap.on.mockImplementation((event: string, handlerOrLayer: unknown) => {
+      if (event === 'load' && typeof handlerOrLayer === 'function') (handlerOrLayer as () => void)()
+      return glMap
+    })
+    glMap.getSource.mockReturnValue({
+      setData: vi.fn(),
+    })
+    glMap.querySourceFeatures.mockReturnValue([
+      { properties: { placeId: 11 } },
+    ])
+    const mapboxgl = (await import('mapbox-gl')).default
+    const dataUrl = 'data:image/svg+xml," onerror="alert(1)'
+
+    render(<MapViewGL places={[buildMapPlace({ id: 11, lat: 48.8584, lng: 2.2945, image_url: dataUrl })]} fitKey={1} />)
+    await act(async () => {
+      await new Promise(resolve => requestAnimationFrame(resolve))
+    })
+
+    const photoCall = vi.mocked(mapboxgl.Marker).mock.calls.find(([opts]) =>
+      String((opts as { element?: HTMLElement }).element?.innerHTML || '').includes('data:image/svg+xml'),
+    )
+    const html = String((photoCall?.[0] as { element?: HTMLElement } | undefined)?.element?.innerHTML || '')
+    expect(html).toContain('src="data:image/svg+xml,&quot; onerror=&quot;alert(1)"')
+    expect(html).not.toContain('src="data:image/svg+xml," onerror="alert(1)"')
+  })
+
   it('FE-COMP-MAPVIEWGL-014: disables built-in double tap zoom on GL maps', async () => {
     const mapboxgl = (await import('mapbox-gl')).default
 

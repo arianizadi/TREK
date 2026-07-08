@@ -27,6 +27,11 @@ export interface ResolvedLlmConfig {
   apiKey?: string;
   multimodal: boolean;
   reasoningEffort?: OpenRouterReasoningEffort;
+  /**
+   * True only for operator-controlled config (admin addon config or env).
+   * Per-user URLs are not trusted and must stay behind the SSRF guard.
+   */
+  allowUnsafeLocalBaseUrl?: boolean;
 }
 
 /** Shape of the admin instance config stored in `addons.config` (apiKey encrypted). */

@@ -1,4 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const { safeFetchFollow } = vi.hoisted(() => ({
+  safeFetchFollow: vi.fn((url: string, init?: RequestInit) => fetch(url, init)),
+}));
+vi.mock('../../../../src/utils/ssrfGuard', () => ({ safeFetchFollow }));
+
 import { toNativeBase, extractEnforced } from '../../../../src/nest/llm-parse/router/ollama-format.client';
 
 function mockFetch(impl: (url: string, init: RequestInit) => Promise<Response> | Response) {
@@ -19,7 +25,11 @@ const INPUT = {
   schema: { type: 'object' as const },
 };
 
-beforeEach(() => vi.unstubAllGlobals());
+beforeEach(() => {
+  vi.unstubAllGlobals();
+  safeFetchFollow.mockClear();
+  safeFetchFollow.mockImplementation((url: string, init?: RequestInit) => fetch(url, init));
+});
 
 describe('toNativeBase', () => {
   it('strips a /v1 suffix and trailing slashes', () => {
@@ -43,6 +53,18 @@ describe('extractEnforced', () => {
     expect(body.stream).toBe(false);
     expect(body.options.temperature).toBe(0);
     expect((init as RequestInit).headers).not.toHaveProperty('authorization');
+    expect(safeFetchFollow).toHaveBeenCalledWith(
+      'http://ollama:11434/api/chat',
+      expect.objectContaining({ method: 'POST' }),
+      { maxRedirects: 3, bypassInternalIpAllowed: true },
+    );
+  });
+
+  it('uses raw fetch for operator-trusted local Ollama endpoints', async () => {
+    const fetchFn = mockFetch(() => jsonResponse({ message: { content: '{}' } }));
+    await extractEnforced({ ...INPUT, allowUnsafeLocalBaseUrl: true });
+    expect(safeFetchFollow).not.toHaveBeenCalled();
+    expect(fetchFn).toHaveBeenCalledOnce();
   });
 
   it('sends a bearer header only when an apiKey is given', async () => {

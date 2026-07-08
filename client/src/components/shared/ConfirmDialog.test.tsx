@@ -24,6 +24,7 @@ describe('ConfirmDialog', () => {
     );
     expect(screen.getByText('Confirm')).toBeTruthy();
     expect(screen.getByText('Are you sure?')).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Confirm' })).toHaveAccessibleDescription('Are you sure?');
   });
 
   it('FE-COMP-CONFIRM-003: renders custom title and message', () => {
@@ -38,6 +39,7 @@ describe('ConfirmDialog', () => {
     );
     expect(screen.getByText('Remove item')).toBeTruthy();
     expect(screen.getByText('This cannot be undone.')).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Remove item' })).toHaveAccessibleDescription('This cannot be undone.');
   });
 
   it('FE-COMP-CONFIRM-004: Cancel button calls onClose', async () => {

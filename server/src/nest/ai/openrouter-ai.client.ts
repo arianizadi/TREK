@@ -333,11 +333,31 @@ function actionPlanJsonSchema() {
               assignToDayId: stringOrNumberSchema,
               assignmentNotes: nullableStringSchema,
             }),
+            operationSchema('update_place', {
+              placeId: stringOrNumberSchema,
+              data: placeDataSchema([]),
+            }),
+            operationSchema('delete_place', {
+              placeId: stringOrNumberSchema,
+            }),
             operationSchema('assign_place_to_day', {
               dayId: stringOrNumberSchema,
               placeId: stringOrNumberSchema,
               placeOperationId: { type: 'string' },
               notes: nullableStringSchema,
+            }),
+            operationSchema('unassign_place', {
+              assignmentId: stringOrNumberSchema,
+            }),
+            operationSchema('move_assignment', {
+              assignmentId: stringOrNumberSchema,
+              toDayId: stringOrNumberSchema,
+              orderIndex: { type: 'number' },
+            }),
+            operationSchema('set_assignment_time', {
+              assignmentId: stringOrNumberSchema,
+              time: nullableStringSchema,
+              endTime: nullableStringSchema,
             }),
             operationSchema('reorder_itinerary', {
               dayId: stringOrNumberSchema,
@@ -345,20 +365,44 @@ function actionPlanJsonSchema() {
             }),
             operationSchema('add_day_note', {
               dayId: stringOrNumberSchema,
+              data: dayNoteDataSchema(['text']),
+            }),
+            operationSchema('update_day_note', {
+              noteId: stringOrNumberSchema,
+              dayId: stringOrNumberSchema,
+              data: dayNoteDataSchema([]),
+            }),
+            operationSchema('delete_day_note', {
+              noteId: stringOrNumberSchema,
+              dayId: stringOrNumberSchema,
+            }),
+            operationSchema('update_day', {
+              dayId: stringOrNumberSchema,
               data: {
                 type: 'object',
                 additionalProperties: false,
-                required: ['text'],
                 properties: {
-                  text: { type: 'string' },
-                  time: { type: 'string' },
-                  icon: { type: 'string' },
-                  sort_order: { type: 'number' },
+                  title: nullableStringSchema,
+                  notes: { type: 'string' },
                 },
               },
             }),
-            operationSchema('create_budget_item', { data: budgetDataSchema }),
-            operationSchema('create_packing_item', { data: packingDataSchema }),
+            operationSchema('create_budget_item', { data: budgetDataSchema(['name']) }),
+            operationSchema('update_budget_item', {
+              itemId: stringOrNumberSchema,
+              data: budgetDataSchema([]),
+            }),
+            operationSchema('delete_budget_item', {
+              itemId: stringOrNumberSchema,
+            }),
+            operationSchema('create_packing_item', { data: packingDataSchema(['name']) }),
+            operationSchema('update_packing_item', {
+              itemId: stringOrNumberSchema,
+              data: packingDataSchema([]),
+            }),
+            operationSchema('delete_packing_item', {
+              itemId: stringOrNumberSchema,
+            }),
             operationSchema('create_poll', { data: pollDataSchema }),
             operationSchema('import_reservation', { data: reservationDataSchema(['title']) }),
             operationSchema('update_reservation', {
@@ -379,10 +423,11 @@ const stringOrNumberSchema = { anyOf: [{ type: 'string' }, { type: 'number' }] }
 const nullableStringSchema = { anyOf: [{ type: 'string' }, { type: 'null' }] } as const;
 
 function operationSchema(type: string, properties: Record<string, unknown>) {
+  const optionalForType = OPTIONAL_PROPS_BY_TYPE[type];
   return {
     type: 'object',
     additionalProperties: false,
-    required: ['type', ...Object.keys(properties).filter(k => !OPTIONAL_OPERATION_PROPS.has(k))],
+    required: ['type', ...Object.keys(properties).filter(k => !OPTIONAL_OPERATION_PROPS.has(k) && !optionalForType?.has(k))],
     properties: {
       id: { type: 'string' },
       title: { type: 'string' },
@@ -394,7 +439,13 @@ function operationSchema(type: string, properties: Record<string, unknown>) {
   } as const;
 }
 
-const OPTIONAL_OPERATION_PROPS = new Set(['notes', 'assignToDayId', 'assignmentNotes', 'placeId', 'placeOperationId']);
+const OPTIONAL_OPERATION_PROPS = new Set(['notes', 'assignToDayId', 'assignmentNotes', 'placeOperationId', 'orderIndex', 'time', 'endTime']);
+
+// 'placeId' is required on update_place/delete_place but optional on
+// assign_place_to_day (which may reference a created place by operation id).
+const OPTIONAL_PROPS_BY_TYPE: Record<string, Set<string>> = {
+  assign_place_to_day: new Set(['placeId']),
+};
 
 function placeDataSchema(required: string[] = []) {
   return {
@@ -421,36 +472,55 @@ function placeDataSchema(required: string[] = []) {
   } as const;
 }
 
-const budgetDataSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['name'],
-  properties: {
-    name: { type: 'string' },
-    category: { type: 'string' },
-    total_price: { type: 'number' },
-    currency: nullableStringSchema,
-    persons: { anyOf: [{ type: 'number' }, { type: 'null' }] },
-    days: { anyOf: [{ type: 'number' }, { type: 'null' }] },
-    note: nullableStringSchema,
-    expense_date: nullableStringSchema,
-    member_ids: { type: 'array', items: { type: 'number' } },
-  },
-} as const;
+function budgetDataSchema(required: string[] = []) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required,
+    properties: {
+      name: { type: 'string' },
+      category: { type: 'string' },
+      total_price: { type: 'number' },
+      currency: nullableStringSchema,
+      persons: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+      days: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+      note: nullableStringSchema,
+      expense_date: nullableStringSchema,
+      member_ids: { type: 'array', items: { type: 'number' } },
+    },
+  } as const;
+}
 
-const packingDataSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['name'],
-  properties: {
-    name: { type: 'string' },
-    category: { type: 'string' },
-    checked: { type: 'boolean' },
-    is_private: { type: 'boolean' },
-    visibility: { type: 'string', enum: ['common', 'personal', 'shared'] },
-    recipient_ids: { type: 'array', items: { type: 'number' } },
-  },
-} as const;
+function packingDataSchema(required: string[] = []) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required,
+    properties: {
+      name: { type: 'string' },
+      category: { type: 'string' },
+      checked: { type: 'boolean' },
+      quantity: { type: 'number' },
+      is_private: { type: 'boolean' },
+      visibility: { type: 'string', enum: ['common', 'personal', 'shared'] },
+      recipient_ids: { type: 'array', items: { type: 'number' } },
+    },
+  } as const;
+}
+
+function dayNoteDataSchema(required: string[] = []) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required,
+    properties: {
+      text: { type: 'string' },
+      time: { type: 'string' },
+      icon: { type: 'string' },
+      sort_order: { type: 'number' },
+    },
+  } as const;
+}
 
 const pollDataSchema = {
   type: 'object',

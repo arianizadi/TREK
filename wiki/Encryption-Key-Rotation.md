@@ -44,7 +44,7 @@ Use `scripts/migrate-encryption.ts` to re-encrypt all stored secrets without dow
 **Docker:**
 
 ```bash
-docker exec -it trek node --import tsx scripts/migrate-encryption.ts
+docker exec -it -w /app/server trek node --import tsx scripts/migrate-encryption.ts
 ```
 
 **Host (run from the `server/` directory):**

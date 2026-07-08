@@ -26,6 +26,11 @@ function categoryIconSvg(iconName: string | null | undefined, size: number): str
   } catch { return '' }
 }
 
+function escAttr(s: string | null | undefined): string {
+  if (!s) return ''
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 // Marker grouping for the GL map (#1385): MapLibre/Mapbox can't show the rich
 // HTML photo markers *and* cluster them natively, so we feed the place points
 // into a clustered GeoJSON source. The cluster bubbles render as GL circles +
@@ -152,7 +157,7 @@ function createMarkerElement(place: Place & { category_color?: string; category_
         overflow:hidden;background:${bgColor};
         box-sizing:content-box;
       ">
-        <img src="${photoUrl}" width="${size}" height="${size}" style="display:block;border-radius:50%;object-fit:cover;" />
+        <img src="${escAttr(photoUrl)}" width="${size}" height="${size}" style="display:block;border-radius:50%;object-fit:cover;" />
       </div>
       ${badgeHtml}
     `

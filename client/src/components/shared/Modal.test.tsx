@@ -23,6 +23,7 @@ describe('Modal', () => {
   it('FE-COMP-MODAL-003: renders the title prop', () => {
     render(<Modal isOpen={true} onClose={onClose} title="My Modal Title" />);
     expect(screen.getByText('My Modal Title')).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'My Modal Title' })).toBeTruthy();
   });
 
   it('FE-COMP-MODAL-004: renders children content', () => {
@@ -42,9 +43,7 @@ describe('Modal', () => {
   it('FE-COMP-MODAL-006: close button calls onClose', async () => {
     const user = userEvent.setup();
     render(<Modal isOpen={true} onClose={onClose} title="T" />);
-    // The X button is the only button rendered by Modal itself
-    const closeBtn = document.querySelector('button');
-    await user.click(closeBtn!);
+    await user.click(screen.getByRole('button', { name: 'Close dialog' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -79,5 +78,10 @@ describe('Modal', () => {
   it('FE-COMP-MODAL-011: sets document.body overflow to hidden when open', () => {
     render(<Modal isOpen={true} onClose={onClose} />);
     expect(document.body.style.overflow).toBe('hidden');
+  });
+
+  it('FE-COMP-MODAL-012: exposes an unnamed modal as a generic dialog', () => {
+    render(<Modal isOpen={true} onClose={onClose}><p>body</p></Modal>);
+    expect(screen.getByRole('dialog', { name: 'Dialog' })).toBeTruthy();
   });
 });

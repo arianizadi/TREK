@@ -42,6 +42,7 @@ export class LlmParseService {
       model: config.model,
       baseUrl: config.baseUrl,
       apiKey: config.apiKey,
+      allowUnsafeLocalBaseUrl: config.allowUnsafeLocalBaseUrl === true,
     };
 
     // Native PDF only for Anthropic (its document block reads text AND scans).
@@ -87,6 +88,7 @@ export class LlmParseService {
           baseUrl: config.baseUrl ?? 'http://localhost:11434/v1',
           model: config.model,
           apiKey: config.apiKey,
+          allowUnsafeLocalBaseUrl: config.allowUnsafeLocalBaseUrl === true,
         });
         return { kiItems: routed.kiItems, warnings: [...warnings, ...routed.warnings] };
       } catch (err) {

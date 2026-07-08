@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useId, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from '../../i18n'
@@ -25,6 +25,10 @@ export default function ConfirmDialog({
   danger = true,
 }: ConfirmDialogProps) {
   const { t } = useTranslation()
+  const titleId = useId()
+  const messageId = useId()
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   const handleEsc = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
@@ -32,9 +36,22 @@ export default function ConfirmDialog({
 
   useEffect(() => {
     if (isOpen) {
+      previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       document.addEventListener('keydown', handleEsc)
+      window.setTimeout(() => {
+        const dialog = dialogRef.current
+        if (!dialog) return
+        const focusable = dialog.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        )
+        ;(focusable ?? dialog).focus()
+      }, 0)
     }
-    return () => document.removeEventListener('keydown', handleEsc)
+    return () => {
+      document.removeEventListener('keydown', handleEsc)
+      previousFocusRef.current?.focus?.()
+      previousFocusRef.current = null
+    }
   }, [isOpen, handleEsc])
 
   if (!isOpen) return null
@@ -46,6 +63,12 @@ export default function ConfirmDialog({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={message ? messageId : undefined}
+        tabIndex={-1}
         className="trek-modal-enter rounded-2xl shadow-2xl w-full max-w-sm p-6 bg-surface-card"
         onClick={e => e.stopPropagation()}
       >
@@ -56,10 +79,10 @@ export default function ConfirmDialog({
             </div>
           )}
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-content">
+            <h3 id={titleId} className="text-base font-semibold text-content">
               {title || t('common.confirm')}
             </h3>
-            <p className="mt-1 text-sm text-content-secondary">
+            <p id={message ? messageId : undefined} className="mt-1 text-sm text-content-secondary">
               {message}
             </p>
           </div>

@@ -1,4 +1,5 @@
 import type { LlmExtractionClient, LlmExtractionInput } from '../llm-provider.interface';
+import { fetchLlmEndpoint } from '../llm-fetch';
 import { isNuExtractModel, buildNuExtractUserText, nuExtractToKiReservations } from './nuextract';
 
 // Generous: a local CPU model (Ollama, no GPU) may cold-load several GB and then
@@ -66,7 +67,7 @@ export class OpenAiCompatibleClient implements LlmExtractionClient {
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     let res: Response;
     try {
-      res = await fetch(url, {
+      res = await fetchLlmEndpoint(url, {
         method: 'POST',
         signal: controller.signal,
         headers: {
@@ -80,7 +81,7 @@ export class OpenAiCompatibleClient implements LlmExtractionClient {
             : {}),
         },
         body: JSON.stringify(body),
-      });
+      }, input.allowUnsafeLocalBaseUrl);
     } finally {
       clearTimeout(timer);
     }

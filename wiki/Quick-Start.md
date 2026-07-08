@@ -11,17 +11,19 @@ Get TREK running in under five minutes with a single Docker command.
 
 ## Run TREK
 
-Generate an encryption key and start the container in one step:
+Generate an encryption key, save it somewhere safe, and start the container:
 
 ```bash
-ENCRYPTION_KEY=$(openssl rand -hex 32) docker run -d \
+ENCRYPTION_KEY="$(openssl rand -hex 32)"
+printf 'TREK encryption key: %s\n' "$ENCRYPTION_KEY"
+docker run -d \
   --name trek \
   -p 3000:3000 \
-  -e ENCRYPTION_KEY=$ENCRYPTION_KEY \
+  -e "ENCRYPTION_KEY=$ENCRYPTION_KEY" \
   -v ./data:/app/data \
   -v ./uploads:/app/uploads \
   --restart unless-stopped \
-  mauriceboe/trek:latest
+  trek:local
 ```
 
 **Flag breakdown:**

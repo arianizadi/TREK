@@ -31,7 +31,14 @@ When running in Docker, mount `./data` and `./uploads` as volumes so your data s
 
 ## How do I update TREK?
 
-Pull the new image and recreate the container. Your data is in the mounted volumes and is never modified by the update process. See [Updating](Updating) for the exact commands.
+For this custom-fork install, update the git checkout and rebuild the local image:
+
+```bash
+cd /home/outkast/trek
+./update-from-upstream.sh
+```
+
+Your data is in mounted `data` and `uploads` directories and is never modified by the rebuild. See [Updating](Updating) for details.
 
 ## Can I restrict who can register?
 

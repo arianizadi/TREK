@@ -6,47 +6,34 @@ How to update TREK to a newer version without losing data.
 
 Back up your data first. Go to Admin Panel → Backups and create a manual backup, or copy your `./data` and `./uploads` directories to a safe location. See [Backups](Backups) for details.
 
-## Image Tags
+## Docker Compose (Custom Fork)
 
-| Tag | Example | Behavior |
-|---|---|---|
-| `latest` | `mauriceboe/trek:latest` | Always the newest release across all major versions |
-| Major version | `mauriceboe/trek:3` | Latest release pinned to that major version |
-| Full version | `mauriceboe/trek:3.0.15` | Exact release; never changes |
-
-Use `latest` or a major-version tag if you want updates on each redeploy. Use a full version tag for explicit control — update by changing the tag, not by re-pulling.
-
-## Docker Compose (Recommended)
-
-**`latest` or major-version tag:**
+Update from the git upstream and rebuild your local image:
 
 ```bash
-docker compose pull && docker compose up -d
+cd /home/outkast/trek
+./update-from-upstream.sh
 ```
 
-This pulls the newest matching image and recreates the container with your existing volumes. Your data is untouched.
+The updater backs up `data` and `uploads`, runs `git pull --rebase upstream main`, builds `trek:local`, starts the container, and verifies health plus the database schema version.
 
-**Pinned full-version tag:**
-
-Edit `docker-compose.yml`, update the tag in the `image:` line (e.g. `3.0.15` → `3.0.16`), then redeploy:
+If you already pulled or merged source changes manually, rebuild and restart with:
 
 ```bash
-docker compose up -d
+cd /home/outkast/trek
+docker compose up -d --build app
 ```
+
+Your data is untouched because only `./data` and `./uploads` are mounted into the container.
 
 ## Docker Run
 
-If you started TREK with `docker run`, pull the new image and replace the container:
+This install is intended to run through Compose so it always builds the custom fork. If you temporarily started TREK with `docker run`, replace it with the compose deployment:
 
 ```bash
-docker pull mauriceboe/trek
+cd /home/outkast/trek
 docker rm -f trek
-docker run -d --name trek -p 3000:3000 \
-  -v ./data:/app/data \
-  -v ./uploads:/app/uploads \
-  -e ENCRYPTION_KEY=<your-key> \
-  --restart unless-stopped \
-  mauriceboe/trek
+docker compose up -d --build app
 ```
 
 > **Tip:** Not sure which volume paths you used? Check before removing:

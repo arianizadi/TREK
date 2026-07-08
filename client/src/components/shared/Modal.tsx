@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef } from 'react'
+import React, { useEffect, useCallback, useId, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import { X } from 'lucide-react'
 
@@ -30,18 +30,32 @@ export default function Modal({
   footer,
   hideCloseButton = false,
 }: ModalProps) {
+  const titleId = useId()
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
   const handleEsc = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
   }, [onClose])
 
   useEffect(() => {
     if (isOpen) {
+      previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       document.addEventListener('keydown', handleEsc)
       document.body.style.overflow = 'hidden'
+      window.setTimeout(() => {
+        const dialog = dialogRef.current
+        if (!dialog) return
+        const focusable = dialog.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        )
+        ;(focusable ?? dialog).focus()
+      }, 0)
     }
     return () => {
       document.removeEventListener('keydown', handleEsc)
       document.body.style.overflow = ''
+      previousFocusRef.current?.focus?.()
+      previousFocusRef.current = null
     }
   }, [isOpen, handleEsc])
 
@@ -60,6 +74,12 @@ export default function Modal({
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={!title ? 'Dialog' : undefined}
+        tabIndex={-1}
         className={`
           trek-modal-enter
           rounded-2xl overflow-hidden shadow-2xl w-full ${sizeClasses[size] || sizeClasses.md}
@@ -71,9 +91,11 @@ export default function Modal({
       >
         {/* Header — stays put even while the body scrolls */}
         <div className="flex items-center justify-between p-6 flex-shrink-0 border-b border-edge-secondary">
-          <h2 className="text-lg font-semibold text-content">{title}</h2>
+          <h2 id={title ? titleId : undefined} className="text-lg font-semibold text-content">{title}</h2>
           {!hideCloseButton && (
             <button
+              type="button"
+              aria-label="Close dialog"
               onClick={onClose}
               className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             >

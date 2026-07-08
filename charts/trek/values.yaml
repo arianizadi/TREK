@@ -1,8 +1,8 @@
 
 image:
-  repository: mauriceboe/trek
-  # tag: latest
-  pullPolicy: IfNotPresent
+  repository: trek
+  tag: local
+  pullPolicy: Never
 
 # Optional image pull secrets for private registries
 imagePullSecrets: []

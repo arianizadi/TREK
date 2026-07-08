@@ -51,6 +51,7 @@ function readInstanceConfig(): ResolvedLlmConfig | null {
     apiKey: storedApiKey ?? (provider === 'openrouter' ? envOpenRouterKey() : undefined),
     multimodal: cfg.multimodal === true,
     reasoningEffort: provider === 'openrouter' ? normalizeOpenRouterReasoningEffort(cfg.reasoningEffort) : undefined,
+    allowUnsafeLocalBaseUrl: true,
   };
 }
 
@@ -67,6 +68,7 @@ function readUserConfig(userId: number): ResolvedLlmConfig | null {
     baseUrl: resolveBaseUrl(provider, settings.llm_base_url, usingEnvOpenRouterKey),
     apiKey: apiKey ?? (provider === 'openrouter' ? envOpenRouterKey() : undefined),
     multimodal: settings.llm_multimodal === true,
+    allowUnsafeLocalBaseUrl: false,
   };
 }
 
@@ -80,6 +82,7 @@ function readEnvConfig(): ResolvedLlmConfig | null {
     apiKey,
     multimodal: true,
     reasoningEffort: normalizeOpenRouterReasoningEffort(process.env.OPENROUTER_REASONING_EFFORT),
+    allowUnsafeLocalBaseUrl: true,
   };
 }
 

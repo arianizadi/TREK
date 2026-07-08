@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { resetAllStores } from '../../../tests/helpers/store'
 import { buildPlace } from '../../../tests/helpers/factories'
 import * as photoService from '../../services/photoService'
+import L from 'leaflet'
 
 const mapMock = vi.hoisted(() => ({
   panTo: vi.fn(),
@@ -197,6 +198,18 @@ describe('MapView', () => {
     render(<MapView places={places} />)
     // Marker still renders; base64 path in createPlaceIcon should be exercised
     expect(screen.getByTestId('marker')).toBeTruthy()
+  })
+
+  it('FE-COMP-MAPVIEW-025: escapes photo marker image URLs before injecting marker HTML', () => {
+    const dataUrl = 'data:image/svg+xml," onerror="alert(1)'
+    const places = [buildMapPlace({ id: 11, lat: 48.0, lng: 2.0, image_url: dataUrl })]
+    render(<MapView places={places} />)
+    const photoCall = vi.mocked(L.divIcon).mock.calls.find(([opts]) =>
+      String((opts as { html?: string }).html || '').includes('data:image/svg+xml'),
+    )
+    const html = String((photoCall?.[0] as { html?: string } | undefined)?.html || '')
+    expect(html).toContain('src="data:image/svg+xml,&quot; onerror=&quot;alert(1)"')
+    expect(html).not.toContain('src="data:image/svg+xml," onerror="alert(1)"')
   })
 
   it('FE-COMP-MAPVIEW-015: uses cached photo thumb from photoService when available', () => {

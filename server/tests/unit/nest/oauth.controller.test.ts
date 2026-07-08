@@ -2,7 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HttpException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
-vi.mock('../../../src/services/auditLog', () => ({ writeAudit: vi.fn(), getClientIp: vi.fn(() => '1.2.3.4'), logWarn: vi.fn() }));
+vi.mock('../../../src/services/auditLog', () => ({
+  writeAudit: vi.fn(),
+  getClientIp: vi.fn(() => '1.2.3.4'),
+  getAuditRequestContext: vi.fn(() => ({ ip: '1.2.3.4', countryCode: null, regionCode: null, regionName: null })),
+  logWarn: vi.fn(),
+}));
 
 import { getClientIp } from '../../../src/services/auditLog';
 const getClientIpMock = vi.mocked(getClientIp);

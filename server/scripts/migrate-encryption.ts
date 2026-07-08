@@ -9,7 +9,7 @@
  *   node --import tsx scripts/migrate-encryption.ts
  *
  * Usage (Docker):
- *   docker exec -it trek node --import tsx scripts/migrate-encryption.ts
+ *   docker exec -it -w /app/server trek node --import tsx scripts/migrate-encryption.ts
  *
  * The script will prompt for the old and new keys interactively so they never
  * appear in shell history, process arguments, or log output.

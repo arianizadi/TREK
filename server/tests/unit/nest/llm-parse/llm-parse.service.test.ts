@@ -130,7 +130,12 @@ describe('LlmParseService', () => {
     expect(res.kiItems).toEqual([{ '@type': 'LodgingReservation' }]);
     expect(res.warnings).toEqual(['note']);
     expect(extract).not.toHaveBeenCalled();
-    expect(routeExtraction).toHaveBeenCalledWith('Hotel booking', { baseUrl: 'http://ollama:11434/v1', model: 'm', apiKey: 'k' });
+    expect(routeExtraction).toHaveBeenCalledWith('Hotel booking', {
+      baseUrl: 'http://ollama:11434/v1',
+      model: 'm',
+      apiKey: 'k',
+      allowUnsafeLocalBaseUrl: false,
+    });
   });
 
   it('keeps the wide text cap (16k) for a local flight itinerary but tightens it (6k) otherwise', async () => {

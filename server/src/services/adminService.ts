@@ -328,10 +328,13 @@ export function saveDemoBaseline(): { error?: string; status?: number; message?:
 
 // ── GitHub Integration ─────────────────────────────────────────────────────
 
+const RELEASE_REPO = (process.env.TREK_RELEASE_REPO || '').trim();
+
 export async function getGithubReleases(perPage: string = '10', page: string = '1') {
+  if (!RELEASE_REPO) return [];
   try {
     const resp = await fetch(
-      `https://api.github.com/repos/mauriceboe/TREK/releases?per_page=${perPage}&page=${page}`,
+      `https://api.github.com/repos/${RELEASE_REPO}/releases?per_page=${perPage}&page=${page}`,
       { headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'TREK-Server' } }
     );
     if (!resp.ok) return [];
@@ -367,12 +370,16 @@ export async function checkVersion(): Promise<VersionInfo> {
   const currentVersion: string = process.env.APP_VERSION || require('../../package.json').version;
   const isPrerelease = currentVersion.includes('-pre.');
   const fallback: VersionInfo = { current: currentVersion, latest: currentVersion, update_available: false, is_docker: isDocker, is_prerelease: isPrerelease };
+  if (!RELEASE_REPO) {
+    _versionCache = { data: fallback, expiresAt: Date.now() + VERSION_CACHE_TTL };
+    return fallback;
+  }
   let result: VersionInfo;
   try {
     if (isPrerelease) {
       // Fetch release list and find the newest prerelease
       const resp = await fetch(
-        'https://api.github.com/repos/mauriceboe/TREK/releases?per_page=100',
+        `https://api.github.com/repos/${RELEASE_REPO}/releases?per_page=100`,
         { headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'TREK-Server' } }
       );
       if (!resp.ok) {
@@ -391,7 +398,7 @@ export async function checkVersion(): Promise<VersionInfo> {
       result = { current: currentVersion, latest, update_available, release_url: tagged[0].r.html_url || '', is_docker: isDocker, is_prerelease: true };
     } else {
       const resp = await fetch(
-        'https://api.github.com/repos/mauriceboe/TREK/releases/latest',
+        `https://api.github.com/repos/${RELEASE_REPO}/releases/latest`,
         { headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'TREK-Server' } }
       );
       if (!resp.ok) {

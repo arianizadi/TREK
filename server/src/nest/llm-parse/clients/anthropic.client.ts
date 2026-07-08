@@ -1,4 +1,5 @@
 import type { LlmExtractionClient, LlmExtractionInput } from '../llm-provider.interface';
+import { fetchLlmEndpoint } from '../llm-fetch';
 
 const TIMEOUT_MS = 120_000;
 const MAX_TOKENS = 8192;
@@ -48,7 +49,7 @@ export class AnthropicClient implements LlmExtractionClient {
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     let res: Response;
     try {
-      res = await fetch(url, {
+      res = await fetchLlmEndpoint(url, {
         method: 'POST',
         signal: controller.signal,
         headers: {
@@ -57,7 +58,7 @@ export class AnthropicClient implements LlmExtractionClient {
           'anthropic-version': ANTHROPIC_VERSION,
         },
         body: JSON.stringify(body),
-      });
+      }, input.allowUnsafeLocalBaseUrl);
     } finally {
       clearTimeout(timer);
     }

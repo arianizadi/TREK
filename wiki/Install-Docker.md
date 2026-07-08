@@ -12,7 +12,7 @@ docker run -d \
   -v ./uploads:/app/uploads \
   -e ENCRYPTION_KEY=<your-32-byte-hex-key> \
   --restart unless-stopped \
-  mauriceboe/trek:latest
+  trek:local
 ```
 
 `ENCRYPTION_KEY` is strongly recommended but not strictly required. If omitted, a key is auto-generated on first start and persisted to `data/.encryption_key`. Setting it explicitly means you can recreate the container from scratch (e.g. on a new host) without losing access to stored encrypted data (API keys, SMTP credentials, OIDC secrets, MFA secrets).
@@ -34,15 +34,11 @@ Pass additional `-e` flags for timezone and CORS/email link support:
 
 See [Environment-Variables](Environment-Variables) for the full list.
 
-## Image Tags
+## Local Image
 
-| Tag | Example | Behavior |
-|---|---|---|
-| `latest` | `mauriceboe/trek:latest` | Always the newest release across all major versions |
-| Major version | `mauriceboe/trek:3` | Latest release pinned to that major version |
-| Full version | `mauriceboe/trek:3.0.15` | Exact release; never changes |
+This custom-fork install uses the locally built `trek:local` image. Rebuild that image from the checkout when the source changes; do not expect `docker pull trek:local` to update it.
 
-Replace `mauriceboe/trek:latest` in the run command with your chosen tag to pin to a major version or exact release.
+For day-to-day operation, prefer the Compose workflow in [Install-Docker-Compose](Install-Docker-Compose) so updates can run through `/home/outkast/trek/update-from-upstream.sh`.
 
 ## Volume Reference
 
@@ -65,7 +61,7 @@ docker run -d \
   -v trek_uploads:/app/uploads \
   -e ENCRYPTION_KEY=<your-32-byte-hex-key> \
   --restart unless-stopped \
-  mauriceboe/trek:latest
+  trek:local
 ```
 
 Docker creates `trek_data` and `trek_uploads` automatically on first run. Named volumes are easier to manage with `docker volume` commands and work better in some NAS or container-management environments.

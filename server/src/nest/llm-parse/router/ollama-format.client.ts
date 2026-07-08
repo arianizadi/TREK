@@ -11,6 +11,8 @@
  * tool/response_format and keep using the existing clients.)
  */
 
+import { fetchLlmEndpoint } from '../llm-fetch';
+
 const TIMEOUT_MS = 300_000;
 
 export interface EnforcedExtractInput {
@@ -22,6 +24,7 @@ export interface EnforcedExtractInput {
   /** JSON Schema the output is constrained to (grammar-level). */
   schema: Record<string, unknown>;
   apiKey?: string;
+  allowUnsafeLocalBaseUrl?: boolean;
   numPredict?: number;
   /** Context window. 8192 fits a typical multi-section booking; raise for long itineraries. */
   numCtx?: number;
@@ -71,7 +74,7 @@ export async function extractEnforced(input: EnforcedExtractInput): Promise<Reco
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetchLlmEndpoint(url, {
       method: 'POST',
       signal: controller.signal,
       headers: {
@@ -79,7 +82,7 @@ export async function extractEnforced(input: EnforcedExtractInput): Promise<Reco
         ...(input.apiKey ? { authorization: `Bearer ${input.apiKey}` } : {}),
       },
       body: JSON.stringify(body),
-    });
+    }, input.allowUnsafeLocalBaseUrl);
   } finally {
     clearTimeout(timer);
   }
